@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#5f0040">
+<meta name="robots" content="noindex,nofollow">
+<title>Rota do Profissional · Solar Cuidados</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--wine:#5f0040;--wine-d:#3a0026;--sun:#fbb040;--peach:#f2d1a0;--warm:#d7d2cb;--bg:#f7f5f1;--ink:#2b0a1f;--muted:#6d5d64;--line:#e4ddd6;--ok:#1d6b3a;--ok-bg:#dff3e5;--pend:#7a4300;--pend-bg:#fff0d6;--bad:#8f1d2b;--bad-bg:#fbe2e5}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Montserrat,Arial,sans-serif;-webkit-text-size-adjust:100%}
+button,input,textarea,select{font:inherit}
+button{cursor:pointer}
+.wrap{max-width:520px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+.logo{display:flex;align-items:center;gap:12px;font-size:26px;font-weight:500;letter-spacing:5px}
+.logo i{width:19px;height:19px;border-radius:50%;background:var(--sun);display:inline-block}
+/* login */
+.login{flex:1;background:var(--wine);color:#fff;padding:48px 24px calc(28px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:26px}
+.login h1{margin:36px 0 6px;font-size:26px;font-weight:800;line-height:1.2}
+.login p{margin:0;color:var(--peach);font-size:15px;line-height:1.5}
+.login form{margin-top:auto;display:flex;flex-direction:column;gap:14px}
+.login label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600}
+.login input{font-size:17px;padding:14px;border-radius:12px;border:0;color:var(--ink)}
+.btn{min-height:52px;border:0;border-radius:14px;font-size:15.5px;font-weight:800;padding:0 18px}
+.btn.sun{background:var(--sun);color:var(--wine-d)}
+.btn.wine{background:var(--wine);color:#fff}
+.btn.line{background:#fff;border:1px solid var(--wine);color:var(--wine);min-height:44px;font-size:13px;border-radius:10px;padding:0 12px}
+.btn:disabled{opacity:.55;cursor:default}
+.err{background:var(--bad-bg);color:var(--bad);border-radius:10px;padding:10px 12px;font-size:13.5px;font-weight:600}
+.login .err{margin:0}
+.login small{text-align:center;color:var(--peach);font-size:12.5px}
+/* app */
+header.top{background:var(--wine);color:#fff;padding:16px 18px 14px;border-bottom:5px solid var(--sun);display:flex;flex-direction:column;gap:4px;position:sticky;top:0;z-index:5}
+.top .r1{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.top .hi{font-size:13px;color:var(--peach);font-weight:600}
+.top .out{background:rgba(255,255,255,.14);color:#fff;border:0;border-radius:999px;font-size:12px;font-weight:700;padding:6px 12px;min-height:32px}
+.top h2{margin:0;font-size:20px;font-weight:800}
+.top .sub{font-size:12.5px;color:var(--peach)}
+.days{display:flex;gap:6px;overflow-x:auto;padding:12px 16px 0}
+.days button{flex:none;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:999px;padding:7px 13px;font-size:12.5px;font-weight:700;min-height:36px}
+.days button.on{background:var(--wine);color:#fff;border-color:var(--wine)}
+main{flex:1;padding:14px 16px 90px;display:flex;flex-direction:column;gap:12px}
+.note{border-radius:12px;padding:10px 14px;font-size:13px;font-weight:600}
+.note.pend{background:var(--pend-bg);color:var(--pend)}
+.note.ok{background:var(--ok-bg);color:var(--ok);font-weight:700}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.print{display:block;width:100%;max-height:260px;object-fit:cover;background:#eef1ec;border:0;padding:0}
+.print img{display:block;width:100%;max-height:260px;object-fit:cover}
+.noprint{height:110px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;background:#eef1ec}
+.cardf{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;font-size:12.5px;color:var(--muted);gap:8px}
+.cardf button{border:0;background:none;color:var(--wine);font-weight:700;font-size:12.5px;padding:6px 0;min-height:32px}
+h3{margin:6px 2px 0;font-size:15px;font-weight:800}
+ol.pac{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.pac li{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;align-items:center;gap:12px}
+.num{width:30px;height:30px;border-radius:50%;background:var(--wine);color:#fff;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:none}
+.pi{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.pi b{font-size:14px}.pi span{font-size:12px;color:var(--muted)}
+.chip{align-self:flex-start;margin-top:4px;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px}
+.chip.pend{background:var(--pend-bg);color:var(--pend)}.chip.ok{background:var(--ok-bg);color:var(--ok)}.chip.no{background:var(--bad-bg);color:var(--bad)}
+.back{align-self:flex-start;border:0;background:none;color:var(--wine);font-size:14px;font-weight:700;padding:6px 0;min-height:44px}
+fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+legend{font-size:14px;font-weight:800;margin-bottom:8px;padding:0}
+.opt{min-height:48px;text-align:left;padding:0 14px;border-radius:12px;font-size:14px;font-weight:700;border:1px solid var(--warm);background:#fff;color:var(--ink)}
+.opt[aria-pressed=true]{border:2px solid var(--wine);background:var(--peach);color:var(--wine-d)}
+.row{display:flex;gap:10px}
+.fl{flex:1;display:flex;flex-direction:column;gap:6px;font-size:12.5px;font-weight:700}
+.fl input,.fl textarea{font-size:16px;padding:12px;border-radius:12px;border:1px solid var(--warm);background:#fff;color:var(--ink)}
+.fl textarea{resize:vertical;min-height:84px}
+article.ped{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:6px}
+.ped .h{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ped .h b{font-size:14px}
+.ped .m{font-size:12.5px;color:var(--muted)}
+.resp{border-radius:10px;padding:10px 12px;font-size:13px;display:flex;flex-direction:column;gap:2px}
+.resp.ok{background:var(--ok-bg);color:var(--ok)}.resp.no{background:var(--bad-bg);color:var(--bad)}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom);z-index:6}
+nav.tabs div{display:flex;width:100%;max-width:520px}
+nav.tabs button{flex:1;min-height:58px;border:0;background:none;font-size:13px;font-weight:600;color:var(--muted)}
+nav.tabs button.on{color:var(--wine);font-weight:800;box-shadow:inset 0 3px 0 var(--sun)}
+.empty{text-align:center;color:var(--muted);font-size:14px;padding:40px 10px;line-height:1.5}
+.zoom{position:fixed;inset:0;background:rgba(20,0,14,.92);z-index:20;display:flex;flex-direction:column}
+.zoom div{flex:1;overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:12px}
+.zoom img{max-width:none;width:160%}
+.zoom button{min-height:52px;border:0;background:var(--sun);color:var(--wine-d);font-weight:800;font-size:15px}
+.toast{position:fixed;left:50%;bottom:76px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-size:13.5px;font-weight:600;z-index:30;max-width:90vw}
+.lgpd{font-size:11px;color:var(--muted);text-align:center;padding:4px 10px 10px;line-height:1.4}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+const SB='https://sizbevhqreaccxrlimup.supabase.co',KEY='sb_publishable_sOPBmFvZMrGj3JvHzxIyYQ_4LsvUbSG';
+const TIPOS={horario_fixo:'Atender em horário fixo',nao_antes:'Não atender antes de',trocar_ordem:'Trocar a ordem do atendimento',nao_atender:'Paciente não será atendido',observacao:'Observação para o motorista'};
+const ST={pendente:['Aguardando','pend'],aprovada:['OK','ok'],aplicada:['OK','ok'],recusada:['Não foi possível','no']};
+const S={token:null,nome:'',rotas:[],dia:null,tela:'rota',sel:null,tipo:'horario_fixo',busy:false,err:'',zoom:false};
+try{S.token=localStorage.getItem('rp-token');S.nome=localStorage.getItem('rp-nome')||''}catch(e){}
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function rpc(fn,args){
+  const r=await fetch(SB+'/rest/v1/rpc/'+fn,{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify(args)});
+  if(!r.ok)throw new Error('Falha de conexão ('+r.status+'). Tente de novo.');
+  return r.json();
+}
+function toast(t){const d=document.createElement('div');d.className='toast';d.setAttribute('role','status');d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),3200)}
+const dExt=k=>{const d=new Date(k+'T12:00:00');const s=d.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'2-digit'});return s[0].toUpperCase()+s.slice(1)};
+const hm=t=>t?new Date(t).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'';
+const hoje=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+function sair(msg){try{if(S.token)rpc('app_sair',{p_token:S.token}).catch(()=>{});localStorage.removeItem('rp-token')}catch(e){}S.token=null;S.rotas=[];S.err=msg||'';render()}
+async function carregar(silencioso){
+  if(!S.token)return;
+  try{const r=await rpc('app_minhas_rotas',{p_token:S.token});
+    if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');throw new Error(r.erro)}
+    S.nome=r.nome;S.rotas=r.rotas||[];
+    if(!S.dia||!S.rotas.some(x=>x.data===S.dia)){const h=hoje();const prox=S.rotas.find(x=>x.data>=h)||S.rotas[S.rotas.length-1];S.dia=prox?prox.data:null}
+    S.err='';render();
+  }catch(e){if(!silencioso){S.err=e.message;render()}}
+}
+const rotaAtual=()=>S.rotas.find(x=>x.data===S.dia);
+function render(){
+  const app=$('#app');
+  if(!S.token){
+    app.innerHTML=`<section class="login"><div class="logo" aria-label="Solar"><span>S</span><i></i><span>L</span><span>A</span><span>R</span></div>
+    <div><h1>Sua rota, na palma da mão</h1><p>Veja seus pacientes, peça mudanças e receba o OK da logística.</p></div>
+    <form id="flogin" novalidate>${S.err?`<p class="err" role="alert">${esc(S.err)}</p>`:''}
+      <label>Celular cadastrado<input id="cel" type="tel" inputmode="tel" autocomplete="tel" placeholder="(21) 9 0000-0000" required></label>
+      <label>PIN<input id="pin" type="password" inputmode="numeric" autocomplete="current-password" maxlength="6" placeholder="4 a 6 números" required></label>
+      <button class="btn sun" type="submit"${S.busy?' disabled':''}>${S.busy?'Entrando…':'Entrar'}</button>
+      <small>Esqueceu o PIN? Fale com a logística.</small></form></section>`;
+    return;
+  }
+  const ro=rotaAtual();
+  const nPend=ro?ro.pedidos.filter(p=>p.status==='pendente').length:0;
+  let h=`<header class="top"><div class="r1"><span class="hi">Olá, ${esc(S.nome)}</span><button class="out" type="button" data-a="sair">Sair</button></div>
+   <h2>${S.tela==='pedido'?'Pedir mudança':S.tela==='pedidos'?'Meus pedidos':'Minha rota'}</h2>
+   ${ro?`<div class="sub">${esc(dExt(ro.data))} · Carro ${esc(ro.placa)}${ro.motorista?' · Motorista '+esc(ro.motorista):''}</div>`:''}</header>`;
+  if(S.rotas.length>1&&S.tela!=='pedido')h+=`<div class="days" role="tablist" aria-label="Dias">${S.rotas.map(x=>`<button type="button" role="tab" data-dia="${x.data}" class="${x.data===S.dia?'on':''}" aria-selected="${x.data===S.dia}">${esc(dExt(x.data).split(',')[0].slice(0,3))} ${x.data.slice(8,10)}/${x.data.slice(5,7)}</button>`).join('')}</div>`;
+  h+='<main>';
+  if(S.err)h+=`<p class="err" role="alert">${esc(S.err)}</p>`;
+  if(!ro){h+=`<p class="empty">Nenhuma rota publicada para você ainda.<br>Quando a logística publicar, ela aparece aqui.</p><button class="btn line" type="button" data-a="atualizar" style="align-self:center">Atualizar</button>`}
+  else if(S.tela==='rota'){
+    h+=ro.confirmado_em?`<div class="note ok">Rota confirmada às ${hm(ro.confirmado_em)}.</div>`:`<div class="note pend">Confira sua rota e envie os pedidos de mudança o quanto antes.</div>`;
+    h+=`<div class="card">${ro.print?`<button class="print" type="button" data-a="zoom" aria-label="Ampliar o print da rota"><img src="${esc(ro.print)}" alt="Print da rota de ${esc(dExt(ro.data))}"></button>`:'<div class="noprint">Print da rota ainda não enviado</div>'}
+      <div class="cardf"><span>${ro.pacientes.length} ${ro.pacientes.length===1?'paciente':'pacientes'}</span>${ro.print?'<button type="button" data-a="zoom">Ampliar print</button>':''}</div></div>
+      <h3>Pacientes na ordem da rota</h3><ol class="pac">`;
+    ro.pacientes.forEach(p=>{const ped=ro.pedidos.find(q=>q.ordem===p.ordem);const st=ped?ST[ped.status]||['',''] :null;
+      h+=`<li><span class="num">${esc(p.ordem)}</span><div class="pi"><b>${esc(p.nome)}</b><span>${p.hora?esc(p.hora)+' previsto':''}${p.hora&&p.bairro?' · ':''}${esc(p.bairro||'')}</span>${ped?`<span class="chip ${st[1]}">${ped.status==='pendente'?'Pedido enviado':st[0]==='OK'?'OK da logística':'Pedido recusado'}</span>`:''}</div>
+      <button class="btn line" type="button" data-pac="${esc(p.ordem)}">Pedir mudança</button></li>`});
+    h+='</ol>';
+    if(!ro.confirmado_em)h+=`<button class="btn wine" type="button" data-a="confirmar"${S.busy?' disabled':''}>Rota OK, sem mais mudanças</button>`;
+  }else if(S.tela==='pedido'){
+    const p=ro.pacientes.find(x=>String(x.ordem)===String(S.sel));
+    h+=`<button class="back" type="button" data-a="rota">‹ Voltar para a rota</button>
+     <div class="card" style="padding:14px;display:flex;gap:12px;align-items:center"><span class="num">${esc(p.ordem)}</span><div class="pi"><b>${esc(p.nome)}</b><span>${esc(p.hora||'')}${p.hora&&p.bairro?' · ':''}${esc(p.bairro||'')}</span></div></div>
+     <form id="fped" novalidate><fieldset><legend>O que precisa mudar?</legend>
+     ${Object.entries(TIPOS).map(([k,v])=>`<button type="button" class="opt" data-tipo="${k}" aria-pressed="${S.tipo===k}">${v}</button>`).join('')}</fieldset>
+     ${S.tipo==='horario_fixo'||S.tipo==='nao_antes'?`<div class="row" style="margin-top:12px"><label class="fl">${S.tipo==='nao_antes'?'A partir de':'De'}<input id="de" type="time" required></label>${S.tipo==='horario_fixo'?'<label class="fl">Até<input id="ate" type="time" required></label>':''}</div>`:''}
+     <label class="fl" style="margin-top:12px">Motivo<textarea id="mot" maxlength="500" placeholder="Ex.: paciente faz diálise às 11h" required></textarea></label>
+     <button class="btn sun" type="submit" style="margin-top:12px;width:100%"${S.busy?' disabled':''}>${S.busy?'Enviando…':'Enviar pedido à logística'}</button></form>`;
+  }else{
+    if(!ro.pedidos.length)h+='<p class="empty">Você ainda não fez pedidos para esta rota.</p>';
+    ro.pedidos.forEach(q=>{const st=ST[q.status]||[q.status,'pend'];const jan=q.tipo==='horario_fixo'?' · '+(q.de||'?')+' às '+(q.ate||'?'):q.tipo==='nao_antes'?' · a partir de '+(q.de||'?'):'';
+      h+=`<article class="ped"><div class="h"><b>${esc(TIPOS[q.tipo]||q.tipo)}</b><span class="chip ${st[1]}" style="margin:0">${st[0]}</span></div>
+       <span style="font-size:13px">${esc(q.ordem)}. ${esc(q.paciente)}${esc(jan)}</span>
+       <span class="m">${q.motivo?'“'+esc(q.motivo)+'” · ':''}enviado às ${hm(q.criado_em)}</span>
+       ${q.status!=='pendente'?`<div class="resp ${st[1]}"><b>${st[1]==='ok'?'OK da logística':'Resposta da logística'}</b>${q.resposta?`<span>${esc(q.resposta)}</span>`:''}</div>`:''}</article>`});
+    h+=`<button class="btn line" type="button" data-a="atualizar" style="align-self:center">Atualizar</button>`;
+  }
+  h+=`<p class="lgpd">Dados de pacientes são sigilosos (LGPD). Não compartilhe prints desta tela.</p></main>`;
+  h+=`<nav class="tabs" aria-label="Navegação"><div><button type="button" data-a="rota" class="${S.tela!=='pedidos'?'on':''}">Minha rota</button><button type="button" data-a="pedidos" class="${S.tela==='pedidos'?'on':''}">Meus pedidos${nPend?' ('+nPend+')':''}</button></div></nav>`;
+  if(S.zoom&&ro&&ro.print)h+=`<div class="zoom" role="dialog" aria-modal="true" aria-label="Print da rota"><div><img src="${esc(ro.print)}" alt="Print da rota ampliado"></div><button type="button" data-a="fechar">Fechar</button></div>`;
+  app.innerHTML=h;
+}
+document.addEventListener('submit',async e=>{
+  e.preventDefault();
+  if(e.target.id==='flogin'){
+    const cel=$('#cel').value,pin=$('#pin').value;if(!cel||!pin){S.err='Preencha o celular e o PIN.';render();return}
+    S.busy=true;S.err='';render();
+    try{const r=await rpc('app_login',{p_celular:cel,p_pin:pin});
+      if(!r.ok){S.err=r.erro;S.busy=false;render();$('#cel').value=cel;return}
+      S.token=r.token;S.nome=r.nome;try{localStorage.setItem('rp-token',r.token);localStorage.setItem('rp-nome',r.nome)}catch(x){}
+      S.busy=false;S.tela='rota';await carregar();
+    }catch(x){S.err=x.message;S.busy=false;render()}
+  }
+  if(e.target.id==='fped'){
+    const ro=rotaAtual(),de=$('#de')?$('#de').value:'',ate=$('#ate')?$('#ate').value:'',mot=$('#mot').value.trim();
+    if((S.tipo==='horario_fixo'&&(!de||!ate))||(S.tipo==='nao_antes'&&!de)){toast('Informe o horário.');return}
+    if(S.tipo==='horario_fixo'&&de>=ate){toast('O horário final precisa ser depois do inicial.');return}
+    if(!mot){toast('Escreva o motivo do pedido.');$('#mot').focus();return}
+    S.busy=true;render();
+    try{const r=await rpc('app_pedir',{p_token:S.token,p_rota:ro.id,p_ordem:+S.sel,p_tipo:S.tipo,p_de:de,p_ate:ate,p_motivo:mot});
+      S.busy=false;if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');toast(r.erro);render();return}
+      toast('Pedido enviado à logística.');S.tela='pedidos';await carregar();
+    }catch(x){S.busy=false;render();toast(x.message)}
+  }
+});
+document.addEventListener('click',async e=>{
+  const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.dia){S.dia=b.dataset.dia;render();return}
+  if(b.dataset.pac){S.sel=b.dataset.pac;S.tipo='horario_fixo';S.tela='pedido';render();window.scrollTo(0,0);return}
+  if(b.dataset.tipo){const mot=$('#mot')?$('#mot').value:'';S.tipo=b.dataset.tipo;render();if($('#mot'))$('#mot').value=mot;return}
+  const a=b.dataset.a;if(!a)return;
+  if(a==='sair'){sair();return}
+  if(a==='rota'||a==='pedidos'){S.tela=a;render();window.scrollTo(0,0);if(a==='pedidos')carregar(true);return}
+  if(a==='zoom'){S.zoom=true;render();return}
+  if(a==='fechar'){S.zoom=false;render();return}
+  if(a==='atualizar'){await carregar();toast('Atualizado.');return}
+  if(a==='confirmar'){const ro=rotaAtual();S.busy=true;render();
+    try{const r=await rpc('app_confirmar',{p_token:S.token,p_rota:ro.id});S.busy=false;if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');toast('Rota confirmada. Obrigado!');await carregar()}
+    catch(x){S.busy=false;render();toast(x.message)}}
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&S.zoom){S.zoom=false;render()}});
+setInterval(()=>{if(S.token&&!document.hidden&&S.tela!=='pedido')carregar(true)},60000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.token&&S.tela!=='pedido')carregar(true)});
+render();if(S.token)carregar();
+</script>
+</body>
+</html>
