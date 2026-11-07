@@ -12,8 +12,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" type="image/png" href="icon-192.png">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="https://sizbevhqreaccxrlimup.supabase.co/storage/v1/object/public/app-icones/icon-192.png">
+<link rel="apple-touch-icon" href="https://sizbevhqreaccxrlimup.supabase.co/storage/v1/object/public/app-icones/apple-touch-icon.png">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -149,9 +149,9 @@ addEventListener('beforeinstallprompt',e=>{e.preventDefault();INST=e;render()});
 addEventListener('appinstalled',()=>{INST=null;toast('Minha Rota instalado na tela inicial.');render()});
 if('serviceWorker' in navigator&&location.protocol==='https:')addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 function bannerInst(){if(instalado()||instFechado)return'';
- if(INST)return`<div class="inst"><img src="icon-192.png" alt=""><div><b>Instale o Minha Rota</b>Abre em tela cheia, direto do ícone no celular.</div><button class="ib" type="button" data-a="instalar">Instalar</button><button class="ix" type="button" data-a="instx" aria-label="Fechar aviso">×</button></div>`;
- if(ehIOS)return`<div class="inst"><img src="icon-192.png" alt=""><div><b>Instale o Minha Rota</b>No Safari, toque em <b style="display:inline">Compartilhar</b> (quadrado com seta) e depois em <b style="display:inline">Adicionar à Tela de Início</b>.</div><button class="ix" type="button" data-a="instx" aria-label="Fechar aviso">×</button></div>`;
- if(/android/i.test(navigator.userAgent))return`<div class="inst"><img src="icon-192.png" alt=""><div><b>Instale o Minha Rota</b>No Chrome, toque nos <b style="display:inline">três pontinhos ⋮</b> no alto e depois em <b style="display:inline">Instalar app</b> (ou Adicionar à tela inicial).</div><button class="ix" type="button" data-a="instx" aria-label="Fechar aviso">×</button></div>`;
+ if(INST)return`<div class="inst"><img src="https://sizbevhqreaccxrlimup.supabase.co/storage/v1/object/public/app-icones/icon-192.png" alt=""><div><b>Instale o Minha Rota</b>Abre em tela cheia, direto do ícone no celular.</div><button class="ib" type="button" data-a="instalar">Instalar</button><button class="ix" type="button" data-a="instx" aria-label="Fechar aviso">×</button></div>`;
+ if(ehIOS)return`<div class="inst"><img src="https://sizbevhqreaccxrlimup.supabase.co/storage/v1/object/public/app-icones/icon-192.png" alt=""><div><b>Instale o Minha Rota</b>No Safari, toque em <b style="display:inline">Compartilhar</b> (quadrado com seta) e depois em <b style="display:inline">Adicionar à Tela de Início</b>.</div><button class="ix" type="button" data-a="instx" aria-label="Fechar aviso">×</button></div>`;
+ if(/android/i.test(navigator.userAgent))return`<div class="inst"><img src="https://sizbevhqreaccxrlimup.supabase.co/storage/v1/object/public/app-icones/icon-192.png" alt=""><div><b>Instale o Minha Rota</b>No Chrome, toque nos <b style="display:inline">três pontinhos ⋮</b> no alto e depois em <b style="display:inline">Instalar app</b> (ou Adicionar à tela inicial).</div><button class="ix" type="button" data-a="instx" aria-label="Fechar aviso">×</button></div>`;
  return''}
 const temGeo=ro=>ro&&!ro.print&&(ro.pacientes||[]).filter(p=>p.lat&&p.lng).length>0;
 function gmaps(ro){const pts=(ro.pacientes||[]).filter(p=>p.lat&&p.lng).map(p=>p.lat+','+p.lng);if(!pts.length)return'';const dst=pts.slice(0,10).pop(),wp=pts.slice(0,Math.min(pts.length,10)-1);
@@ -180,13 +180,13 @@ function render(){
   const nPend=ro?ro.pedidos.filter(p=>p.status==='pendente').length:0;
   let h=`<header class="top"><div class="r1"><span class="hi">Olá, ${esc(S.nome)}</span><button class="out" type="button" data-a="sair">Sair</button></div>
    <h2>${S.tela==='pedido'?'Necessidade do paciente':S.tela==='pedidos'?'Meus pedidos':'Minha rota'}</h2>
-   ${ro?`<div class="sub">${esc(dExt(ro.data))} · Carro ${esc(ro.placa)}${ro.motorista?' · Motorista '+esc(ro.motorista):''}</div>`:''}</header>`;
+   ${ro?`<div class="sub">${esc(dExt(ro.data))} · ${/^carro\b/i.test(ro.placa||'')?'':'Carro '}${esc(ro.placa)}${ro.motorista?' · Motorista '+esc(ro.motorista):''}</div>`:''}</header>`;
   if(S.rotas.length>1&&S.tela!=='pedido')h+=`<div class="days" role="tablist" aria-label="Dias">${S.rotas.map(x=>`<button type="button" role="tab" data-dia="${x.data}" class="${x.data===S.dia?'on':''}" aria-selected="${x.data===S.dia}">${esc(dExt(x.data).split(',')[0].slice(0,3))} ${x.data.slice(8,10)}/${x.data.slice(5,7)}</button>`).join('')}</div>`;
   h+='<main>'+bannerInst();
   if(S.err)h+=`<p class="err" role="alert">${esc(S.err)}</p>`;
   if(!ro){h+=`<p class="empty">Nenhuma rota publicada para você ainda.<br>Quando a logística publicar, ela aparece aqui.</p><button class="btn line" type="button" data-a="atualizar" style="align-self:center">Atualizar</button>`}
   else if(S.tela==='rota'){
-    h+=ro.confirmado_em?`<div class="note ok">Rota confirmada às ${hm(ro.confirmado_em)}.</div>`:ro.atualizado_em?`<div class="note pend">A logística atualizou esta rota às ${hm(ro.atualizado_em)}. Confira de novo e confirme.</div>`:`<div class="note pend">Confira sua rota e envie os pedidos de mudança o quanto antes.</div>`;
+    h+=ro.confirmado_em?`<div class="note ok">Rota confirmada às ${hm(ro.confirmado_em)}.</div>`:ro.atualizado_em?`<div class="note pend">A logística atualizou esta rota às ${hm(ro.atualizado_em)}. Confira de novo e confirme.</div>`:`<div class="note pend">Confira sua rota e indique as necessidades dos pacientes o quanto antes.</div>`;
     const gm=gmaps(ro);
     h+=`<div class="card">${temGeo(ro)?'<div class="mapa" id="mapa" role="img" aria-label="Mapa com os pacientes na ordem da rota"></div>':ro.print?`<button class="print" type="button" data-a="zoom" aria-label="Ampliar o print da rota"><img src="${esc(ro.print)}" alt="Print da rota de ${esc(dExt(ro.data))}"></button>`:'<div class="noprint">Print da rota ainda não enviado</div>'}
       <div class="cardf"><span>${ro.pacientes.length} ${ro.pacientes.length===1?'paciente':'pacientes'}</span>${gm?`<a href="${esc(gm)}" target="_blank" rel="noopener">Abrir trajeto no Google Maps ›</a>`:ro.print?'<button type="button" data-a="zoom">Ampliar print</button>':''}</div></div>
