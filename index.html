@@ -151,6 +151,7 @@ if('serviceWorker' in navigator&&location.protocol==='https:')addEventListener('
 function bannerInst(){if(instalado()||instFechado)return'';
  if(INST)return`<div class="inst"><img src="icon-192.png" alt=""><div><b>Instale o Minha Rota</b>Abre em tela cheia, direto do ícone no celular.</div><button class="ib" type="button" data-a="instalar">Instalar</button><button class="ix" type="button" data-a="instx" aria-label="Fechar aviso">×</button></div>`;
  if(ehIOS)return`<div class="inst"><img src="icon-192.png" alt=""><div><b>Instale o Minha Rota</b>No Safari, toque em <b style="display:inline">Compartilhar</b> (quadrado com seta) e depois em <b style="display:inline">Adicionar à Tela de Início</b>.</div><button class="ix" type="button" data-a="instx" aria-label="Fechar aviso">×</button></div>`;
+ if(/android/i.test(navigator.userAgent))return`<div class="inst"><img src="icon-192.png" alt=""><div><b>Instale o Minha Rota</b>No Chrome, toque nos <b style="display:inline">três pontinhos ⋮</b> no alto e depois em <b style="display:inline">Instalar app</b> (ou Adicionar à tela inicial).</div><button class="ix" type="button" data-a="instx" aria-label="Fechar aviso">×</button></div>`;
  return''}
 const temGeo=ro=>ro&&!ro.print&&(ro.pacientes||[]).filter(p=>p.lat&&p.lng).length>0;
 function gmaps(ro){const pts=(ro.pacientes||[]).filter(p=>p.lat&&p.lng).map(p=>p.lat+','+p.lng);if(!pts.length)return'';const dst=pts.slice(0,10).pop(),wp=pts.slice(0,Math.min(pts.length,10)-1);

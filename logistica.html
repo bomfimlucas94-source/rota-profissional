@@ -120,7 +120,12 @@ const SB='https://sizbevhqreaccxrlimup.supabase.co',KEY='sb_publishable_sOPBmFvZ
 const TIPOS={horario_fixo:'Horário fixo',nao_antes:'Não atender antes de',trocar_ordem:'Trocar a ordem',nao_atender:'Paciente não será atendido',observacao:'Observação para o motorista'};
 const STN={pendente:'Pendente',aprovada:'Aprovada',recusada:'Recusada',aplicada:'Aplicada no SimpliRoute'};
 const S={token:null,nome:'',itens:null,err:'',busy:false,f:{st:'',esp:'',dia:''},open:{},draft:{},at:0,tab:'sol'};
-try{S.token=localStorage.getItem('lg-token');S.nome=localStorage.getItem('lg-nome')||'';S.tab=localStorage.getItem('lg-tab')||'sol'}catch(e){}
+// Segurança: a sessão fica só nesta aba (sessionStorage). Fechou o navegador ou abriu o link em outra aba/pessoa → pede celular e PIN.
+const INATIVO_MIN=30;
+try{localStorage.removeItem('lg-token');localStorage.removeItem('lg-nome');S.token=sessionStorage.getItem('lg-token');S.nome=sessionStorage.getItem('lg-nome')||'';S.tab=localStorage.getItem('lg-tab')||'sol';
+ const ult=+sessionStorage.getItem('lg-ult')||0;if(S.token&&Date.now()-ult>INATIVO_MIN*6e4){S.token=null;sessionStorage.removeItem('lg-token')}}catch(e){}
+const marcaUso=()=>{try{sessionStorage.setItem('lg-ult',String(Date.now()))}catch(e){}};marcaUso();
+['click','keydown','touchstart'].forEach(ev=>addEventListener(ev,marcaUso,{passive:true}));
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 async function rpc(fn,args){const r=await fetch(SB+'/rest/v1/rpc/'+fn,{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify(args)});if(!r.ok)throw new Error('Falha de conexão ('+r.status+'). Tente de novo.');return r.json()}
@@ -129,7 +134,7 @@ const dm=k=>k.slice(8,10)+'/'+k.slice(5,7);
 const dExt=k=>{const s=new Date(k+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'long'});return s[0].toUpperCase()+s.slice(1)};
 const hm=t=>t?new Date(t).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
 const jan=r=>r.tipo==='horario_fixo'?(r.horario_de||'?')+' – '+(r.horario_ate||'?'):r.tipo==='nao_antes'?'a partir de '+(r.horario_de||'?'):'';
-function sair(msg){try{if(S.token)rpc('eq_sair',{p_token:S.token}).catch(()=>{});localStorage.removeItem('lg-token')}catch(e){}S.token=null;S.itens=null;S.err=msg||'';render()}
+function sair(msg){try{if(S.token)rpc('eq_sair',{p_token:S.token}).catch(()=>{});sessionStorage.removeItem('lg-token');sessionStorage.removeItem('lg-nome')}catch(e){}S.token=null;S.itens=null;S.err=msg||'';render()}
 async function carregar(sil){if(!S.token)return;
  try{const r=await rpc('eq_solicitacoes',{p_token:S.token});if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');throw new Error(r.erro)}
   S.nome=r.nome;S.itens=r.itens||[];S.err='';S.at=Date.now();render()}catch(e){if(!sil){S.err=e.message;render()}}}
@@ -262,7 +267,7 @@ async function responder(id,st,resp,lote){const r=await rpc('eq_responder',{p_to
  if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');throw new Error(r.erro||'Não foi possível salvar.')}delete S.draft[id];if(!lote)await carregar(true)}
 document.addEventListener('submit',async e=>{if(e.target.id!=='flog')return;e.preventDefault();const cel=$('#cel').value,pin=$('#pin').value;if(!cel||!pin){S.err='Preencha o celular e o PIN.';render();return}
  S.busy=true;S.err='';render();try{const r=await rpc('eq_login',{p_celular:cel,p_pin:pin});S.busy=false;if(!r.ok){S.err=r.erro;render();$('#cel').value=cel;return}
-  S.token=r.token;S.nome=r.nome;try{localStorage.setItem('lg-token',r.token);localStorage.setItem('lg-nome',r.nome)}catch(x){}render();carregar()}catch(x){S.busy=false;S.err=x.message;render()}});
+  S.token=r.token;S.nome=r.nome;try{sessionStorage.setItem('lg-token',r.token);sessionStorage.setItem('lg-nome',r.nome);marcaUso()}catch(x){}render();carregar()}catch(x){S.busy=false;S.err=x.message;render()}});
 document.addEventListener('input',e=>{const t=e.target.closest('[data-rs]');if(t)S.draft[t.dataset.rs]=t.value});
 document.addEventListener('change',e=>{if(e.target.id==='rde'){R.de=e.target.value;return}if(e.target.id==='rate'){R.ate=e.target.value;return}if(e.target.id==='rtst'){R.teste=e.target.checked;render();return}if(e.target.id==='edata'){E.data=e.target.value||hojeSP();E.sr=null;E.db=null;carregarEnv(true);return}if(e.target.id==='eini'){E.ini=e.target.checked;try{localStorage.setItem('lg-ini',E.ini?'1':'0')}catch(x){}render();return}if(e.target.dataset&&e.target.dataset.pick!==undefined){E.pick[e.target.dataset.pick]=e.target.value;render();return}if(e.target.id==='fesp'){S.f.esp=e.target.value;render()}if(e.target.id==='fdia'){S.f.dia=e.target.value;render()}});
 document.addEventListener('click',async e=>{const b=e.target.closest('button');if(!b)return;const d=b.dataset;
@@ -286,8 +291,8 @@ document.addEventListener('click',async e=>{const b=e.target.closest('button');i
   if(d.re){b.disabled=true;await responder(d.re,'pendente');toast('Solicitação reaberta.');return}
   if(d.all){b.disabled=true;const ids=d.all.split(',');for(const id of ids)await responder(id,'aprovada',S.draft[id],true);await carregar(true);toast(ids.length+' pedidos aprovados.');return}
  }catch(x){b.disabled=false;toast(x.message)}});
-setInterval(()=>{if(S.token&&!document.hidden&&!document.querySelector('[data-rs]:focus,select:focus')){carregar(true);if(S.tab==='env'&&E.sr!==null&&!E.busy)carregarEnv(false,true)}},30000);
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.token)carregar(true)});
+setInterval(()=>{try{if(S.token&&Date.now()-(+sessionStorage.getItem('lg-ult')||0)>INATIVO_MIN*6e4){sair('Por segurança, a sessão foi encerrada após '+INATIVO_MIN+' minutos sem uso. Entre de novo.');return}}catch(e){}if(S.token&&!document.hidden&&!document.querySelector('[data-rs]:focus,select:focus')){carregar(true);if(S.tab==='env'&&E.sr!==null&&!E.busy)carregarEnv(false,true)}},30000);
+document.addEventListener('visibilitychange',()=>{if(document.hidden||!S.token)return;try{if(Date.now()-(+sessionStorage.getItem('lg-ult')||0)>INATIVO_MIN*6e4)return sair('Por segurança, a sessão foi encerrada após '+INATIVO_MIN+' minutos sem uso. Entre de novo.')}catch(e){}carregar(true)});
 render();if(S.token){carregar();if(S.tab==='env')carregarEnv(true);if(S.tab==='rel')carregarRel()}
 </script>
 </body>
