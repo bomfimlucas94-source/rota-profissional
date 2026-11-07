@@ -8,6 +8,7 @@
 <title>Minha Rota · Solar Cuidados</title>
 <meta name="application-name" content="Minha Rota">
 <meta name="apple-mobile-web-app-title" content="Minha Rota">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -52,6 +53,10 @@ main{flex:1;padding:14px 16px 90px;display:flex;flex-direction:column;gap:12px}
 .card{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden}
 .print{display:block;width:100%;max-height:260px;object-fit:cover;background:#eef1ec;border:0;padding:0}
 .print img{display:block;width:100%;max-height:260px;object-fit:cover}
+.mapa{height:240px;background:#eef1ec;z-index:0}
+.mk{width:26px;height:26px;border-radius:50%;background:var(--wine);color:#fff;font:800 12px Montserrat,Arial,sans-serif;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35)}
+.cardf a{color:var(--wine);font-weight:700;font-size:13px;text-decoration:none}
+.pi small{display:block;color:var(--muted);font-size:11.5px;line-height:1.35;margin-top:2px}
 .noprint{height:110px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;background:#eef1ec}
 .cardf{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;font-size:12.5px;color:var(--muted);gap:8px}
 .cardf button{border:0;background:none;color:var(--wine);font-weight:700;font-size:12.5px;padding:6px 0;min-height:32px}
@@ -121,6 +126,17 @@ async function carregar(silencioso){
   }catch(e){if(!silencioso){S.err=e.message;render()}}
 }
 const rotaAtual=()=>S.rotas.find(x=>x.data===S.dia);
+const temGeo=ro=>ro&&!ro.print&&(ro.pacientes||[]).filter(p=>p.lat&&p.lng).length>0;
+function gmaps(ro){const pts=(ro.pacientes||[]).filter(p=>p.lat&&p.lng).map(p=>p.lat+','+p.lng);if(!pts.length)return'';const dst=pts.slice(0,10).pop(),wp=pts.slice(0,Math.min(pts.length,10)-1);
+ return 'https://www.google.com/maps/dir/?api=1&travelmode=driving&destination='+encodeURIComponent(dst)+(wp.length?'&waypoints='+encodeURIComponent(wp.join('|')):'')}
+let LF=null;
+function carregaLeaflet(){if(window.L)return Promise.resolve();if(LF)return LF;LF=new Promise((ok,no)=>{const sc=document.createElement('script');sc.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';sc.crossOrigin='';sc.onload=ok;sc.onerror=no;document.head.appendChild(sc)});return LF}
+async function desenhaMapa(ro){const el=document.getElementById('mapa');if(!el)return;try{await carregaLeaflet()}catch(e){el.textContent='Mapa indisponível agora.';return}
+ if(!document.body.contains(el))return;const pts=ro.pacientes.filter(p=>p.lat&&p.lng);
+ const m=L.map(el,{zoomControl:true,attributionControl:true,scrollWheelZoom:false});L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap'}).addTo(m);
+ const ll=pts.map(p=>[+p.lat,+p.lng]);L.polyline(ll,{color:'#5f0040',weight:3,opacity:.7,dashArray:'6 6'}).addTo(m);
+ pts.forEach(p=>L.marker([+p.lat,+p.lng],{icon:L.divIcon({className:'',html:'<div class="mk">'+esc(p.ordem)+'</div>',iconSize:[26,26],iconAnchor:[13,13]}),title:p.ordem+'. '+p.nome}).addTo(m));
+ m.fitBounds(L.latLngBounds(ll).pad(.15),{maxZoom:15})}
 function render(){
   const app=$('#app');
   if(!S.token){
@@ -143,12 +159,13 @@ function render(){
   if(S.err)h+=`<p class="err" role="alert">${esc(S.err)}</p>`;
   if(!ro){h+=`<p class="empty">Nenhuma rota publicada para você ainda.<br>Quando a logística publicar, ela aparece aqui.</p><button class="btn line" type="button" data-a="atualizar" style="align-self:center">Atualizar</button>`}
   else if(S.tela==='rota'){
-    h+=ro.confirmado_em?`<div class="note ok">Rota confirmada às ${hm(ro.confirmado_em)}.</div>`:`<div class="note pend">Confira sua rota e envie os pedidos de mudança o quanto antes.</div>`;
-    h+=`<div class="card">${ro.print?`<button class="print" type="button" data-a="zoom" aria-label="Ampliar o print da rota"><img src="${esc(ro.print)}" alt="Print da rota de ${esc(dExt(ro.data))}"></button>`:'<div class="noprint">Print da rota ainda não enviado</div>'}
-      <div class="cardf"><span>${ro.pacientes.length} ${ro.pacientes.length===1?'paciente':'pacientes'}</span>${ro.print?'<button type="button" data-a="zoom">Ampliar print</button>':''}</div></div>
+    h+=ro.confirmado_em?`<div class="note ok">Rota confirmada às ${hm(ro.confirmado_em)}.</div>`:ro.atualizado_em?`<div class="note pend">A logística atualizou esta rota às ${hm(ro.atualizado_em)}. Confira de novo e confirme.</div>`:`<div class="note pend">Confira sua rota e envie os pedidos de mudança o quanto antes.</div>`;
+    const gm=gmaps(ro);
+    h+=`<div class="card">${temGeo(ro)?'<div class="mapa" id="mapa" role="img" aria-label="Mapa com os pacientes na ordem da rota"></div>':ro.print?`<button class="print" type="button" data-a="zoom" aria-label="Ampliar o print da rota"><img src="${esc(ro.print)}" alt="Print da rota de ${esc(dExt(ro.data))}"></button>`:'<div class="noprint">Print da rota ainda não enviado</div>'}
+      <div class="cardf"><span>${ro.pacientes.length} ${ro.pacientes.length===1?'paciente':'pacientes'}</span>${gm?`<a href="${esc(gm)}" target="_blank" rel="noopener">Abrir trajeto no Google Maps ›</a>`:ro.print?'<button type="button" data-a="zoom">Ampliar print</button>':''}</div></div>
       <h3>Pacientes na ordem da rota</h3><ol class="pac">`;
     ro.pacientes.forEach(p=>{const ped=ro.pedidos.find(q=>q.ordem===p.ordem);const st=ped?ST[ped.status]||['',''] :null;
-      h+=`<li><span class="num">${esc(p.ordem)}</span><div class="pi"><b>${esc(p.nome)}</b><span>${p.hora?esc(p.hora)+' previsto':''}${p.hora&&p.bairro?' · ':''}${esc(p.bairro||'')}</span>${ped?`<span class="chip ${st[1]}">${ped.status==='pendente'?'Pedido enviado':st[0]==='OK'?'OK da logística':'Pedido recusado'}</span>`:''}</div>
+      h+=`<li><span class="num">${esc(p.ordem)}</span><div class="pi"><b>${esc(p.nome)}</b><span>${p.hora?esc(p.hora)+' previsto':''}${p.hora&&p.bairro?' · ':''}${esc(p.bairro||'')}${p.janela?' · janela '+esc(p.janela):''}</span>${p.endereco?`<small>${esc(p.endereco)}</small>`:''}${ped?`<span class="chip ${st[1]}">${ped.status==='pendente'?'Pedido enviado':st[0]==='OK'?'OK da logística':'Pedido recusado'}</span>`:''}</div>
       <button class="btn line" type="button" data-pac="${esc(p.ordem)}">Pedir mudança</button></li>`});
     h+='</ol>';
     if(!ro.confirmado_em)h+=`<button class="btn wine" type="button" data-a="confirmar"${S.busy?' disabled':''}>Rota OK, sem mais mudanças</button>`;
@@ -174,6 +191,7 @@ function render(){
   h+=`<nav class="tabs" aria-label="Navegação"><div><button type="button" data-a="rota" class="${S.tela!=='pedidos'?'on':''}">Minha rota</button><button type="button" data-a="pedidos" class="${S.tela==='pedidos'?'on':''}">Meus pedidos${nPend?' ('+nPend+')':''}</button></div></nav>`;
   if(S.zoom&&ro&&ro.print)h+=`<div class="zoom" role="dialog" aria-modal="true" aria-label="Print da rota"><div><img src="${esc(ro.print)}" alt="Print da rota ampliado"></div><button type="button" data-a="fechar">Fechar</button></div>`;
   app.innerHTML=h;
+  if(ro&&S.tela==='rota'&&temGeo(ro))desenhaMapa(ro);
 }
 document.addEventListener('submit',async e=>{
   e.preventDefault();
