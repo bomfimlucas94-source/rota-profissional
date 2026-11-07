@@ -8,20 +8,28 @@
 <title>Minha Rota · Solar Cuidados</title>
 <meta name="application-name" content="Minha Rota">
 <meta name="apple-mobile-web-app-title" content="Minha Rota">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{--wine:#5f0040;--wine-d:#3a0026;--sun:#fbb040;--peach:#f2d1a0;--warm:#d7d2cb;--bg:#f7f5f1;--ink:#2b0a1f;--muted:#6d5d64;--line:#e4ddd6;--ok:#1d6b3a;--ok-bg:#dff3e5;--pend:#7a4300;--pend-bg:#fff0d6;--bad:#8f1d2b;--bad-bg:#fbe2e5}
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Montserrat,Arial,sans-serif;-webkit-text-size-adjust:100%}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Montserrat,Arial,sans-serif;-webkit-text-size-adjust:100%;overscroll-behavior-y:none}
+html{background:var(--wine)}body{min-height:100vh;min-height:100dvh;-webkit-tap-highlight-color:transparent}
+input,textarea,select{font-size:16px}
 button,input,textarea,select{font:inherit}
 button{cursor:pointer}
-.wrap{max-width:520px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+.wrap{max-width:520px;margin:0 auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;background:var(--bg)}
 .logo{display:flex;align-items:center;gap:12px;font-size:26px;font-weight:500;letter-spacing:5px}
 .logo i{width:19px;height:19px;border-radius:50%;background:var(--sun);display:inline-block}
 /* login */
-.login{flex:1;background:var(--wine);color:#fff;padding:48px 24px calc(28px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:26px}
+.login{flex:1;background:var(--wine);color:#fff;padding:calc(48px + env(safe-area-inset-top)) 24px calc(28px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:26px}
 .login .apn{margin:36px 0 4px;font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--peach)}
 .login h1{margin:0 0 6px;font-size:26px;font-weight:800;line-height:1.2}
 .login p{margin:0;color:var(--peach);font-size:15px;line-height:1.5}
@@ -32,12 +40,13 @@ button{cursor:pointer}
 .btn.sun{background:var(--sun);color:var(--wine-d)}
 .btn.wine{background:var(--wine);color:#fff}
 .btn.line{background:#fff;border:1px solid var(--wine);color:var(--wine);min-height:44px;font-size:13px;border-radius:10px;padding:0 12px}
+.btn.line.nec{width:118px;flex:none;line-height:1.2;padding:6px 10px;font-size:12px}
 .btn:disabled{opacity:.55;cursor:default}
 .err{background:var(--bad-bg);color:var(--bad);border-radius:10px;padding:10px 12px;font-size:13.5px;font-weight:600}
 .login .err{margin:0}
 .login small{text-align:center;color:var(--peach);font-size:12.5px}
 /* app */
-header.top{background:var(--wine);color:#fff;padding:16px 18px 14px;border-bottom:5px solid var(--sun);display:flex;flex-direction:column;gap:4px;position:sticky;top:0;z-index:5}
+header.top{background:var(--wine);color:#fff;padding:calc(16px + env(safe-area-inset-top)) calc(18px + env(safe-area-inset-right)) 14px calc(18px + env(safe-area-inset-left));border-bottom:5px solid var(--sun);display:flex;flex-direction:column;gap:4px;position:sticky;top:0;z-index:5}
 .top .r1{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .top .hi{font-size:13px;color:var(--peach);font-weight:600}
 .top .out{background:rgba(255,255,255,.14);color:#fff;border:0;border-radius:999px;font-size:12px;font-weight:700;padding:6px 12px;min-height:32px}
@@ -46,7 +55,7 @@ header.top{background:var(--wine);color:#fff;padding:16px 18px 14px;border-botto
 .days{display:flex;gap:6px;overflow-x:auto;padding:12px 16px 0}
 .days button{flex:none;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:999px;padding:7px 13px;font-size:12.5px;font-weight:700;min-height:36px}
 .days button.on{background:var(--wine);color:#fff;border-color:var(--wine)}
-main{flex:1;padding:14px 16px 90px;display:flex;flex-direction:column;gap:12px}
+main{flex:1;padding:14px 16px calc(90px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:12px}
 .note{border-radius:12px;padding:10px 14px;font-size:13px;font-weight:600}
 .note.pend{background:var(--pend-bg);color:var(--pend)}
 .note.ok{background:var(--ok-bg);color:var(--ok);font-weight:700}
@@ -56,6 +65,12 @@ main{flex:1;padding:14px 16px 90px;display:flex;flex-direction:column;gap:12px}
 .mapa{height:240px;background:#eef1ec;z-index:0}
 .mk{width:26px;height:26px;border-radius:50%;background:var(--wine);color:#fff;font:800 12px Montserrat,Arial,sans-serif;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35)}
 .cardf a{color:var(--wine);font-weight:700;font-size:13px;text-decoration:none}
+.inst{display:flex;gap:10px;align-items:center;background:#fff;border:1px solid var(--line);border-left:4px solid var(--sun);border-radius:14px;padding:10px 12px;font-size:12.5px;line-height:1.4;color:var(--ink)}
+.inst img{width:38px;height:38px;border-radius:9px;flex:none}
+.inst div{flex:1}.inst b{display:block;font-size:13px}
+.inst .ib{background:var(--wine);color:#fff;border:0;border-radius:10px;font-weight:800;font-size:12.5px;min-height:38px;padding:0 12px}
+.inst .ix{background:none;border:0;color:var(--muted);font-size:18px;min-width:32px;min-height:38px}
+.login .inst{color:var(--ink)}
 .pi small{display:block;color:var(--muted);font-size:11.5px;line-height:1.35;margin-top:2px}
 .noprint{height:110px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;background:#eef1ec}
 .cardf{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;font-size:12.5px;color:var(--muted);gap:8px}
@@ -88,11 +103,11 @@ nav.tabs div{display:flex;width:100%;max-width:520px}
 nav.tabs button{flex:1;min-height:58px;border:0;background:none;font-size:13px;font-weight:600;color:var(--muted)}
 nav.tabs button.on{color:var(--wine);font-weight:800;box-shadow:inset 0 3px 0 var(--sun)}
 .empty{text-align:center;color:var(--muted);font-size:14px;padding:40px 10px;line-height:1.5}
-.zoom{position:fixed;inset:0;background:rgba(20,0,14,.92);z-index:20;display:flex;flex-direction:column}
+.zoom{position:fixed;inset:0;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);background:rgba(20,0,14,.92);z-index:20;display:flex;flex-direction:column}
 .zoom div{flex:1;overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:12px}
 .zoom img{max-width:none;width:160%}
 .zoom button{min-height:52px;border:0;background:var(--sun);color:var(--wine-d);font-weight:800;font-size:15px}
-.toast{position:fixed;left:50%;bottom:76px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-size:13.5px;font-weight:600;z-index:30;max-width:90vw}
+.toast{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-size:13.5px;font-weight:600;z-index:30;max-width:90vw}
 .lgpd{font-size:11px;color:var(--muted);text-align:center;padding:4px 10px 10px;line-height:1.4}
 </style>
 </head>
@@ -126,6 +141,17 @@ async function carregar(silencioso){
   }catch(e){if(!silencioso){S.err=e.message;render()}}
 }
 const rotaAtual=()=>S.rotas.find(x=>x.data===S.dia);
+/* instalar como app */
+let INST=null;const instalado=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+const ehIOS=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+let instFechado=false;try{instFechado=localStorage.getItem('rp-inst')==='x'}catch(e){}
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();INST=e;render()});
+addEventListener('appinstalled',()=>{INST=null;toast('Minha Rota instalado na tela inicial.');render()});
+if('serviceWorker' in navigator&&location.protocol==='https:')addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+function bannerInst(){if(instalado()||instFechado)return'';
+ if(INST)return`<div class="inst"><img src="icon-192.png" alt=""><div><b>Instale o Minha Rota</b>Abre em tela cheia, direto do ícone no celular.</div><button class="ib" type="button" data-a="instalar">Instalar</button><button class="ix" type="button" data-a="instx" aria-label="Fechar aviso">×</button></div>`;
+ if(ehIOS)return`<div class="inst"><img src="icon-192.png" alt=""><div><b>Instale o Minha Rota</b>No Safari, toque em <b style="display:inline">Compartilhar</b> (quadrado com seta) e depois em <b style="display:inline">Adicionar à Tela de Início</b>.</div><button class="ix" type="button" data-a="instx" aria-label="Fechar aviso">×</button></div>`;
+ return''}
 const temGeo=ro=>ro&&!ro.print&&(ro.pacientes||[]).filter(p=>p.lat&&p.lng).length>0;
 function gmaps(ro){const pts=(ro.pacientes||[]).filter(p=>p.lat&&p.lng).map(p=>p.lat+','+p.lng);if(!pts.length)return'';const dst=pts.slice(0,10).pop(),wp=pts.slice(0,Math.min(pts.length,10)-1);
  return 'https://www.google.com/maps/dir/?api=1&travelmode=driving&destination='+encodeURIComponent(dst)+(wp.length?'&waypoints='+encodeURIComponent(wp.join('|')):'')}
@@ -141,21 +167,21 @@ function render(){
   const app=$('#app');
   if(!S.token){
     app.innerHTML=`<section class="login"><div class="logo" aria-label="Solar"><span>S</span><i></i><span>L</span><span>A</span><span>R</span></div>
-    <div><p class="apn">Minha Rota</p><h1>Sua rota, na palma da mão</h1><p>Veja seus pacientes, peça mudanças e receba o OK da logística.</p></div>
+    <div><p class="apn">Minha Rota</p><h1>Sua rota, na palma da mão</h1><p>Veja seus pacientes, indique as necessidades de cada um e receba o OK da logística.</p></div>
     <form id="flogin" novalidate>${S.err?`<p class="err" role="alert">${esc(S.err)}</p>`:''}
       <label>Celular cadastrado<input id="cel" type="tel" inputmode="tel" autocomplete="tel" placeholder="(21) 9 0000-0000" required></label>
       <label>PIN<input id="pin" type="password" inputmode="numeric" autocomplete="current-password" maxlength="6" placeholder="4 a 6 números" required></label>
       <button class="btn sun" type="submit"${S.busy?' disabled':''}>${S.busy?'Entrando…':'Entrar'}</button>
-      <small>Esqueceu o PIN? Fale com a logística.</small></form></section>`;
+      <small>Esqueceu o PIN? Fale com a logística.</small></form>${bannerInst()}</section>`;
     return;
   }
   const ro=rotaAtual();
   const nPend=ro?ro.pedidos.filter(p=>p.status==='pendente').length:0;
   let h=`<header class="top"><div class="r1"><span class="hi">Olá, ${esc(S.nome)}</span><button class="out" type="button" data-a="sair">Sair</button></div>
-   <h2>${S.tela==='pedido'?'Pedir mudança':S.tela==='pedidos'?'Meus pedidos':'Minha rota'}</h2>
+   <h2>${S.tela==='pedido'?'Necessidade do paciente':S.tela==='pedidos'?'Meus pedidos':'Minha rota'}</h2>
    ${ro?`<div class="sub">${esc(dExt(ro.data))} · Carro ${esc(ro.placa)}${ro.motorista?' · Motorista '+esc(ro.motorista):''}</div>`:''}</header>`;
   if(S.rotas.length>1&&S.tela!=='pedido')h+=`<div class="days" role="tablist" aria-label="Dias">${S.rotas.map(x=>`<button type="button" role="tab" data-dia="${x.data}" class="${x.data===S.dia?'on':''}" aria-selected="${x.data===S.dia}">${esc(dExt(x.data).split(',')[0].slice(0,3))} ${x.data.slice(8,10)}/${x.data.slice(5,7)}</button>`).join('')}</div>`;
-  h+='<main>';
+  h+='<main>'+bannerInst();
   if(S.err)h+=`<p class="err" role="alert">${esc(S.err)}</p>`;
   if(!ro){h+=`<p class="empty">Nenhuma rota publicada para você ainda.<br>Quando a logística publicar, ela aparece aqui.</p><button class="btn line" type="button" data-a="atualizar" style="align-self:center">Atualizar</button>`}
   else if(S.tela==='rota'){
@@ -166,14 +192,14 @@ function render(){
       <h3>Pacientes na ordem da rota</h3><ol class="pac">`;
     ro.pacientes.forEach(p=>{const ped=ro.pedidos.find(q=>q.ordem===p.ordem);const st=ped?ST[ped.status]||['',''] :null;
       h+=`<li><span class="num">${esc(p.ordem)}</span><div class="pi"><b>${esc(p.nome)}</b><span>${p.hora?esc(p.hora)+' previsto':''}${p.hora&&p.bairro?' · ':''}${esc(p.bairro||'')}${p.janela?' · janela '+esc(p.janela):''}</span>${p.endereco?`<small>${esc(p.endereco)}</small>`:''}${ped?`<span class="chip ${st[1]}">${ped.status==='pendente'?'Pedido enviado':st[0]==='OK'?'OK da logística':'Pedido recusado'}</span>`:''}</div>
-      <button class="btn line" type="button" data-pac="${esc(p.ordem)}">Pedir mudança</button></li>`});
+      <button class="btn line nec" type="button" data-pac="${esc(p.ordem)}" aria-label="Indicar necessidade do paciente ${esc(p.nome)}">Indicar necessidade do paciente</button></li>`});
     h+='</ol>';
     if(!ro.confirmado_em)h+=`<button class="btn wine" type="button" data-a="confirmar"${S.busy?' disabled':''}>Rota OK, sem mais mudanças</button>`;
   }else if(S.tela==='pedido'){
     const p=ro.pacientes.find(x=>String(x.ordem)===String(S.sel));
     h+=`<button class="back" type="button" data-a="rota">‹ Voltar para a rota</button>
      <div class="card" style="padding:14px;display:flex;gap:12px;align-items:center"><span class="num">${esc(p.ordem)}</span><div class="pi"><b>${esc(p.nome)}</b><span>${esc(p.hora||'')}${p.hora&&p.bairro?' · ':''}${esc(p.bairro||'')}</span></div></div>
-     <form id="fped" novalidate><fieldset><legend>O que precisa mudar?</legend>
+     <form id="fped" novalidate><fieldset><legend>Qual a necessidade do paciente?</legend>
      ${Object.entries(TIPOS).map(([k,v])=>`<button type="button" class="opt" data-tipo="${k}" aria-pressed="${S.tipo===k}">${v}</button>`).join('')}</fieldset>
      ${S.tipo==='horario_fixo'||S.tipo==='nao_antes'?`<div class="row" style="margin-top:12px"><label class="fl">${S.tipo==='nao_antes'?'A partir de':'De'}<input id="de" type="time" required></label>${S.tipo==='horario_fixo'?'<label class="fl">Até<input id="ate" type="time" required></label>':''}</div>`:''}
      <label class="fl" style="margin-top:12px">Motivo<textarea id="mot" maxlength="500" placeholder="Ex.: paciente faz diálise às 11h" required></textarea></label>
@@ -223,6 +249,8 @@ document.addEventListener('click',async e=>{
   if(b.dataset.tipo){const mot=$('#mot')?$('#mot').value:'';S.tipo=b.dataset.tipo;render();if($('#mot'))$('#mot').value=mot;return}
   const a=b.dataset.a;if(!a)return;
   if(a==='sair'){sair();return}
+  if(a==='instalar'&&INST){INST.prompt();const c=await INST.userChoice.catch(()=>null);INST=null;render();return}
+  if(a==='instx'){instFechado=true;try{localStorage.setItem('rp-inst','x')}catch(x){}render();return}
   if(a==='rota'||a==='pedidos'){S.tela=a;render();window.scrollTo(0,0);if(a==='pedidos')carregar(true);return}
   if(a==='zoom'){S.zoom=true;render();return}
   if(a==='fechar'){S.zoom=false;render();return}
