@@ -1,7 +1,7 @@
 // Minha Rota: permite instalar o app e abre mesmo com internet fraca.
 // Páginas sempre buscam a versão nova primeiro; dados (Supabase) nunca são guardados.
-const CACHE = 'minha-rota-v1';
-const BASE = ['./index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
+const CACHE = 'minha-rota-v2';
+const BASE = ['./index.html', './manifest.webmanifest'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(BASE)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
