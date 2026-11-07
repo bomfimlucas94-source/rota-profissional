@@ -103,6 +103,14 @@ details.pl li i{font-style:normal;font-weight:800;color:var(--wine)}details.pl l
 .ena{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:4px 14px 12px}
 .ena small{font-size:11.5px;color:var(--muted);flex:1;min-width:160px}
 .sec{margin:10px 0 0;font-size:13.5px;color:var(--wine)}
+.tw{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:auto;max-height:70vh}
+table.rel{border-collapse:collapse;width:100%;font-size:12.5px;min-width:1100px}
+table.rel th{position:sticky;top:0;background:var(--off);text-align:left;font-size:11.5px;color:var(--muted);font-weight:700;padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.rel td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+table.rel td small{color:var(--muted)}
+table.rel td.n{white-space:nowrap}
+table.rel tr:last-child td{border-bottom:0}
+.dica{font-size:12px;color:var(--muted);line-height:1.5;margin:0}
 </style>
 </head>
 <body>
@@ -187,6 +195,34 @@ async function enviarRota(k,lote){const r=(E.sr||[]).find(x=>chave(x)===k);if(!r
  const res=await rpc('eq_publicar_rota',{p_token:S.token,p_data:E.data,p_placa:k,p_motorista:r.motorista||'',p_profissional_id:pid,p_pacientes:pacOf(r),p_sr_route_id:r.route_id,p_origem:'simpliroute'});
  if(!res.ok){if(res.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');throw new Error(res.erro||'Não foi possível enviar.')}
  if(!lote)await carregarEnv(false,true)}
+
+/* ===== Relatório das mudanças ===== */
+const R={de:hojeSP().slice(0,8)+'01',ate:hojeSP(7),itens:null,busy:false,err:'',f:'feitas',teste:false};
+const RF=[['feitas','Mudanças feitas',x=>x.status==='aprovada'||x.status==='aplicada'],['aplicada','Aplicadas no SimpliRoute',x=>x.status==='aplicada'],['aprovada','Aprovadas (falta aplicar)',x=>x.status==='aprovada'],['recusada','Recusadas',x=>x.status==='recusada'],['pendente','Pendentes',x=>x.status==='pendente'],['','Todas',()=>true]];
+const dtSP=t=>t?new Date(t).toLocaleString('sv-SE',{timeZone:'America/Sao_Paulo'}).slice(0,16):'';
+const brD=k=>k?k.slice(8,10)+'/'+k.slice(5,7)+'/'+k.slice(0,4):'';
+const brDT=t=>t?new Date(t).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
+async function carregarRel(){if(!S.token)return;R.busy=true;R.err='';render();
+ try{const r=await rpc('eq_relatorio',{p_token:S.token,p_de:R.de,p_ate:R.ate});if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');throw new Error(r.erro)}R.itens=r.itens||[]}catch(e){R.err=e.message}
+ R.busy=false;render()}
+const relLista=()=>{const f=RF.find(x=>x[0]===R.f)[2];return(R.itens||[]).filter(x=>(R.teste||!x.teste)&&f(x))};
+function renderRel(){
+ let h=`<div class="bar"><label class="ck">De <input type="date" id="rde" value="${R.de}"></label><label class="ck">Até <input type="date" id="rate" value="${R.ate}"></label><button class="btn wine sm" type="button" data-a="rger"${R.busy?' disabled':''}>${R.busy?'Gerando…':'Gerar relatório'}</button><label class="ck"><input type="checkbox" id="rtst"${R.teste?' checked':''}> Incluir pedidos de teste</label><span class="sp"></span>${R.itens&&relLista().length?`<button class="btn sun sm" type="button" data-a="rcsv">Baixar para o Lists (CSV)</button>`:''}</div>`;
+ if(R.err)h+=`<p class="err" role="alert">${esc(R.err)}</p>`;
+ if(R.itens===null)return h+`<div class="empty">${R.busy?'Gerando o relatório…':'Escolha o período e clique em <b>Gerar relatório</b>.'}</div>`;
+ const base=R.itens.filter(x=>R.teste||!x.teste),cnt=st=>base.filter(x=>x.status===st).length;
+ const resp=base.filter(x=>x.respondido_em&&x.criado_em).map(x=>(new Date(x.respondido_em)-new Date(x.criado_em))/6e4);const med=resp.length?Math.round(resp.reduce((a,b)=>a+b,0)/resp.length):null;
+ h+=`<div class="resumo"><div class="kpi"><b>${base.length}</b><span>pedidos no período</span></div><div class="kpi"><b>${cnt('aprovada')+cnt('aplicada')}</b><span>mudanças feitas</span></div><div class="kpi"><b>${cnt('recusada')}</b><span>recusadas</span></div><div class="kpi"><b>${med===null?'—':med<60?med+' min':Math.floor(med/60)+'h'+String(med%60).padStart(2,'0')}</b><span>tempo médio de resposta</span></div></div>`;
+ h+=`<div class="bar"><div class="chips" role="group" aria-label="Filtrar situação">${RF.map(f=>{const n=base.filter(f[2]).length;return`<button type="button" data-rf="${f[0]}" class="${R.f===f[0]?'on':''}">${f[1]}<b>${n}</b></button>`}).join('')}</div></div>`;
+ const L=relLista();
+ if(!L.length)return h+'<div class="empty">Nenhum pedido com esse filtro no período.</div>';
+ h+=`<div class="tw"><table class="rel"><thead><tr><th>Data da rota</th><th>Veículo</th><th>Profissional</th><th>Paciente</th><th>Necessidade</th><th>Horário</th><th>Motivo</th><th>Situação</th><th>Resposta</th><th>Respondido por</th><th>Respondido em</th></tr></thead><tbody>${L.map(x=>`<tr><td class="n">${brD(x.data_rota)}</td><td>${esc(x.placa||'')}${x.motorista?`<br><small>${esc(x.motorista)}</small>`:''}</td><td>${esc(x.profissional||'')}${x.especialidade?`<br><small>${esc(x.especialidade)}</small>`:''}</td><td>${x.paciente_ordem?esc(x.paciente_ordem)+'. ':''}${esc(x.paciente||'')}${x.bairro?`<br><small>${esc(x.bairro)}</small>`:''}${x.teste?' <em class="tt">teste</em>':''}</td><td>${esc(TIPOS[x.tipo]||x.tipo)}</td><td class="n">${esc(jan(x))}</td><td>${esc(x.motivo||'')}</td><td class="n"><span class="bd ${x.status}">${STN[x.status]||x.status}</span></td><td>${esc(x.resposta||'')}</td><td>${esc(x.respondido_por||'')}</td><td class="n">${brDT(x.respondido_em)}</td></tr>`).join('')}</tbody></table></div>
+ <p class="dica">Para levar ao Microsoft Lists: baixe o CSV e, no Lists, use <b>Nova lista › Do CSV</b>. A coluna <b>ID do pedido</b> não se repete, o que ajuda a não duplicar linhas quando você importar os próximos períodos.</p>`;
+ return h}
+function baixarCSV(){const L=relLista();const cols=[['ID do pedido',x=>x.id],['Data da rota',x=>x.data_rota],['Veiculo',x=>x.placa],['Motorista',x=>x.motorista],['Profissional',x=>x.profissional],['Especialidade',x=>x.especialidade],['Ordem na rota',x=>x.paciente_ordem],['Paciente',x=>x.paciente],['Bairro',x=>x.bairro],['Necessidade',x=>TIPOS[x.tipo]||x.tipo],['Horario de',x=>x.horario_de],['Horario ate',x=>x.horario_ate],['Motivo',x=>x.motivo],['Situacao',x=>STN[x.status]||x.status],['Resposta',x=>x.resposta],['Respondido por',x=>x.respondido_por],['Pedido em',x=>dtSP(x.criado_em)],['Respondido em',x=>dtSP(x.respondido_em)],['Teste',x=>x.teste?'Sim':'Nao']];
+ const q=v=>{const t=String(v==null?'':v).replace(/\r?\n/g,' ');return /[",;]/.test(t)?'"'+t.replace(/"/g,'""')+'"':t};
+ const csv='﻿'+[cols.map(c=>q(c[0])).join(','),...L.map(x=>cols.map(c=>q(c[1](x))).join(','))].join('\r\n');
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='mudancas-rotas_'+R.de+'_a_'+R.ate+'.csv';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
 function render(){
  const app=$('#app');
  if(!S.token){app.innerHTML=`<section class="login"><div class="lbox"><div class="logo" aria-label="Solar"><span>S</span><i></i><span>L</span><span>A</span><span>R</span></div>
@@ -196,8 +232,9 @@ function render(){
  const esps=[...new Set(all.map(r=>r.especialidade).filter(Boolean))].sort(),dias=[...new Set(all.map(r=>r.data_rota))].sort();
  const L=all.filter(r=>(!S.f.st||r.status===S.f.st)&&(!S.f.esp||r.especialidade===S.f.esp)&&(!S.f.dia||r.data_rota===S.f.dia));
  const npend=cnt('pendente');
- let h=`<header class="top"><div class="topin"><div><h2>Central de Solicitações</h2><small>Logística · Solar Cuidados</small></div><nav class="tabs" aria-label="Seções"><button type="button" data-tab="sol" class="${S.tab==='sol'?'on':''}">Solicitações${npend?`<b>${npend}</b>`:''}</button><button type="button" data-tab="env" class="${S.tab==='env'?'on':''}">Envio de rotas</button></nav><span class="sp"></span><span class="who">${esc(S.nome)}</span><button class="out" type="button" data-a="sair">Sair</button></div></header><main>`;
+ let h=`<header class="top"><div class="topin"><div><h2>Central de Solicitações</h2><small>Logística · Solar Cuidados</small></div><nav class="tabs" aria-label="Seções"><button type="button" data-tab="sol" class="${S.tab==='sol'?'on':''}">Solicitações${npend?`<b>${npend}</b>`:''}</button><button type="button" data-tab="env" class="${S.tab==='env'?'on':''}">Envio de rotas</button><button type="button" data-tab="rel" class="${S.tab==='rel'?'on':''}">Relatório</button></nav><span class="sp"></span><span class="who">${esc(S.nome)}</span><button class="out" type="button" data-a="sair">Sair</button></div></header><main>`;
  if(S.tab==='env'){app.innerHTML=h+renderEnv()+'</main>';return}
+ if(S.tab==='rel'){app.innerHTML=h+renderRel()+'</main>';return}
  h+=`<div class="bar"><div class="chips" role="group" aria-label="Filtrar por situação">${['pendente','aprovada','recusada','aplicada'].map(st=>`<button type="button" data-st="${st}" class="${S.f.st===st?'on':''}">${STN[st].replace(' no SimpliRoute','')}<b>${cnt(st)}</b></button>`).join('')}<button type="button" data-st="" class="${!S.f.st?'on':''}">Todas<b>${all.length}</b></button></div>
   <select id="fesp" aria-label="Equipe"><option value="">Todas as equipes</option>${esps.map(e=>`<option${S.f.esp===e?' selected':''}>${esc(e)}</option>`).join('')}</select>
   <select id="fdia" aria-label="Dia da rota"><option value="">Todos os dias</option>${dias.map(d=>`<option value="${d}"${S.f.dia===d?' selected':''}>${dm(d)}</option>`).join('')}</select>
@@ -227,12 +264,15 @@ document.addEventListener('submit',async e=>{if(e.target.id!=='flog')return;e.pr
  S.busy=true;S.err='';render();try{const r=await rpc('eq_login',{p_celular:cel,p_pin:pin});S.busy=false;if(!r.ok){S.err=r.erro;render();$('#cel').value=cel;return}
   S.token=r.token;S.nome=r.nome;try{localStorage.setItem('lg-token',r.token);localStorage.setItem('lg-nome',r.nome)}catch(x){}render();carregar()}catch(x){S.busy=false;S.err=x.message;render()}});
 document.addEventListener('input',e=>{const t=e.target.closest('[data-rs]');if(t)S.draft[t.dataset.rs]=t.value});
-document.addEventListener('change',e=>{if(e.target.id==='edata'){E.data=e.target.value||hojeSP();E.sr=null;E.db=null;carregarEnv(true);return}if(e.target.id==='eini'){E.ini=e.target.checked;try{localStorage.setItem('lg-ini',E.ini?'1':'0')}catch(x){}render();return}if(e.target.dataset&&e.target.dataset.pick!==undefined){E.pick[e.target.dataset.pick]=e.target.value;render();return}if(e.target.id==='fesp'){S.f.esp=e.target.value;render()}if(e.target.id==='fdia'){S.f.dia=e.target.value;render()}});
+document.addEventListener('change',e=>{if(e.target.id==='rde'){R.de=e.target.value;return}if(e.target.id==='rate'){R.ate=e.target.value;return}if(e.target.id==='rtst'){R.teste=e.target.checked;render();return}if(e.target.id==='edata'){E.data=e.target.value||hojeSP();E.sr=null;E.db=null;carregarEnv(true);return}if(e.target.id==='eini'){E.ini=e.target.checked;try{localStorage.setItem('lg-ini',E.ini?'1':'0')}catch(x){}render();return}if(e.target.dataset&&e.target.dataset.pick!==undefined){E.pick[e.target.dataset.pick]=e.target.value;render();return}if(e.target.id==='fesp'){S.f.esp=e.target.value;render()}if(e.target.id==='fdia'){S.f.dia=e.target.value;render()}});
 document.addEventListener('click',async e=>{const b=e.target.closest('button');if(!b)return;const d=b.dataset;
  try{
   if(d.a==='sair'){sair();return}
   if(d.a==='atualizar'){await carregar();toast('Atualizado.');return}
-  if(d.tab){S.tab=d.tab;try{localStorage.setItem('lg-tab',d.tab)}catch(x){}render();if(d.tab==='env'&&E.sr===null)carregarEnv(true);return}
+  if(d.tab){S.tab=d.tab;try{localStorage.setItem('lg-tab',d.tab)}catch(x){}render();if(d.tab==='env'&&E.sr===null)carregarEnv(true);if(d.tab==='rel'&&R.itens===null)carregarRel();return}
+  if(d.a==='rger'){await carregarRel();return}
+  if(d.a==='rcsv'){baixarCSV();toast('CSV baixado.');return}
+  if(d.rf!==undefined){R.f=d.rf;render();return}
   if(d.a==='puxar'){await carregarEnv(true);if(!E.err)toast('Rotas do SimpliRoute atualizadas.');return}
   if(d.dia!==undefined){E.data=hojeSP(+d.dia);E.sr=null;E.db=null;await carregarEnv(true);return}
   if(d.ef!==undefined){E.f=d.ef;render();return}
@@ -248,7 +288,7 @@ document.addEventListener('click',async e=>{const b=e.target.closest('button');i
  }catch(x){b.disabled=false;toast(x.message)}});
 setInterval(()=>{if(S.token&&!document.hidden&&!document.querySelector('[data-rs]:focus,select:focus')){carregar(true);if(S.tab==='env'&&E.sr!==null&&!E.busy)carregarEnv(false,true)}},30000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.token)carregar(true)});
-render();if(S.token){carregar();if(S.tab==='env')carregarEnv(true)}
+render();if(S.token){carregar();if(S.tab==='env')carregarEnv(true);if(S.tab==='rel')carregarRel()}
 </script>
 </body>
 </html>

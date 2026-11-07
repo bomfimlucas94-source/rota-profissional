@@ -115,7 +115,7 @@ nav.tabs button.on{color:var(--wine);font-weight:800;box-shadow:inset 0 3px 0 va
 <div class="wrap" id="app"></div>
 <script>
 const SB='https://sizbevhqreaccxrlimup.supabase.co',KEY='sb_publishable_sOPBmFvZMrGj3JvHzxIyYQ_4LsvUbSG';
-const TIPOS={horario_fixo:'Atender em horário fixo',nao_antes:'Não atender antes de',trocar_ordem:'Trocar a ordem do atendimento',nao_atender:'Paciente não será atendido',observacao:'Observação para o motorista'};
+const TIPOS={horario_fixo:'Atender em horário fixo',nao_antes:'Não atender antes de',nao_atender:'Paciente não será atendido',observacao:'Observação para o motorista'};
 const ST={pendente:['Aguardando','pend'],aprovada:['OK','ok'],aplicada:['OK','ok'],recusada:['Não foi possível','no']};
 const S={token:null,nome:'',rotas:[],dia:null,tela:'rota',sel:null,tipo:'horario_fixo',busy:false,err:'',zoom:false};
 try{S.token=localStorage.getItem('rp-token');S.nome=localStorage.getItem('rp-nome')||''}catch(e){}
@@ -207,7 +207,7 @@ function render(){
   }else{
     if(!ro.pedidos.length)h+='<p class="empty">Você ainda não fez pedidos para esta rota.</p>';
     ro.pedidos.forEach(q=>{const st=ST[q.status]||[q.status,'pend'];const jan=q.tipo==='horario_fixo'?' · '+(q.de||'?')+' às '+(q.ate||'?'):q.tipo==='nao_antes'?' · a partir de '+(q.de||'?'):'';
-      h+=`<article class="ped"><div class="h"><b>${esc(TIPOS[q.tipo]||q.tipo)}</b><span class="chip ${st[1]}" style="margin:0">${st[0]}</span></div>
+      h+=`<article class="ped"><div class="h"><b>${esc(TIPOS[q.tipo]||(q.tipo==='trocar_ordem'?'Trocar a ordem do atendimento':q.tipo))}</b><span class="chip ${st[1]}" style="margin:0">${st[0]}</span></div>
        <span style="font-size:13px">${esc(q.ordem)}. ${esc(q.paciente)}${esc(jan)}</span>
        <span class="m">${q.motivo?'“'+esc(q.motivo)+'” · ':''}enviado às ${hm(q.criado_em)}</span>
        ${q.status!=='pendente'?`<div class="resp ${st[1]}"><b>${st[1]==='ok'?'OK da logística':'Resposta da logística'}</b>${q.resposta?`<span>${esc(q.resposta)}</span>`:''}</div>`:''}</article>`});
