@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#5f0040">
+<meta name="robots" content="noindex,nofollow">
+<title>Central de Solicitações · Logística Solar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--wine:#5f0040;--wine-d:#3a0026;--sun:#fbb040;--peach:#f2d1a0;--warm:#d7d2cb;--bg:#f7f5f1;--surface:#fff;--ink:#2b0a1f;--muted:#6d5d64;--line:#e4ddd6;--off:#f3efea;--ok:#1d6b3a;--ok-bg:#dff3e5;--pend:#7a4300;--pend-bg:#fff0d6;--bad:#8f1d2b;--bad-bg:#fbe2e5}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Montserrat,Arial,sans-serif;-webkit-text-size-adjust:100%}
+button,input,textarea,select{font:inherit}
+button{cursor:pointer}
+button:disabled{opacity:.5;cursor:default}
+.logo{display:flex;align-items:center;gap:12px;font-size:26px;font-weight:500;letter-spacing:5px}
+.logo i{width:19px;height:19px;border-radius:50%;background:var(--sun);display:inline-block}
+.login{min-height:100vh;background:var(--wine);color:#fff;display:flex;align-items:center;justify-content:center;padding:24px}
+.lbox{width:100%;max-width:380px;display:flex;flex-direction:column;gap:22px}
+.lbox h1{margin:24px 0 4px;font-size:24px;font-weight:800;line-height:1.2}
+.lbox p{margin:0;color:var(--peach);font-size:14px;line-height:1.5}
+.lbox form{display:flex;flex-direction:column;gap:12px}
+.lbox label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600}
+.lbox input{font-size:17px;padding:13px;border-radius:12px;border:0;color:var(--ink)}
+.btn{min-height:46px;border:0;border-radius:12px;font-size:14.5px;font-weight:800;padding:0 16px}
+.btn.sun{background:var(--sun);color:var(--wine-d)}
+.btn.wine{background:var(--wine);color:#fff}
+.btn.ghost{background:#fff;border:1px solid var(--line);color:var(--ink);font-weight:700}
+.btn.sm{min-height:36px;font-size:12.5px;padding:0 12px;border-radius:9px}
+.err{background:var(--bad-bg);color:var(--bad);border-radius:10px;padding:10px 12px;font-size:13.5px;font-weight:600;margin:0}
+header.top{background:var(--wine);color:#fff;border-bottom:5px solid var(--sun);position:sticky;top:0;z-index:5}
+.topin{max-width:1200px;margin:0 auto;padding:12px 16px;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center}
+.topin h2{margin:0;font-size:18px;font-weight:800}
+.topin small{display:block;color:var(--peach);font-size:12px;font-weight:600}
+.topin .sp{flex:1}
+.topin .who{font-size:12.5px;color:var(--peach)}
+.out{background:rgba(255,255,255,.14);color:#fff;border:0;border-radius:999px;font-size:12px;font-weight:700;padding:7px 12px}
+main{max-width:1200px;margin:0 auto;padding:14px 16px 40px;display:flex;flex-direction:column;gap:12px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:999px;padding:6px 12px;font-size:12.5px;font-weight:700;min-height:36px}
+.chips button b{font-size:11px;background:var(--off);border-radius:999px;padding:1px 7px}
+.chips button.on{background:var(--wine);border-color:var(--wine);color:#fff}.chips button.on b{background:rgba(255,255,255,.2);color:#fff}
+.bar select{padding:7px 9px;border:1px solid var(--line);border-radius:9px;background:#fff;font-size:12.5px;min-height:36px}
+.bar .sp{flex:1}
+.upd{font-size:11.5px;color:var(--muted)}
+.day{margin:8px 0 0;font-size:14px;color:var(--wine);display:flex;align-items:center;gap:8px}
+.day span{font-size:11px;background:var(--sun);color:var(--wine-d);border-radius:999px;padding:1px 8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:10px;align-items:start}
+@media (max-width:520px){.grid{grid-template-columns:1fr}}
+.rt{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--sun);border-radius:14px;overflow:hidden}
+.rt.ok{border-left-color:#2f8f4e}
+.rth{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:12px 14px;width:100%}
+.rth:focus-visible{outline:2px solid var(--sun);outline-offset:-2px}
+.rth .p{display:flex;flex-direction:column;min-width:0}.rth .p b{font-size:14px}.rth .p small{font-size:11.5px;color:var(--muted)}
+.rth .c{font-size:12.5px;color:var(--muted)}.rth .c code{font-weight:700;color:var(--wine)}
+.rth .r{margin-left:auto;display:flex;align-items:center;gap:8px}.rth .r small{font-size:11.5px;color:var(--muted)}
+.bd{font-size:11px;font-weight:700;border-radius:999px;padding:2px 9px;white-space:nowrap}
+.bd.pendente{background:var(--pend-bg);color:var(--pend)}.bd.aprovada{background:var(--ok-bg);color:var(--ok)}.bd.recusada{background:var(--bad-bg);color:var(--bad)}.bd.aplicada{background:#f1dceb;color:var(--wine)}
+ol.ls{list-style:none;margin:0;padding:0 14px 8px}
+ol.ls li{border-top:1px solid var(--line);padding:10px 0;display:flex;flex-direction:column;gap:5px}
+.lh{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.tp{font-weight:800;font-size:13px}.jn{font-size:12px;font-weight:700;background:var(--peach);color:var(--wine-d);border-radius:6px;padding:1px 7px}
+.lh .bd{margin-left:auto}
+.pc{font-size:13.5px}.pc small{color:var(--muted);font-size:11.5px}
+.mo{margin:0;font-size:13px;line-height:1.45}
+.act{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.act input{flex:1;min-width:180px;font-size:13px;border:1px solid var(--line);border-radius:9px;padding:8px 10px;background:var(--off)}
+.resp{font-size:12.5px;background:var(--off);border-radius:9px;padding:8px 10px;display:flex;flex-direction:column;gap:4px}
+.resp small{color:var(--muted)}
+.resp .act{margin-top:2px}
+.all{padding:0 14px 12px;display:flex;justify-content:flex-end}
+.empty{background:var(--surface);border:1px dashed var(--line);border-radius:14px;padding:30px;text-align:center;color:var(--muted);line-height:1.6}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-size:13.5px;font-weight:600;z-index:30;max-width:90vw}
+.tt{font-size:10.5px;background:var(--off);color:var(--muted);border-radius:6px;padding:1px 6px;font-style:normal}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const SB='https://sizbevhqreaccxrlimup.supabase.co',KEY='sb_publishable_sOPBmFvZMrGj3JvHzxIyYQ_4LsvUbSG';
+const TIPOS={horario_fixo:'Horário fixo',nao_antes:'Não atender antes de',trocar_ordem:'Trocar a ordem',nao_atender:'Paciente não será atendido',observacao:'Observação para o motorista'};
+const STN={pendente:'Pendente',aprovada:'Aprovada',recusada:'Recusada',aplicada:'Aplicada no SimpliRoute'};
+const S={token:null,nome:'',itens:null,err:'',busy:false,f:{st:'',esp:'',dia:''},open:{},draft:{},at:0};
+try{S.token=localStorage.getItem('lg-token');S.nome=localStorage.getItem('lg-nome')||''}catch(e){}
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function rpc(fn,args){const r=await fetch(SB+'/rest/v1/rpc/'+fn,{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify(args)});if(!r.ok)throw new Error('Falha de conexão ('+r.status+'). Tente de novo.');return r.json()}
+function toast(t){const d=document.createElement('div');d.className='toast';d.setAttribute('role','status');d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),3200)}
+const dm=k=>k.slice(8,10)+'/'+k.slice(5,7);
+const dExt=k=>{const s=new Date(k+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'long'});return s[0].toUpperCase()+s.slice(1)};
+const hm=t=>t?new Date(t).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
+const jan=r=>r.tipo==='horario_fixo'?(r.horario_de||'?')+' – '+(r.horario_ate||'?'):r.tipo==='nao_antes'?'a partir de '+(r.horario_de||'?'):'';
+function sair(msg){try{if(S.token)rpc('eq_sair',{p_token:S.token}).catch(()=>{});localStorage.removeItem('lg-token')}catch(e){}S.token=null;S.itens=null;S.err=msg||'';render()}
+async function carregar(sil){if(!S.token)return;
+ try{const r=await rpc('eq_solicitacoes',{p_token:S.token});if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');throw new Error(r.erro)}
+  S.nome=r.nome;S.itens=r.itens||[];S.err='';S.at=Date.now();render()}catch(e){if(!sil){S.err=e.message;render()}}}
+function render(){
+ const app=$('#app');
+ if(!S.token){app.innerHTML=`<section class="login"><div class="lbox"><div class="logo" aria-label="Solar"><span>S</span><i></i><span>L</span><span>A</span><span>R</span></div>
+  <div><h1>Central de Solicitações</h1><p>Área da logística para responder os pedidos dos profissionais de saúde.</p></div>
+  <form id="flog" novalidate>${S.err?`<p class="err" role="alert">${esc(S.err)}</p>`:''}<label>Celular cadastrado<input id="cel" type="tel" inputmode="tel" autocomplete="tel" placeholder="(21) 9 0000-0000"></label><label>PIN<input id="pin" type="password" inputmode="numeric" autocomplete="current-password" maxlength="6" placeholder="4 a 6 números"></label><button class="btn sun" type="submit"${S.busy?' disabled':''}>${S.busy?'Entrando…':'Entrar'}</button></form></div></section>`;return}
+ const all=S.itens||[];const cnt=st=>all.filter(r=>r.status===st).length;
+ const esps=[...new Set(all.map(r=>r.especialidade).filter(Boolean))].sort(),dias=[...new Set(all.map(r=>r.data_rota))].sort();
+ const L=all.filter(r=>(!S.f.st||r.status===S.f.st)&&(!S.f.esp||r.especialidade===S.f.esp)&&(!S.f.dia||r.data_rota===S.f.dia));
+ let h=`<header class="top"><div class="topin"><div><h2>Central de Solicitações</h2><small>Logística · Solar Cuidados</small></div><span class="sp"></span><span class="who">${esc(S.nome)}</span><button class="out" type="button" data-a="sair">Sair</button></div></header><main>
+ <div class="bar"><div class="chips" role="group" aria-label="Filtrar por situação">${['pendente','aprovada','recusada','aplicada'].map(st=>`<button type="button" data-st="${st}" class="${S.f.st===st?'on':''}">${STN[st].replace(' no SimpliRoute','')}<b>${cnt(st)}</b></button>`).join('')}<button type="button" data-st="" class="${!S.f.st?'on':''}">Todas<b>${all.length}</b></button></div>
+  <select id="fesp" aria-label="Equipe"><option value="">Todas as equipes</option>${esps.map(e=>`<option${S.f.esp===e?' selected':''}>${esc(e)}</option>`).join('')}</select>
+  <select id="fdia" aria-label="Dia da rota"><option value="">Todos os dias</option>${dias.map(d=>`<option value="${d}"${S.f.dia===d?' selected':''}>${dm(d)}</option>`).join('')}</select>
+  <span class="sp"></span><span class="upd">${S.at?'Atualizado às '+new Date(S.at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+' · a cada 30 s':''}</span><button class="btn ghost sm" type="button" data-a="atualizar">Atualizar</button></div>`;
+ if(S.err)h+=`<p class="err" role="alert">${esc(S.err)}</p>`;
+ if(S.itens===null)h+='<div class="empty">Carregando…</div>';
+ else if(!L.length)h+='<div class="empty">Nenhuma solicitação com esses filtros.</div>';
+ else{const byD={};L.forEach(r=>{const rk=(r.placa||'')+'|'+r.profissional;((byD[r.data_rota]=byD[r.data_rota]||{})[rk]=byD[r.data_rota][rk]||[]).push(r)});
+  Object.keys(byD).sort().forEach(d=>{const rts=byD[d];const ks=Object.keys(rts).sort((a,b)=>rts[b].filter(r=>r.status==='pendente').length-rts[a].filter(r=>r.status==='pendente').length||a.localeCompare(b));
+   h+=`<h3 class="day">Rotas de ${esc(dExt(d))}, ${dm(d)}<span>${ks.length} ${ks.length===1?'rota':'rotas'}</span></h3><div class="grid">`;
+   ks.forEach(rk=>{const rs=rts[rk].slice().sort((a,b)=>(a.status==='pendente'?0:1)-(b.status==='pendente'?0:1)||String(a.criado_em).localeCompare(String(b.criado_em)));const r0=rs[0];
+    const tot=all.filter(x=>x.data_rota===d&&(x.placa||'')+'|'+x.profissional===rk),np=tot.filter(x=>x.status==='pendente').length,id='r'+d+rk.replace(/[^A-Za-z0-9]/g,'');
+    const ab=S.open[id]!==undefined?S.open[id]:np>0;
+    h+=`<article class="rt${np?'':' ok'}"><button type="button" class="rth" data-tg="${id}" aria-expanded="${ab}"><span class="p"><b>${esc(r0.profissional)}</b>${r0.especialidade?`<small>${esc(r0.especialidade)}</small>`:''}</span><span class="c">${r0.placa?`<code>${esc(r0.placa)}</code>`:''}${r0.motorista?' · '+esc(r0.motorista):''}${r0.rota_confirmada?' · rota confirmada '+esc(r0.rota_confirmada):''}</span><span class="r">${np?`<span class="bd pendente">${np} ${np===1?'pendente':'pendentes'}</span>`:'<span class="bd aprovada">Tudo respondido</span>'}<small>${tot.length} ${tot.length===1?'pedido':'pedidos'}</small><span aria-hidden="true">${ab?'▾':'▸'}</span></span></button>`;
+    if(ab){h+='<ol class="ls">';rs.forEach(r=>{const pend=r.status==='pendente',j=jan(r);
+     h+=`<li><div class="lh"><span class="tp">${esc(TIPOS[r.tipo]||r.tipo)}</span>${j?`<span class="jn">${esc(j)}</span>`:''}<span class="bd ${r.status}">${STN[r.status]||r.status}</span></div>
+      <div class="pc">${r.paciente_ordem?esc(r.paciente_ordem)+'. ':''}<b>${esc(r.paciente)}</b>${r.bairro?' · '+esc(r.bairro):''}${r.teste?' <em class="tt">teste</em>':''}<small> · pedido ${hm(r.criado_em)}</small></div>
+      ${r.motivo?`<p class="mo">“${esc(r.motivo)}”</p>`:''}
+      ${pend?`<div class="act"><input type="text" data-rs="${r.id}" maxlength="500" placeholder="Resposta ao profissional (obrigatória para recusar)" value="${esc(S.draft[r.id]||'')}" aria-label="Resposta para ${esc(r.paciente)}"><button class="btn wine sm" type="button" data-ok="${r.id}">Aprovar</button><button class="btn ghost sm" type="button" data-no="${r.id}">Recusar</button></div>`
+       :`<div class="resp">${r.resposta?`<span><b>Resposta:</b> ${esc(r.resposta)}</span>`:'<span>Sem resposta escrita.</span>'}<small>${esc(r.respondido_por||'')} · ${hm(r.respondido_em)}</small><div class="act">${r.status==='aprovada'?`<button class="btn ghost sm" type="button" data-ap="${r.id}">Marcar como aplicada</button>`:''}${r.status!=='aplicada'?`<button class="btn ghost sm" type="button" data-re="${r.id}">Reabrir</button>`:''}</div></div>`}</li>`});
+     h+='</ol>';const pids=rs.filter(r=>r.status==='pendente').map(r=>r.id);if(pids.length>1)h+=`<div class="all"><button class="btn ghost sm" type="button" data-all="${pids.join(',')}">Aprovar os ${pids.length} pendentes desta rota</button></div>`}
+    h+='</article>'});h+='</div>'})}
+ h+='</main>';app.innerHTML=h}
+async function responder(id,st,resp,lote){const r=await rpc('eq_responder',{p_token:S.token,p_id:+id,p_status:st,p_resposta:resp||''});
+ if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');throw new Error(r.erro||'Não foi possível salvar.')}delete S.draft[id];if(!lote)await carregar(true)}
+document.addEventListener('submit',async e=>{if(e.target.id!=='flog')return;e.preventDefault();const cel=$('#cel').value,pin=$('#pin').value;if(!cel||!pin){S.err='Preencha o celular e o PIN.';render();return}
+ S.busy=true;S.err='';render();try{const r=await rpc('eq_login',{p_celular:cel,p_pin:pin});S.busy=false;if(!r.ok){S.err=r.erro;render();$('#cel').value=cel;return}
+  S.token=r.token;S.nome=r.nome;try{localStorage.setItem('lg-token',r.token);localStorage.setItem('lg-nome',r.nome)}catch(x){}render();carregar()}catch(x){S.busy=false;S.err=x.message;render()}});
+document.addEventListener('input',e=>{const t=e.target.closest('[data-rs]');if(t)S.draft[t.dataset.rs]=t.value});
+document.addEventListener('change',e=>{if(e.target.id==='fesp'){S.f.esp=e.target.value;render()}if(e.target.id==='fdia'){S.f.dia=e.target.value;render()}});
+document.addEventListener('click',async e=>{const b=e.target.closest('button');if(!b)return;const d=b.dataset;
+ try{
+  if(d.a==='sair'){sair();return}
+  if(d.a==='atualizar'){await carregar();toast('Atualizado.');return}
+  if(d.st!==undefined){S.f.st=d.st;render();return}
+  if(d.tg){S.open[d.tg]=b.getAttribute('aria-expanded')!=='true';render();return}
+  if(d.ok){b.disabled=true;await responder(d.ok,'aprovada',S.draft[d.ok]);toast('Aprovada. O profissional já vê no app.');return}
+  if(d.no){if(!(S.draft[d.no]||'').trim()){toast('Para recusar, escreva o motivo na resposta.');const i=document.querySelector(`[data-rs="${d.no}"]`);if(i)i.focus();return}b.disabled=true;await responder(d.no,'recusada',S.draft[d.no]);toast('Recusada. O profissional já vê no app.');return}
+  if(d.ap){b.disabled=true;await responder(d.ap,'aplicada');toast('Marcada como aplicada.');return}
+  if(d.re){b.disabled=true;await responder(d.re,'pendente');toast('Solicitação reaberta.');return}
+  if(d.all){b.disabled=true;const ids=d.all.split(',');for(const id of ids)await responder(id,'aprovada',S.draft[id],true);await carregar(true);toast(ids.length+' pedidos aprovados.');return}
+ }catch(x){b.disabled=false;toast(x.message)}});
+setInterval(()=>{if(S.token&&!document.hidden&&!document.querySelector('[data-rs]:focus'))carregar(true)},30000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.token)carregar(true)});
+render();if(S.token)carregar();
+</script>
+</body>
+</html>
