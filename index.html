@@ -150,11 +150,11 @@ async function carregar(silencioso){
   try{const r=await rpc('app_minhas_rotas',{p_token:S.token});
     if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');throw new Error(r.erro)}
     S.nome=r.nome;S.rotas=r.rotas||[];
-    if(!S.dia||!S.rotas.some(x=>x.data===S.dia)){const h=hoje();const prox=S.rotas.find(x=>x.data>=h)||S.rotas[S.rotas.length-1];S.dia=prox?prox.data:null}
+    if(!S.dia||!S.rotas.some(x=>String(x.id)===String(S.dia))){const h=hoje();const prox=S.rotas.find(x=>x.data>=h)||S.rotas[S.rotas.length-1];S.dia=prox?String(prox.id):null}
     S.err='';render();
   }catch(e){if(!silencioso){S.err=e.message;render()}}
 }
-const rotaAtual=()=>S.rotas.find(x=>x.data===S.dia);
+const rotaAtual=()=>S.rotas.find(x=>String(x.id)===String(S.dia));
 /* instalar como app */
 let INST=null;const instalado=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
 const ehIOS=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
@@ -249,7 +249,7 @@ function render(){
   let h=`<header class="top"><div class="r1"><span class="hi">Olá, ${esc(S.nome)}</span><button class="out" type="button" data-a="sair">Sair</button></div>
    <h2>${S.tela==='pedido'?'Necessidade do paciente':S.tela==='pedidos'?'Meus pedidos':'Minha rota'}</h2>
    ${ro?`<div class="sub">${esc(dExt(ro.data))} · ${/^carro\b/i.test(ro.placa||'')?'':'Carro '}${esc(ro.placa)}${ro.motorista?' · Motorista '+esc(ro.motorista):''}</div>`:''}</header>`;
-  if(S.rotas.length>1&&S.tela!=='pedido')h+=`<div class="days" role="tablist" aria-label="Dias">${S.rotas.map(x=>`<button type="button" role="tab" data-dia="${x.data}" class="${x.data===S.dia?'on':''}" aria-selected="${x.data===S.dia}">${esc(dExt(x.data).split(',')[0].slice(0,3))} ${x.data.slice(8,10)}/${x.data.slice(5,7)}</button>`).join('')}</div>`;
+  if(S.rotas.length>1&&S.tela!=='pedido')h+=`<div class="days" role="tablist" aria-label="Dias">${S.rotas.map(x=>{const on=String(x.id)===String(S.dia),dup=S.rotas.filter(y=>y.data===x.data).length>1;return `<button type="button" role="tab" data-dia="${x.id}" class="${on?'on':''}" aria-selected="${on}">${esc(dExt(x.data).split(',')[0].slice(0,3))} ${x.data.slice(8,10)}/${x.data.slice(5,7)}${dup?' · '+esc(x.placa||''):''}</button>`}).join('')}</div>`;
   h+='<main>'+bannerInst();
   if(S.err)h+=`<p class="err" role="alert">${esc(S.err)}</p>`;
   if(!ro){h+=`<p class="empty">Nenhuma rota publicada para você ainda.<br>Quando a logística publicar, ela aparece aqui.</p><button class="btn line" type="button" data-a="atualizar" style="align-self:center">Atualizar</button>`}
