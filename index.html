@@ -131,7 +131,8 @@ const SB='https://sizbevhqreaccxrlimup.supabase.co',KEY='sb_publishable_sOPBmFvZ
 const TIPOS={horario_fixo:'Atender em horário fixo',nao_antes:'Não atender antes de',nao_atender:'Paciente não será atendido',observacao:'Observação para o motorista'};
 const ST={pendente:['Aguardando','pend'],aprovada:['OK','ok'],aplicada:['OK','ok'],recusada:['Não foi possível','no']};
 const S={token:null,nome:'',rotas:[],dia:null,tela:'rota',sel:null,tipo:'horario_fixo',busy:false,err:'',zoom:false};
-try{S.token=localStorage.getItem('rp-token');S.nome=localStorage.getItem('rp-nome')||''}catch(e){}
+try{S.token=localStorage.getItem('rp-token');S.nome=localStorage.getItem('rp-nome')||'';S.trocar=localStorage.getItem('rp-trocar')==='1'}catch(e){}
+let PIN_TMP='';
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 async function rpc(fn,args){
@@ -143,9 +144,9 @@ function toast(t){const d=document.createElement('div');d.className='toast';d.se
 const dExt=k=>{const d=new Date(k+'T12:00:00');const s=d.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'2-digit'});return s[0].toUpperCase()+s.slice(1)};
 const hm=t=>t?new Date(t).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'';
 const hoje=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
-function sair(msg){try{if(S.token)rpc('app_sair',{p_token:S.token}).catch(()=>{});localStorage.removeItem('rp-token')}catch(e){}S.token=null;S.rotas=[];S.err=msg||'';render()}
+function sair(msg){try{if(S.token)rpc('app_sair',{p_token:S.token}).catch(()=>{});localStorage.removeItem('rp-token');localStorage.removeItem('rp-trocar')}catch(e){}S.trocar=false;PIN_TMP='';S.token=null;S.rotas=[];S.err=msg||'';render()}
 async function carregar(silencioso){
-  if(!S.token)return;
+  if(!S.token||S.trocar)return;
   try{const r=await rpc('app_minhas_rotas',{p_token:S.token});
     if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');throw new Error(r.erro)}
     S.nome=r.nome;S.rotas=r.rotas||[];
@@ -231,6 +232,18 @@ function render(){
       <small>Esqueceu o PIN? Fale com a logística.</small></form>${bannerInst()}</section>`;
     return;
   }
+  if(S.trocar){
+    app.innerHTML=`<section class="login"><div class="logo" aria-label="Solar"><span>S</span><i></i><span>L</span><span>A</span><span>R</span></div>
+    <div><p class="apn">Primeiro acesso</p><h1>Crie seu PIN</h1><p>Olá, ${esc(S.nome)}! Por segurança, troque o PIN provisório por um só seu antes de ver a rota.</p></div>
+    <form id="fpin" novalidate>${S.err?`<p class="err" role="alert">${esc(S.err)}</p>`:''}
+      ${PIN_TMP?'':'<label>PIN provisório (o que você recebeu)<input id="pa" type="password" inputmode="numeric" autocomplete="current-password" maxlength="6" required></label>'}
+      <label>Novo PIN<input id="pn" type="password" inputmode="numeric" autocomplete="new-password" maxlength="6" placeholder="4 a 6 números" required></label>
+      <label>Repita o novo PIN<input id="pn2" type="password" inputmode="numeric" autocomplete="new-password" maxlength="6" required></label>
+      <button class="btn sun" type="submit"${S.busy?' disabled':''}>${S.busy?'Salvando…':'Salvar meu PIN'}</button>
+      <small>Não use 1234, números repetidos (1111) ou em sequência (2345).</small>
+      <button class="btn line" type="button" data-a="sair" style="background:transparent;color:#fff;border-color:rgba(255,255,255,.4)">Sair</button></form></section>`;
+    return;
+  }
   const ro=rotaAtual();
   const nPend=ro?ro.pedidos.filter(p=>p.status==='pendente').length:0;
   let h=`<header class="top"><div class="r1"><span class="hi">Olá, ${esc(S.nome)}</span><button class="out" type="button" data-a="sair">Sair</button></div>
@@ -284,9 +297,20 @@ document.addEventListener('submit',async e=>{
     S.busy=true;S.err='';render();
     try{const r=await rpc('app_login',{p_celular:cel,p_pin:pin});
       if(!r.ok){S.err=r.erro;S.busy=false;render();$('#cel').value=cel;return}
-      S.token=r.token;S.nome=r.nome;try{localStorage.setItem('rp-token',r.token);localStorage.setItem('rp-nome',r.nome)}catch(x){}
-      S.busy=false;S.tela='rota';await carregar();
+      S.token=r.token;S.nome=r.nome;S.trocar=!!r.trocar_pin;try{localStorage.setItem('rp-token',r.token);localStorage.setItem('rp-nome',r.nome);if(S.trocar)localStorage.setItem('rp-trocar','1');else localStorage.removeItem('rp-trocar')}catch(x){}
+      S.busy=false;S.tela='rota';if(S.trocar){PIN_TMP=pin;render();return}await carregar();
     }catch(x){S.err=x.message;S.busy=false;render()}
+  }
+  if(e.target.id==='fpin'){
+    const pa=PIN_TMP||($('#pa')?$('#pa').value:''),pn=$('#pn').value,pn2=$('#pn2').value;
+    if(!pa||!pn){S.err='Preencha os campos.';render();return}
+    if(pn!==pn2){S.err='Os dois PINs novos não são iguais.';render();return}
+    S.busy=true;S.err='';render();
+    try{const r=await rpc('app_trocar_pin',{p_token:S.token,p_atual:pa,p_novo:pn});S.busy=false;
+      if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo com o PIN provisório.');S.err=r.erro;render();return}
+      S.trocar=false;PIN_TMP='';try{localStorage.removeItem('rp-trocar')}catch(x){}toast('PIN criado. Use ele nas próximas vezes.');await carregar();
+    }catch(x){S.err=x.message;S.busy=false;render()}
+    return;
   }
   if(e.target.id==='fped'){
     const ro=rotaAtual(),de=$('#de')?$('#de').value:'',ate=$('#ate')?$('#ate').value:'',mot=$('#mot').value.trim();
