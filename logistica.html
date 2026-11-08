@@ -172,16 +172,16 @@ function renderEnv(){
   <label class="ck"><input type="checkbox" id="eini"${E.ini?' checked':''}> Enviar só iniciais dos pacientes</label>
   <span class="sp"></span><span class="upd">${E.srAt?'SimpliRoute lido às '+hh(E.srAt):''}${E.at?' · situação atualizada às '+hh(E.at):''}</span></div>`;
  if(E.err)h+=`<p class="err" role="alert">${esc(E.err)}</p>`;
- if(E.sr===null){h+=`<div class="empty">${E.busy?'Buscando as rotas no SimpliRoute…':'Escolha o dia e clique em <b>Puxar do SimpliRoute</b> para ver as rotas dos profissionais.'}</div>`;return h+manuais([])}
+ if(E.sr===null){h+=`<div class="empty">${E.busy?'Buscando as rotas no SimpliRoute…':'Escolha o dia e clique em <b>Puxar do SimpliRoute</b> para ver as rotas médicas.'}</div>`;return h+manuais([])}
  const L=E.sr.map(r=>{const e=estado(r),pf=e.d&&e.d.profissional_id?E.prof.find(p=>p.id===e.d.profissional_id):null;const auto=achaProf(r);const pid=E.pick[chave(r)]||(auto&&auto.id)||(pf&&pf.id)||'';return{r,e,auto,pid:pid?+pid:'',ped:e.d?+e.d.pendentes:0}});
  const c={tot:L.length,nao:L.filter(x=>x.e.k==='nao').length,env:L.filter(x=>x.e.k==='env').length,vis:L.filter(x=>x.e.k==='vis').length,conf:L.filter(x=>x.e.k==='conf').length,mud:L.filter(x=>x.e.k==='mud').length,sem:L.filter(x=>!x.pid).length,ped:L.filter(x=>x.ped>0).length};
- h+=`<div class="resumo"><div class="kpi"><b>${c.tot}</b><span>rotas de profissionais</span></div><div class="kpi"><b>${c.env+c.vis+c.conf}</b><span>enviadas ao Minha Rota</span></div><div class="kpi"><b>${c.vis+c.conf}</b><span>vistas pelo profissional</span></div><div class="kpi"><b>${c.conf}</b><span>confirmadas</span></div></div>`;
+ h+=`<div class="resumo"><div class="kpi"><b>${c.tot}</b><span>rotas médicas</span></div><div class="kpi"><b>${c.env+c.vis+c.conf}</b><span>enviadas ao Minha Rota</span></div><div class="kpi"><b>${c.vis+c.conf}</b><span>vistas pelo profissional</span></div><div class="kpi"><b>${c.conf}</b><span>confirmadas</span></div></div>`;
  const F=[['','Todas',c.tot],['nao','Não enviadas',c.nao],['mud','Mudaram no SimpliRoute',c.mud],['env','Aguardando ver',c.env],['vis','Vistas',c.vis],['conf','Confirmadas',c.conf],['ped','Com pedido pendente',c.ped],['sem','Sem profissional',c.sem]];
  const prontas=L.filter(x=>x.pid&&(x.e.k==='nao'||x.e.k==='mud'));
  h+=`<div class="bar"><div class="chips" role="group" aria-label="Filtrar rotas">${F.filter(f=>!f[0]||f[2]).map(f=>`<button type="button" data-ef="${f[0]}" class="${E.f===f[0]?'on':''}">${f[1]}<b>${f[2]}</b></button>`).join('')}</div><span class="sp"></span>${prontas.length?`<button class="btn sun sm" type="button" data-a="envtodas"${E.busy?' disabled':''}>Enviar ${prontas.length} ${prontas.length===1?'rota pronta':'rotas prontas'}</button>`:''}</div>`;
- if(E.semRota)h+=`<p class="upd">${E.semRota} ${E.semRota===1?'visita de profissional ainda não está':'visitas de profissionais ainda não estão'} em nenhuma rota no SimpliRoute.</p>`;
+ if(E.semRota)h+=`<p class="upd">${E.semRota} ${E.semRota===1?'visita médica ainda não está':'visitas médicas ainda não estão'} em nenhuma rota no SimpliRoute.</p>`;
  const V=L.filter(x=>!E.f||(E.f==='sem'?!x.pid:E.f==='ped'?x.ped>0:x.e.k===E.f));
- if(!L.length)h+='<div class="empty">Nenhuma rota de profissional encontrada no SimpliRoute para este dia.</div>';
+ if(!L.length)h+='<div class="empty">Nenhuma rota médica encontrada no SimpliRoute para este dia.</div>';
  else if(!V.length)h+='<div class="empty">Nenhuma rota com esse filtro.</div>';
  else{h+='<div class="grid">';V.forEach(x=>{const r=x.r,k=chave(r),d=x.e.d,st=x.e.k,pac=r.visitas;const prof=x.pid?E.prof.find(p=>p.id===x.pid):null;
   const nome=prof?prof.nome:(r.skill||'Profissional não identificado');const ini=pac.find(v=>v.hora&&v.hora!=='00:00');
