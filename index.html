@@ -256,6 +256,7 @@ function render(){
   else if(S.tela==='rota'){
     h+=ro.confirmado_em?`<div class="note ok">Rota confirmada às ${hm(ro.confirmado_em)}.</div>`:ro.atualizado_em?`<div class="note pend">A logística atualizou esta rota às ${hm(ro.atualizado_em)}. Confira de novo e confirme.</div>`:`<div class="note pend">Confira sua rota e indique as necessidades dos pacientes o quanto antes.</div>`;
     if(trkAtivo(ro))h+=trkHtml(ro);
+    else if(ro.motorista&&ro.data>hoje())h+=`<div class="card trk"><div class="trkh"><b>Seu motorista</b><span>${esc(ro.motorista)}</span></div><div class="trki"><small>O acompanhamento do carro aparece aqui no dia da rota (${esc(ro.data.slice(8,10)+'/'+ro.data.slice(5,7))}), com a distância até você e a previsão de chegada.</small></div></div>`;
     const gm=gmaps(ro);
     h+=`<div class="card">${temGeo(ro)?'<div class="mapa" id="mapa" role="img" aria-label="Mapa com os pacientes na ordem da rota"></div>':ro.print?`<button class="print" type="button" data-a="zoom" aria-label="Ampliar o print da rota"><img src="${esc(ro.print)}" alt="Print da rota de ${esc(dExt(ro.data))}"></button>`:'<div class="noprint">Print da rota ainda não enviado</div>'}
       <div class="cardf"><span>${ro.pacientes.length} ${ro.pacientes.length===1?'paciente':'pacientes'}</span>${gm?`<a href="${esc(gm)}" target="_blank" rel="noopener">Abrir trajeto no Google Maps ›</a>`:ro.print?'<button type="button" data-a="zoom">Ampliar print</button>':''}</div></div>
