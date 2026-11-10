@@ -112,6 +112,20 @@ table.rel td small{color:var(--muted)}
 table.rel td.n{white-space:nowrap}
 table.rel tr:last-child td{border-bottom:0}
 .dica{font-size:12px;color:var(--muted);line-height:1.5;margin:0}
+.cad{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.cad h3{margin:0;font-size:15px;color:var(--wine);display:flex;align-items:center;gap:8px}.cad h3 span{font-size:11px;background:var(--off);color:var(--muted);border-radius:999px;padding:2px 9px}
+.cad .sub{margin:0;font-size:12.5px;color:var(--muted);line-height:1.5}
+.cform{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;background:var(--off);border-radius:12px;padding:10px 12px}
+.cform label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700;color:var(--muted)}
+.cform input,.cform select{font-size:14px;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:#fff;min-height:38px}
+.cform .w{min-width:220px}.cform .p{width:110px}
+.clist{display:flex;flex-direction:column}
+.crow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:10px 0;border-top:1px solid var(--line);font-size:13px}
+.crow.off{opacity:.55}.crow .sp{flex:1}.crow b{font-size:13.5px}.crow .cel{color:var(--muted)}
+.crow .act{display:flex;gap:6px;flex-wrap:wrap}
+.crow .cbox{flex-basis:100%;display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;background:var(--off);border-radius:10px;padding:8px 10px}
+.crow .cbox label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700;color:var(--muted)}
+.crow .cbox input{font-size:14px;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:#fff;min-height:36px}
 </style>
 </head>
 <body>
@@ -135,8 +149,8 @@ const dm=k=>k.slice(8,10)+'/'+k.slice(5,7);
 const dExt=k=>{const s=new Date(k+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'long'});return s[0].toUpperCase()+s.slice(1)};
 const hm=t=>t?new Date(t).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
 const jan=r=>r.tipo==='horario_fixo'?(r.horario_de||'?')+' – '+(r.horario_ate||'?'):r.tipo==='nao_antes'?'a partir de '+(r.horario_de||'?'):'';
-function sair(msg){try{if(S.token)rpc('eq_sair',{p_token:S.token}).catch(()=>{});sessionStorage.removeItem('lg-token');sessionStorage.removeItem('lg-nome')}catch(e){}S.token=null;S.itens=null;S.err=msg||'';render()}
-async function carregar(sil){if(!S.token)return;
+function sair(msg){S.trocar=false;PIN_TMP='';try{if(S.token)rpc('eq_sair',{p_token:S.token}).catch(()=>{});sessionStorage.removeItem('lg-token');sessionStorage.removeItem('lg-nome')}catch(e){}S.token=null;S.itens=null;S.err=msg||'';render()}
+async function carregar(sil){if(!S.token||S.trocar)return;
  try{const r=await rpc('eq_solicitacoes',{p_token:S.token});if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');throw new Error(r.erro)}
   S.nome=r.nome;S.itens=r.itens||[];S.err='';S.at=Date.now();render()}catch(e){if(!sil){S.err=e.message;render()}}}
 
@@ -156,7 +170,7 @@ const pacOf=r=>r.visitas.map(v=>({ordem:v.ordem,nome:E.ini?iniciais(v.nome):v.no
 const sig=p=>JSON.stringify((p||[]).map(x=>[x.ordem,x.hora||'',x.lat||0,x.lng||0]));
 const hh=t=>t?new Date(t).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'';
 function estado(r){const d=E.db&&E.db[chave(r)];if(!d)return{k:'nao',d};if(sig(d.pacientes)!==sig(pacOf(r)))return{k:'mud',d};return{k:d.confirmado_em?'conf':d.visto_em?'vis':'env',d}}
-async function carregarEnv(puxar,sil){if(!S.token)return;
+async function carregarEnv(puxar,sil){if(!S.token||S.trocar)return;
  if(puxar){E.busy=true;E.err='';render()}
  try{
   const jobs=[rpc('eq_rotas_dia',{p_token:S.token,p_data:E.data})];
@@ -208,7 +222,7 @@ const RF=[['feitas','Mudanças feitas',x=>x.status==='aprovada'||x.status==='apl
 const dtSP=t=>t?new Date(t).toLocaleString('sv-SE',{timeZone:'America/Sao_Paulo'}).slice(0,16):'';
 const brD=k=>k?k.slice(8,10)+'/'+k.slice(5,7)+'/'+k.slice(0,4):'';
 const brDT=t=>t?new Date(t).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
-async function carregarRel(){if(!S.token)return;R.busy=true;R.err='';render();
+async function carregarRel(){if(!S.token||S.trocar)return;R.busy=true;R.err='';render();
  try{const r=await rpc('eq_relatorio',{p_token:S.token,p_de:R.de,p_ate:R.ate});if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');throw new Error(r.erro)}R.itens=r.itens||[]}catch(e){R.err=e.message}
  R.busy=false;render()}
 const relLista=()=>{const f=RF.find(x=>x[0]===R.f)[2];return(R.itens||[]).filter(x=>(R.teste||!x.teste)&&f(x))};
@@ -229,18 +243,58 @@ function baixarCSV(){const L=relLista();const cols=[['ID do pedido',x=>x.id],['D
  const q=v=>{const t=String(v==null?'':v).replace(/\r?\n/g,' ');return /[",;]/.test(t)?'"'+t.replace(/"/g,'""')+'"':t};
  const csv='﻿'+[cols.map(c=>q(c[0])).join(','),...L.map(x=>cols.map(c=>q(c[1](x))).join(','))].join('\r\n');
  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='mudancas-rotas_'+R.de+'_a_'+R.ate+'.csv';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+
+/* ===== Cadastros (profissionais do Minha Rota e equipe da Central) ===== */
+const C={d:null,busy:false,err:'',ed:null,pin:null};
+const soDig=t=>String(t||'').replace(/\D/g,'');
+const fmtCel=t=>{const d=soDig(t);return d.length===11?'('+d.slice(0,2)+') '+d.slice(2,3)+' '+d.slice(3,7)+'-'+d.slice(7):d.length===10?'('+d.slice(0,2)+') '+d.slice(2,6)+'-'+d.slice(6):t};
+async function carregarCad(sil){if(!S.token)return;if(!sil){C.busy=true;render()}
+ try{const r=await rpc('eq_cadastros',{p_token:S.token});if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');throw new Error(r.erro)}C.d=r;C.err=''}catch(e){C.err=e.message}
+ C.busy=false;render()}
+async function cadRpc(fn,args,ok){const r=await rpc(fn,{p_token:S.token,...args});if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');throw new Error(r.erro||'Não foi possível salvar.')}C.ed=null;C.pin=null;toast(ok);await carregarCad(true)}
+function cadLista(tipo,L){const eu=C.d&&C.d.eu;
+ if(!L.length)return '<p class="sub">Ninguém cadastrado ainda.</p>';
+ return '<div class="clist">'+L.map(p=>{const k=tipo+p.id;
+  let h=`<div class="crow${p.ativo?'':' off'}"><b>${esc(p.nome)}</b><span class="cel">${esc(fmtCel(p.celular))}</span>${p.especialidade?`<span class="cel">${esc(p.especialidade)}</span>`:''}${p.trocar_pin&&p.ativo?'<span class="bd pendente" title="No próximo acesso a pessoa será obrigada a criar um PIN próprio">PIN provisório</span>':''}${p.bloqueado?'<span class="bd recusada">Bloqueado 15 min</span>':''}${!p.ativo?'<span class="bd">Desativado</span>':''}${tipo==='equipe'&&p.id===eu?'<span class="bd aplicada">Você</span>':''}<span class="sp"></span>
+   <span class="act"><button class="btn ghost sm" type="button" data-ced="${k}">Editar</button><button class="btn ghost sm" type="button" data-cpin="${k}">Redefinir PIN</button>${tipo==='equipe'&&p.id===eu?'':`<button class="btn ghost sm" type="button" data-cat="${k}">${p.ativo?'Desativar':'Reativar'}</button>`}</span>`;
+  if(C.ed===k)h+=`<form class="cbox" data-csave="${k}"><label>Nome<input name="nome" value="${esc(p.nome)}" maxlength="80" required></label><label>Celular<input name="cel" value="${esc(fmtCel(p.celular))}" inputmode="tel" required></label><button class="btn wine sm" type="submit">Salvar</button><button class="btn ghost sm" type="button" data-cx>Cancelar</button></form>`;
+  if(C.pin===k)h+=`<form class="cbox" data-cpinok="${k}"><label>PIN provisório<input name="pin" value="1234" inputmode="numeric" maxlength="6" pattern="[0-9]{4,6}" required></label><span class="dica">A pessoa sai de todas as sessões e, ao entrar com esse PIN, é obrigada a criar um PIN próprio.</span><button class="btn wine sm" type="submit">Redefinir</button><button class="btn ghost sm" type="button" data-cx>Cancelar</button></form>`;
+  return h+'</div>'}).join('')+'</div>'}
+function renderCad(){
+ let h='';if(C.err)h+=`<p class="err" role="alert">${esc(C.err)}</p>`;
+ if(!C.d)return h+`<div class="empty">${C.busy?'Carregando cadastros…':'Abrindo…'}</div>`;
+ const P=C.d.profissionais||[],Q=C.d.equipe||[];
+ h+=`<section class="cad"><h3>Profissionais do Minha Rota<span>${P.filter(p=>p.ativo).length} ativos</span></h3><p class="sub">Nesta primeira fase, só a <b>Equipe Médica</b>. Cadastre com o nome igual ao do SimpliRoute para a rota ser reconhecida no Envio de rotas.</p>
+  <form class="cform" id="cnovo-prof"><label>Nome<input class="w" name="nome" maxlength="80" placeholder="Igual ao nome no SimpliRoute" required></label><label>Celular<input name="cel" inputmode="tel" placeholder="(21) 9 0000-0000" required></label><label>Equipe<select name="esp"><option>Equipe Médica</option></select></label><label>PIN provisório<input class="p" name="pin" value="1234" inputmode="numeric" maxlength="6" required></label><button class="btn sun sm" type="submit">Cadastrar</button></form>
+  ${cadLista('prof',P)}</section>
+ <section class="cad"><h3>Equipe da Central<span>${Q.filter(p=>p.ativo).length} ativos</span></h3><p class="sub">Quem está aqui entra nesta Central com celular e PIN e pode responder solicitações, enviar rotas e gerenciar cadastros.</p>
+  <form class="cform" id="cnovo-equipe"><label>Nome<input class="w" name="nome" maxlength="80" required></label><label>Celular<input name="cel" inputmode="tel" placeholder="(21) 9 0000-0000" required></label><label>PIN provisório<input class="p" name="pin" value="1234" inputmode="numeric" maxlength="6" required></label><button class="btn sun sm" type="submit">Cadastrar</button></form>
+  ${cadLista('equipe',Q)}</section>
+ <p class="dica">Todo cadastro novo e todo PIN redefinido é provisório: no primeiro acesso a pessoa é obrigada a criar um PIN próprio (sem 1111, 1234 e parecidos). Após 5 tentativas erradas o acesso fica bloqueado por 15 minutos; redefinir o PIN desbloqueia na hora.</p>`;
+ return h}
+const cadAchar=k=>{const tipo=k.startsWith('prof')?'prof':'equipe',id=+k.replace(/^\D+/,'');const L=tipo==='prof'?C.d.profissionais:C.d.equipe;return {tipo,id,p:L.find(x=>x.id===id)}};
+document.addEventListener('submit',async e=>{const f=e.target;
+ if(f.id==='cnovo-prof'||f.id==='cnovo-equipe'){e.preventDefault();const tipo=f.id==='cnovo-prof'?'prof':'equipe',d=new FormData(f);const bt=f.querySelector('button');bt.disabled=true;
+  try{await cadRpc('eq_cad_salvar',{p_tipo:tipo,p_id:null,p_nome:d.get('nome'),p_celular:d.get('cel'),p_especialidade:d.get('esp')||null,p_pin:d.get('pin')},d.get('nome')+' cadastrado. Envie o link, o celular e o PIN provisório.')}catch(x){bt.disabled=false;toast(x.message)}return}
+ if(f.dataset.csave){e.preventDefault();const {tipo,id,p}=cadAchar(f.dataset.csave),d=new FormData(f);try{await cadRpc('eq_cad_salvar',{p_tipo:tipo,p_id:id,p_nome:d.get('nome'),p_celular:d.get('cel'),p_especialidade:p.especialidade||null,p_pin:null},'Cadastro atualizado.')}catch(x){toast(x.message)}return}
+ if(f.dataset.cpinok){e.preventDefault();const {tipo,id,p}=cadAchar(f.dataset.cpinok),d=new FormData(f);try{await cadRpc('eq_cad_pin',{p_tipo:tipo,p_id:id,p_pin:d.get('pin')},'PIN de '+p.nome+' redefinido. Ele vai criar um PIN próprio ao entrar.')}catch(x){toast(x.message)}return}
+});
 function render(){
  const app=$('#app');
  if(!S.token){app.innerHTML=`<section class="login"><div class="lbox"><div class="logo" aria-label="Solar"><span>S</span><i></i><span>L</span><span>A</span><span>R</span></div>
   <div><h1>Central de Solicitações</h1><p>Área da logística para responder os pedidos dos profissionais de saúde.</p></div>
   <form id="flog" novalidate>${S.err?`<p class="err" role="alert">${esc(S.err)}</p>`:''}<label>Celular cadastrado<input id="cel" type="tel" inputmode="tel" autocomplete="tel" placeholder="(21) 9 0000-0000"></label><label>PIN<input id="pin" type="password" inputmode="numeric" autocomplete="current-password" maxlength="6" placeholder="4 a 6 números"></label><button class="btn sun" type="submit"${S.busy?' disabled':''}>${S.busy?'Entrando…':'Entrar'}</button></form></div></section>`;return}
+ if(S.trocar){app.innerHTML=`<section class="login"><div class="lbox"><div class="logo" aria-label="Solar"><span>S</span><i></i><span>L</span><span>A</span><span>R</span></div>
+  <div><h1>Crie seu PIN</h1><p>Olá, ${esc(S.nome)}! Por segurança, troque o PIN provisório por um só seu antes de entrar na Central.</p></div>
+  <form id="fpin" novalidate>${S.err?`<p class="err" role="alert">${esc(S.err)}</p>`:''}<label>Novo PIN<input id="pn" type="password" inputmode="numeric" autocomplete="new-password" maxlength="6" placeholder="4 a 6 números"></label><label>Repita o novo PIN<input id="pn2" type="password" inputmode="numeric" autocomplete="new-password" maxlength="6"></label><button class="btn sun" type="submit"${S.busy?' disabled':''}>${S.busy?'Salvando…':'Salvar meu PIN'}</button><p style="font-size:12.5px">Não use números repetidos (1111) ou em sequência (1234).</p><button class="btn ghost" type="button" data-a="sair">Sair</button></form></div></section>`;return}
  const all=S.itens||[];const cnt=st=>all.filter(r=>r.status===st).length;
  const esps=[...new Set(all.map(r=>r.especialidade).filter(Boolean))].sort(),dias=[...new Set(all.map(r=>r.data_rota))].sort();
  const L=all.filter(r=>(!S.f.st||r.status===S.f.st)&&(!S.f.esp||r.especialidade===S.f.esp)&&(!S.f.dia||r.data_rota===S.f.dia));
  const npend=cnt('pendente');
- let h=`<header class="top"><div class="topin"><div><h2>Central de Solicitações</h2><small>Logística · Solar Cuidados</small></div><nav class="tabs" aria-label="Seções"><button type="button" data-tab="sol" class="${S.tab==='sol'?'on':''}">Solicitações${npend?`<b>${npend}</b>`:''}</button><button type="button" data-tab="env" class="${S.tab==='env'?'on':''}">Envio de rotas</button><button type="button" data-tab="rel" class="${S.tab==='rel'?'on':''}">Relatório</button></nav><span class="sp"></span><span class="who">${esc(S.nome)}</span><button class="out" type="button" data-a="sair">Sair</button></div></header><main>`;
+ let h=`<header class="top"><div class="topin"><div><h2>Central de Solicitações</h2><small>Logística · Solar Cuidados</small></div><nav class="tabs" aria-label="Seções"><button type="button" data-tab="sol" class="${S.tab==='sol'?'on':''}">Solicitações${npend?`<b>${npend}</b>`:''}</button><button type="button" data-tab="env" class="${S.tab==='env'?'on':''}">Envio de rotas</button><button type="button" data-tab="rel" class="${S.tab==='rel'?'on':''}">Relatório</button><button type="button" data-tab="cad" class="${S.tab==='cad'?'on':''}">Cadastros</button></nav><span class="sp"></span><span class="who">${esc(S.nome)}</span><button class="out" type="button" data-a="sair">Sair</button></div></header><main>`;
  if(S.tab==='env'){app.innerHTML=h+renderEnv()+'</main>';return}
  if(S.tab==='rel'){app.innerHTML=h+renderRel()+'</main>';return}
+ if(S.tab==='cad'){app.innerHTML=h+renderCad()+'</main>';return}
  h+=`<div class="bar"><div class="chips" role="group" aria-label="Filtrar por situação">${['pendente','aprovada','recusada','aplicada'].map(st=>`<button type="button" data-st="${st}" class="${S.f.st===st?'on':''}">${STN[st].replace(' no SimpliRoute','')}<b>${cnt(st)}</b></button>`).join('')}<button type="button" data-st="" class="${!S.f.st?'on':''}">Todas<b>${all.length}</b></button></div>
   <select id="fesp" aria-label="Equipe"><option value="">Todas as equipes</option>${esps.map(e=>`<option${S.f.esp===e?' selected':''}>${esc(e)}</option>`).join('')}</select>
   <select id="fdia" aria-label="Dia da rota"><option value="">Todos os dias</option>${dias.map(d=>`<option value="${d}"${S.f.dia===d?' selected':''}>${dm(d)}</option>`).join('')}</select>
@@ -266,16 +320,26 @@ function render(){
  h+='</main>';app.innerHTML=h}
 async function responder(id,st,resp,lote){const r=await rpc('eq_responder',{p_token:S.token,p_id:+id,p_status:st,p_resposta:resp||''});
  if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');throw new Error(r.erro||'Não foi possível salvar.')}delete S.draft[id];if(!lote)await carregar(true)}
+let PIN_TMP='';
+document.addEventListener('submit',async e=>{if(e.target.id!=='fpin')return;e.preventDefault();const pn=$('#pn').value,pn2=$('#pn2').value;
+ if(!pn){S.err='Digite o novo PIN.';render();return}if(pn!==pn2){S.err='Os dois PINs não são iguais.';render();return}
+ S.busy=true;S.err='';render();try{const r=await rpc('eq_trocar_pin',{p_token:S.token,p_atual:PIN_TMP,p_novo:pn});S.busy=false;
+  if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo com o PIN provisório.');S.err=r.erro;render();return}
+  S.trocar=false;PIN_TMP='';toast('PIN criado. Use ele nas próximas vezes.');render();carregar();if(S.tab==='env')carregarEnv(true);if(S.tab==='rel')carregarRel();if(S.tab==='cad')carregarCad()}catch(x){S.busy=false;S.err=x.message;render()}});
 document.addEventListener('submit',async e=>{if(e.target.id!=='flog')return;e.preventDefault();const cel=$('#cel').value,pin=$('#pin').value;if(!cel||!pin){S.err='Preencha o celular e o PIN.';render();return}
  S.busy=true;S.err='';render();try{const r=await rpc('eq_login',{p_celular:cel,p_pin:pin});S.busy=false;if(!r.ok){S.err=r.erro;render();$('#cel').value=cel;return}
-  S.token=r.token;S.nome=r.nome;try{sessionStorage.setItem('lg-token',r.token);sessionStorage.setItem('lg-nome',r.nome);marcaUso()}catch(x){}render();carregar()}catch(x){S.busy=false;S.err=x.message;render()}});
+  S.token=r.token;S.nome=r.nome;try{sessionStorage.setItem('lg-token',r.token);sessionStorage.setItem('lg-nome',r.nome);marcaUso()}catch(x){}if(r.trocar_pin){S.trocar=true;PIN_TMP=pin;render();return}render();carregar()}catch(x){S.busy=false;S.err=x.message;render()}});
 document.addEventListener('input',e=>{const t=e.target.closest('[data-rs]');if(t)S.draft[t.dataset.rs]=t.value});
 document.addEventListener('change',e=>{if(e.target.id==='rde'){R.de=e.target.value;return}if(e.target.id==='rate'){R.ate=e.target.value;return}if(e.target.id==='rtst'){R.teste=e.target.checked;render();return}if(e.target.id==='edata'){E.data=e.target.value||hojeSP();E.sr=null;E.db=null;carregarEnv(true);return}if(e.target.id==='eini'){E.ini=e.target.checked;try{localStorage.setItem('lg-ini',E.ini?'1':'0')}catch(x){}render();return}if(e.target.dataset&&e.target.dataset.pick!==undefined){E.pick[e.target.dataset.pick]=e.target.value;render();return}if(e.target.id==='fesp'){S.f.esp=e.target.value;render()}if(e.target.id==='fdia'){S.f.dia=e.target.value;render()}});
 document.addEventListener('click',async e=>{const b=e.target.closest('button');if(!b)return;const d=b.dataset;
  try{
   if(d.a==='sair'){sair();return}
   if(d.a==='atualizar'){await carregar();toast('Atualizado.');return}
-  if(d.tab){S.tab=d.tab;try{localStorage.setItem('lg-tab',d.tab)}catch(x){}render();if(d.tab==='env'&&E.sr===null)carregarEnv(true);if(d.tab==='rel'&&R.itens===null)carregarRel();return}
+  if(d.tab){S.tab=d.tab;try{localStorage.setItem('lg-tab',d.tab)}catch(x){}render();if(d.tab==='env'&&E.sr===null)carregarEnv(true);if(d.tab==='rel'&&R.itens===null)carregarRel();if(d.tab==='cad')carregarCad(C.d!==null);return}
+  if(d.ced){C.ed=C.ed===d.ced?null:d.ced;C.pin=null;render();const i=document.querySelector(`[data-csave="${d.ced}"] input`);if(i)i.focus();return}
+  if(d.cpin){C.pin=C.pin===d.cpin?null:d.cpin;C.ed=null;render();const i=document.querySelector(`[data-cpinok="${d.cpin}"] input`);if(i){i.focus();i.select()}return}
+  if(d.cx!==undefined){C.ed=null;C.pin=null;render();return}
+  if(d.cat){const {tipo,id,p}=cadAchar(d.cat);b.disabled=true;await cadRpc('eq_cad_ativo',{p_tipo:tipo,p_id:id,p_ativo:!p.ativo},p.nome+(p.ativo?' desativado. As sessões dele foram encerradas.':' reativado.'));return}
   if(d.a==='rger'){await carregarRel();return}
   if(d.a==='rcsv'){baixarCSV();toast('CSV baixado.');return}
   if(d.rf!==undefined){R.f=d.rf;render();return}
@@ -294,7 +358,7 @@ document.addEventListener('click',async e=>{const b=e.target.closest('button');i
  }catch(x){b.disabled=false;toast(x.message)}});
 setInterval(()=>{try{if(S.token&&Date.now()-(+sessionStorage.getItem('lg-ult')||0)>INATIVO_MIN*6e4){sair('Por segurança, a sessão foi encerrada após '+INATIVO_MIN+' minutos sem uso. Entre de novo.');return}}catch(e){}if(S.token&&!document.hidden&&!document.querySelector('[data-rs]:focus,select:focus')){carregar(true);if(S.tab==='env'&&E.sr!==null&&!E.busy)carregarEnv(false,true)}},30000);
 document.addEventListener('visibilitychange',()=>{if(document.hidden||!S.token)return;try{if(Date.now()-(+sessionStorage.getItem('lg-ult')||0)>INATIVO_MIN*6e4)return sair('Por segurança, a sessão foi encerrada após '+INATIVO_MIN+' minutos sem uso. Entre de novo.')}catch(e){}carregar(true)});
-render();if(S.token){carregar();if(S.tab==='env')carregarEnv(true);if(S.tab==='rel')carregarRel()}
+render();if(S.token){carregar();if(S.tab==='env')carregarEnv(true);if(S.tab==='rel')carregarRel();if(S.tab==='cad')carregarCad()}
 </script>
 </body>
 </html>
