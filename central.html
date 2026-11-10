@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<script>/* endereço antigo (GitHub) → novo endereço no Cloudflare */if(/\.github\.io$/.test(location.hostname)){location.replace("https://minharota.solarcuidados.log.br/"+(location.pathname.split("/").pop()||"")+location.search+location.hash)}</script>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#5f0040">
+<meta name="robots" content="noindex,nofollow">
+<title>Central de Solicitações · Logística Solar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--wine:#5f0040;--wine-d:#3a0026;--sun:#fbb040;--peach:#f2d1a0;--warm:#d7d2cb;--bg:#f7f5f1;--surface:#fff;--ink:#2b0a1f;--muted:#6d5d64;--line:#e4ddd6;--off:#f3efea;--ok:#1d6b3a;--ok-bg:#dff3e5;--pend:#7a4300;--pend-bg:#fff0d6;--bad:#8f1d2b;--bad-bg:#fbe2e5}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Montserrat,Arial,sans-serif;-webkit-text-size-adjust:100%}
+button,input,textarea,select{font:inherit}
+button{cursor:pointer}
+button:disabled{opacity:.5;cursor:default}
+.logo{display:flex;align-items:center;gap:12px;font-size:26px;font-weight:500;letter-spacing:5px}
+.logo i{width:19px;height:19px;border-radius:50%;background:var(--sun);display:inline-block}
+.login{min-height:100vh;background:var(--wine);color:#fff;display:flex;align-items:center;justify-content:center;padding:24px}
+.lbox{width:100%;max-width:380px;display:flex;flex-direction:column;gap:22px}
+.lbox h1{margin:24px 0 4px;font-size:24px;font-weight:800;line-height:1.2}
+.lbox p{margin:0;color:var(--peach);font-size:14px;line-height:1.5}
+.lbox form{display:flex;flex-direction:column;gap:12px}
+.lbox label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600}
+.lbox input{font-size:17px;padding:13px;border-radius:12px;border:0;color:var(--ink)}
+.btn{min-height:46px;border:0;border-radius:12px;font-size:14.5px;font-weight:800;padding:0 16px}
+.btn.sun{background:var(--sun);color:var(--wine-d)}
+.btn.wine{background:var(--wine);color:#fff}
+.btn.ghost{background:#fff;border:1px solid var(--line);color:var(--ink);font-weight:700}
+.btn.sm{min-height:36px;font-size:12.5px;padding:0 12px;border-radius:9px}
+.err{background:var(--bad-bg);color:var(--bad);border-radius:10px;padding:10px 12px;font-size:13.5px;font-weight:600;margin:0}
+header.top{background:var(--wine);color:#fff;border-bottom:5px solid var(--sun);position:sticky;top:0;z-index:5}
+.topin{max-width:1200px;margin:0 auto;padding:12px 16px;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center}
+.topin h2{margin:0;font-size:18px;font-weight:800}
+.topin small{display:block;color:var(--peach);font-size:12px;font-weight:600}
+.topin .sp{flex:1}
+.topin .who{font-size:12.5px;color:var(--peach)}
+.out{background:rgba(255,255,255,.14);color:#fff;border:0;border-radius:999px;font-size:12px;font-weight:700;padding:7px 12px}
+main{max-width:1200px;margin:0 auto;padding:14px 16px 40px;display:flex;flex-direction:column;gap:12px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:999px;padding:6px 12px;font-size:12.5px;font-weight:700;min-height:36px}
+.chips button b{font-size:11px;background:var(--off);border-radius:999px;padding:1px 7px}
+.chips button.on{background:var(--wine);border-color:var(--wine);color:#fff}.chips button.on b{background:rgba(255,255,255,.2);color:#fff}
+.bar select{padding:7px 9px;border:1px solid var(--line);border-radius:9px;background:#fff;font-size:12.5px;min-height:36px}
+.bar .sp{flex:1}
+.upd{font-size:11.5px;color:var(--muted)}
+.day{margin:8px 0 0;font-size:14px;color:var(--wine);display:flex;align-items:center;gap:8px}
+.day span{font-size:11px;background:var(--sun);color:var(--wine-d);border-radius:999px;padding:1px 8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:10px;align-items:start}
+@media (max-width:520px){.grid{grid-template-columns:1fr}}
+.rt{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--sun);border-radius:14px;overflow:hidden}
+.rt.ok{border-left-color:#2f8f4e}
+.rth{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:12px 14px;width:100%}
+.rth:focus-visible{outline:2px solid var(--sun);outline-offset:-2px}
+.rth .p{display:flex;flex-direction:column;min-width:0}.rth .p b{font-size:14px}.rth .p small{font-size:11.5px;color:var(--muted)}
+.rth .c{font-size:12.5px;color:var(--muted)}.rth .c code{font-weight:700;color:var(--wine)}
+.rth .r{margin-left:auto;display:flex;align-items:center;gap:8px}.rth .r small{font-size:11.5px;color:var(--muted)}
+.bd{font-size:11px;font-weight:700;border-radius:999px;padding:2px 9px;white-space:nowrap}
+.bd.pendente{background:var(--pend-bg);color:var(--pend)}.bd.aprovada{background:var(--ok-bg);color:var(--ok)}.bd.recusada{background:var(--bad-bg);color:var(--bad)}.bd.aplicada{background:#f1dceb;color:var(--wine)}
+ol.ls{list-style:none;margin:0;padding:0 14px 8px}
+ol.ls li{border-top:1px solid var(--line);padding:10px 0;display:flex;flex-direction:column;gap:5px}
+.lh{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.tp{font-weight:800;font-size:13px}.jn{font-size:12px;font-weight:700;background:var(--peach);color:var(--wine-d);border-radius:6px;padding:1px 7px}
+.lh .bd{margin-left:auto}
+.pc{font-size:13.5px}.pc small{color:var(--muted);font-size:11.5px}
+.mo{margin:0;font-size:13px;line-height:1.45}
+.act{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.act input{flex:1;min-width:180px;font-size:13px;border:1px solid var(--line);border-radius:9px;padding:8px 10px;background:var(--off)}
+.resp{font-size:12.5px;background:var(--off);border-radius:9px;padding:8px 10px;display:flex;flex-direction:column;gap:4px}
+.resp small{color:var(--muted)}
+.resp .act{margin-top:2px}
+.all{padding:0 14px 12px;display:flex;justify-content:flex-end}
+.empty{background:var(--surface);border:1px dashed var(--line);border-radius:14px;padding:30px;text-align:center;color:var(--muted);line-height:1.6}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-size:13.5px;font-weight:600;z-index:30;max-width:90vw}
+.tt{font-size:10.5px;background:var(--off);color:var(--muted);border-radius:6px;padding:1px 6px;font-style:normal}
+.tabs{display:flex;gap:4px;background:rgba(255,255,255,.12);border-radius:999px;padding:3px}
+.tabs button{background:transparent;border:0;color:var(--peach);font-weight:700;font-size:13px;padding:7px 14px;border-radius:999px;min-height:34px;display:inline-flex;gap:6px;align-items:center}
+.tabs button.on{background:#fff;color:var(--wine)}
+.tabs button b{font-size:10.5px;background:var(--sun);color:var(--wine-d);border-radius:999px;padding:1px 7px}
+.bar input[type=date]{padding:6px 9px;border:1px solid var(--line);border-radius:9px;background:#fff;font-size:13px;min-height:36px}
+.bar label.ck{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--muted)}
+.resumo{display:flex;flex-wrap:wrap;gap:8px}
+.kpi{flex:1;min-width:130px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 14px;display:flex;flex-direction:column;gap:2px}
+.kpi b{font-size:22px;font-weight:800;color:var(--wine)}.kpi span{font-size:12px;color:var(--muted);font-weight:600}
+.en{border-left-color:var(--warm)}
+.en.s-env{border-left-color:var(--sun)}.en.s-vis{border-left-color:#c07a10}.en.s-conf{border-left-color:#2f8f4e}.en.s-mud{border-left-color:var(--bad)}
+.enh{display:flex;flex-direction:column;gap:8px;padding:12px 14px 6px}
+.enh .p{display:flex;flex-direction:column;min-width:0;flex:1}.enh .p b{font-size:14.5px}.enh .p small{font-size:12px;color:var(--muted)}
+.stp{display:flex;gap:4px;flex-wrap:wrap}
+.st{font-size:11px;font-weight:700;border-radius:999px;padding:3px 9px;background:var(--off);color:#8a7d83;white-space:nowrap}
+.st.on{background:var(--ok-bg);color:var(--ok)}.st.mud{background:var(--bad-bg);color:var(--bad)}.st.ped{background:var(--pend-bg);color:var(--pend)}
+.inf{padding:0 14px 8px;font-size:12.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 10px}
+.inf b{color:var(--ink)}
+.pick{margin:0 14px 10px;background:var(--pend-bg);color:var(--pend);border-radius:10px;padding:8px 10px;font-size:12.5px;display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center}
+.pick select{padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:#fff;font-size:12.5px;min-height:34px;color:var(--ink)}
+details.pl{margin:0 14px 8px;border-top:1px solid var(--line)}
+details.pl summary{cursor:pointer;font-size:12.5px;font-weight:700;color:var(--wine);padding:8px 0;min-height:36px;display:flex;align-items:center}
+details.pl ol{margin:0 0 6px;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
+details.pl li{display:grid;grid-template-columns:28px 46px 1fr;gap:6px;font-size:12.5px;align-items:baseline}
+details.pl li i{font-style:normal;font-weight:800;color:var(--wine)}details.pl li em{font-style:normal;color:var(--muted)}
+.ena{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:4px 14px 12px}
+.ena small{font-size:11.5px;color:var(--muted);flex:1;min-width:160px}
+.sec{margin:10px 0 0;font-size:13.5px;color:var(--wine)}
+.tw{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:auto;max-height:70vh}
+table.rel{border-collapse:collapse;width:100%;font-size:12.5px;min-width:1100px}
+table.rel th{position:sticky;top:0;background:var(--off);text-align:left;font-size:11.5px;color:var(--muted);font-weight:700;padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.rel td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+table.rel td small{color:var(--muted)}
+table.rel td.n{white-space:nowrap}
+table.rel tr:last-child td{border-bottom:0}
+.dica{font-size:12px;color:var(--muted);line-height:1.5;margin:0}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const SB='https://sizbevhqreaccxrlimup.supabase.co',KEY='sb_publishable_sOPBmFvZMrGj3JvHzxIyYQ_4LsvUbSG';
+const TIPOS={horario_fixo:'Horário fixo',nao_antes:'Não atender antes de',trocar_ordem:'Trocar a ordem',nao_atender:'Paciente não será atendido',observacao:'Observação para o motorista'};
+const STN={pendente:'Pendente',aprovada:'Aprovada',recusada:'Recusada',aplicada:'Aplicada no SimpliRoute'};
+const S={token:null,nome:'',itens:null,err:'',busy:false,f:{st:'',esp:'',dia:''},open:{},draft:{},at:0,tab:'sol'};
+// Segurança: a sessão fica só nesta aba (sessionStorage). Fechou o navegador ou abriu o link em outra aba/pessoa → pede celular e PIN.
+const INATIVO_MIN=30;
+try{localStorage.removeItem('lg-token');localStorage.removeItem('lg-nome');S.token=sessionStorage.getItem('lg-token');S.nome=sessionStorage.getItem('lg-nome')||'';S.tab=localStorage.getItem('lg-tab')||'sol';
+ const ult=+sessionStorage.getItem('lg-ult')||0;if(S.token&&Date.now()-ult>INATIVO_MIN*6e4){S.token=null;sessionStorage.removeItem('lg-token')}}catch(e){}
+const marcaUso=()=>{try{sessionStorage.setItem('lg-ult',String(Date.now()))}catch(e){}};marcaUso();
+['click','keydown','touchstart'].forEach(ev=>addEventListener(ev,marcaUso,{passive:true}));
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function rpc(fn,args){const r=await fetch(SB+'/rest/v1/rpc/'+fn,{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify(args)});if(!r.ok)throw new Error('Falha de conexão ('+r.status+'). Tente de novo.');return r.json()}
+function toast(t){const d=document.createElement('div');d.className='toast';d.setAttribute('role','status');d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),3200)}
+const dm=k=>k.slice(8,10)+'/'+k.slice(5,7);
+const dExt=k=>{const s=new Date(k+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'long'});return s[0].toUpperCase()+s.slice(1)};
+const hm=t=>t?new Date(t).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
+const jan=r=>r.tipo==='horario_fixo'?(r.horario_de||'?')+' – '+(r.horario_ate||'?'):r.tipo==='nao_antes'?'a partir de '+(r.horario_de||'?'):'';
+function sair(msg){try{if(S.token)rpc('eq_sair',{p_token:S.token}).catch(()=>{});sessionStorage.removeItem('lg-token');sessionStorage.removeItem('lg-nome')}catch(e){}S.token=null;S.itens=null;S.err=msg||'';render()}
+async function carregar(sil){if(!S.token)return;
+ try{const r=await rpc('eq_solicitacoes',{p_token:S.token});if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');throw new Error(r.erro)}
+  S.nome=r.nome;S.itens=r.itens||[];S.err='';S.at=Date.now();render()}catch(e){if(!sil){S.err=e.message;render()}}}
+
+/* ===== Envio de rotas (SimpliRoute → Minha Rota) ===== */
+const hojeSP=(d=0)=>{const t=new Date(Date.now()+d*864e5);return t.toLocaleDateString('sv-SE',{timeZone:'America/Sao_Paulo'})};
+const E={data:hojeSP(),sr:null,db:null,prof:[],busy:false,err:'',f:'',pick:{},ini:false,at:0,semRota:0,srAt:0};
+try{E.ini=localStorage.getItem('lg-ini')==='1'}catch(e){}
+const TPV={med_visit:'Visita médica',enf_visit:'Enfermagem',admissao_visit:'Admissão',avaliacao_visit:'Avaliação',avaliacao_admissao_visit:'Avaliação de admissão'};
+const nrm=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z ]/g,' ').replace(/\s+/g,' ').trim();
+const STOPW=new Set(['da','de','do','das','dos','e']);
+const toks=s=>nrm(s).split(' ').filter(w=>w&&!STOPW.has(w));
+function casa(a,b){const x=toks(a),y=toks(b);if(!x.length||!y.length)return false;if(x.join(' ')===y.join(' '))return true;if(x[0]!==y[0]||x[x.length-1]!==y[y.length-1])return false;const[c,l]=x.length<y.length?[x,y]:[y,x];return c.every(w=>l.includes(w))}
+const iniciais=n=>String(n||'').split(/\s+/).filter(w=>w&&!/^(da|de|do|das|dos|e)$/i.test(w)).map(w=>w[0].toUpperCase()+'.').join(' ');
+const chave=r=>r.veiculo+(r.compartilhada&&r.compartilhada.length?' · '+(r.skill||'?').split(' ')[0]:'');
+function achaProf(r){for(const c of [r.skill,r.motorista]){if(!c)continue;const m=E.prof.filter(p=>casa(p.nome,c));if(m.length===1)return m[0]}return null}
+const pacOf=r=>r.visitas.map(v=>({ordem:v.ordem,nome:E.ini?iniciais(v.nome):v.nome,bairro:v.bairro||'',hora:v.hora&&v.hora!=='00:00'?v.hora:'',janela:v.janela&&v.janela!=='00:00–23:59'?v.janela:'',endereco:v.endereco||'',lat:v.lat,lng:v.lng}));
+const sig=p=>JSON.stringify((p||[]).map(x=>[x.ordem,x.hora||'',x.lat||0,x.lng||0]));
+const hh=t=>t?new Date(t).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'';
+function estado(r){const d=E.db&&E.db[chave(r)];if(!d)return{k:'nao',d};if(sig(d.pacientes)!==sig(pacOf(r)))return{k:'mud',d};return{k:d.confirmado_em?'conf':d.visto_em?'vis':'env',d}}
+async function carregarEnv(puxar,sil){if(!S.token)return;
+ if(puxar){E.busy=true;E.err='';render()}
+ try{
+  const jobs=[rpc('eq_rotas_dia',{p_token:S.token,p_data:E.data})];
+  if(puxar)jobs.push(fetch(SB+'/functions/v1/simpliroute',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({token:S.token,data:E.data})}).then(r=>r.json()));
+  const [db,sr]=await Promise.all(jobs);
+  if(!db.ok){if(db.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');throw new Error(db.erro)}
+  E.prof=db.profissionais||[];E.db={};(db.rotas||[]).forEach(x=>E.db[x.placa]=x);E.at=Date.now();
+  if(sr){if(!sr.ok){if(sr.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');throw new Error(sr.erro||'Não foi possível ler o SimpliRoute.')}E.sr=sr.rotas||[];E.semRota=sr.sem_rota||0;E.srAt=Date.now()}
+  E.err=''}catch(e){if(!sil)E.err=e.message}
+ E.busy=false;render()}
+function renderEnv(){
+ let h=`<div class="bar"><input type="date" id="edata" value="${E.data}" aria-label="Dia das rotas"><button class="btn ghost sm" type="button" data-dia="0">Hoje</button><button class="btn ghost sm" type="button" data-dia="1">Amanhã</button>
+  <button class="btn wine sm" type="button" data-a="puxar"${E.busy?' disabled':''}>${E.busy?'Buscando no SimpliRoute…':'Puxar do SimpliRoute'}</button>
+  <label class="ck"><input type="checkbox" id="eini"${E.ini?' checked':''}> Enviar só iniciais dos pacientes</label>
+  <span class="sp"></span><span class="upd">${E.srAt?'SimpliRoute lido às '+hh(E.srAt):''}${E.at?' · situação atualizada às '+hh(E.at):''}</span></div>`;
+ if(E.err)h+=`<p class="err" role="alert">${esc(E.err)}</p>`;
+ if(E.sr===null){h+=`<div class="empty">${E.busy?'Buscando as rotas no SimpliRoute…':'Escolha o dia e clique em <b>Puxar do SimpliRoute</b> para ver as rotas médicas.'}</div>`;return h+manuais([])}
+ const L=E.sr.map(r=>{const e=estado(r),pf=e.d&&e.d.profissional_id?E.prof.find(p=>p.id===e.d.profissional_id):null;const auto=achaProf(r);const pid=E.pick[chave(r)]||(auto&&auto.id)||(pf&&pf.id)||'';return{r,e,auto,pid:pid?+pid:'',ped:e.d?+e.d.pendentes:0}});
+ const c={tot:L.length,nao:L.filter(x=>x.e.k==='nao').length,env:L.filter(x=>x.e.k==='env').length,vis:L.filter(x=>x.e.k==='vis').length,conf:L.filter(x=>x.e.k==='conf').length,mud:L.filter(x=>x.e.k==='mud').length,sem:L.filter(x=>!x.pid).length,ped:L.filter(x=>x.ped>0).length};
+ h+=`<div class="resumo"><div class="kpi"><b>${c.tot}</b><span>rotas médicas</span></div><div class="kpi"><b>${c.env+c.vis+c.conf}</b><span>enviadas ao Minha Rota</span></div><div class="kpi"><b>${c.vis+c.conf}</b><span>vistas pelo profissional</span></div><div class="kpi"><b>${c.conf}</b><span>confirmadas</span></div></div>`;
+ const F=[['','Todas',c.tot],['nao','Não enviadas',c.nao],['mud','Mudaram no SimpliRoute',c.mud],['env','Aguardando ver',c.env],['vis','Vistas',c.vis],['conf','Confirmadas',c.conf],['ped','Com pedido pendente',c.ped],['sem','Sem profissional',c.sem]];
+ const prontas=L.filter(x=>x.pid&&(x.e.k==='nao'||x.e.k==='mud'));
+ h+=`<div class="bar"><div class="chips" role="group" aria-label="Filtrar rotas">${F.filter(f=>!f[0]||f[2]).map(f=>`<button type="button" data-ef="${f[0]}" class="${E.f===f[0]?'on':''}">${f[1]}<b>${f[2]}</b></button>`).join('')}</div><span class="sp"></span>${prontas.length?`<button class="btn sun sm" type="button" data-a="envtodas"${E.busy?' disabled':''}>Enviar ${prontas.length} ${prontas.length===1?'rota pronta':'rotas prontas'}</button>`:''}</div>`;
+ if(E.semRota)h+=`<p class="upd">${E.semRota} ${E.semRota===1?'visita médica ainda não está':'visitas médicas ainda não estão'} em nenhuma rota no SimpliRoute.</p>`;
+ const V=L.filter(x=>!E.f||(E.f==='sem'?!x.pid:E.f==='ped'?x.ped>0:x.e.k===E.f));
+ if(!L.length)h+='<div class="empty">Nenhuma rota médica encontrada no SimpliRoute para este dia.</div>';
+ else if(!V.length)h+='<div class="empty">Nenhuma rota com esse filtro.</div>';
+ else{h+='<div class="grid">';V.forEach(x=>{const r=x.r,k=chave(r),d=x.e.d,st=x.e.k,pac=r.visitas;const prof=x.pid?E.prof.find(p=>p.id===x.pid):null;
+  const nome=prof?prof.nome:(r.skill||'Profissional não identificado');const ini=pac.find(v=>v.hora&&v.hora!=='00:00');
+  h+=`<article class="rt en s-${st}"><div class="enh"><div class="p"><b>${esc(nome)}</b><small>${esc(r.veiculo||'Sem veículo')}${r.motorista&&!casa(r.motorista,nome)?' · motorista '+esc(r.motorista):''}${prof&&prof.especialidade?' · '+esc(prof.especialidade):''}</small></div>
+   <div class="stp">${st==='mud'?'<span class="st mud">Mudou no SimpliRoute</span>':''}<span class="st${d?' on':''}">${d?'Enviada '+hh(d.atualizado_em||d.publicado_em):'Não enviada'}</span><span class="st${d&&d.visto_em?' on':''}">${d&&d.visto_em?'Vista '+hh(d.visto_em):'Não vista'}</span><span class="st${d&&d.confirmado_em?' on':''}">${d&&d.confirmado_em?'Confirmada '+hh(d.confirmado_em):'Não confirmada'}</span>${x.ped?`<span class="st ped">${x.ped} ${x.ped===1?'pedido pendente':'pedidos pendentes'}</span>`:''}</div></div>
+   <div class="inf"><span><b>${pac.length}</b> ${pac.length===1?'paciente':'pacientes'}</span>${ini?`<span>1ª visita <b>${esc(ini.hora)}</b></span>`:''}<span>${esc((r.tipos||[]).map(t=>TPV[t]||t).join(', '))}</span>${r.compartilhada&&r.compartilhada.length?`<span>carro dividido com ${esc(r.compartilhada.join(', '))}</span>`:''}</div>`;
+  if(!x.auto){h+=`<div class="pick"><span>${x.pid?'Profissional escolhido manualmente.':r.skill?`“${esc(r.skill)}” ainda não está cadastrado no Minha Rota.`:'Rota sem profissional no SimpliRoute.'}</span><select data-pick="${esc(k)}" aria-label="Profissional da rota ${esc(r.veiculo)}"><option value="">Escolher profissional…</option>${E.prof.map(p=>`<option value="${p.id}"${+x.pid===p.id?' selected':''}>${esc(p.nome)}</option>`).join('')}</select></div>`}
+  h+=`<details class="pl"><summary>Ver pacientes na ordem da rota</summary><ol>${pac.map(v=>`<li><i>${v.ordem}</i><em>${esc(v.hora&&v.hora!=='00:00'?v.hora:'—')}</em><span><b>${esc(E.ini?iniciais(v.nome):v.nome)}</b>${v.bairro?' · '+esc(v.bairro):''}</span></li>`).join('')}</ol></details>
+   <div class="ena"><small>${d?`Enviada por ${esc(d.publicado_por||'painel')} em ${hm(d.publicado_em)}${d.atualizado_em?' · reenviada '+hm(d.atualizado_em):''}`:'Ainda não está no app do profissional.'}</small>${st==='nao'||st==='mud'||(d&&+d.profissional_id!==+x.pid)?`<button class="btn ${st==='nao'?'wine':'sun'} sm" type="button" data-env="${esc(k)}"${x.pid?'':' disabled title="Escolha o profissional"'}>${st==='nao'?'Enviar para o Minha Rota':'Reenviar atualizada'}</button>`:'<span class="bd aprovada">Em dia com o SimpliRoute</span>'}</div></article>`});
+  h+='</div>'}
+ return h+manuais(E.sr.map(chave))}
+function manuais(ks){const M=Object.values(E.db||{}).filter(d=>!ks.includes(d.placa));if(!M.length)return'';
+ return `<h3 class="sec">Outras rotas enviadas para ${dm(E.data)} (pelo painel ou de outro dia no SimpliRoute)</h3><div class="grid">${M.map(d=>`<article class="rt en s-${d.confirmado_em?'conf':d.visto_em?'vis':'env'}"><div class="enh"><div class="p"><b>${esc(d.profissional)}</b><small>${esc(d.placa)}${d.motorista?' · '+esc(d.motorista):''}</small></div><div class="stp"><span class="st on">Enviada ${hh(d.publicado_em)}</span><span class="st${d.visto_em?' on':''}">${d.visto_em?'Vista '+hh(d.visto_em):'Não vista'}</span><span class="st${d.confirmado_em?' on':''}">${d.confirmado_em?'Confirmada '+hh(d.confirmado_em):'Não confirmada'}</span>${+d.pendentes?`<span class="st ped">${d.pendentes} pendentes</span>`:''}</div></div><div class="inf"><span><b>${(d.pacientes||[]).length}</b> pacientes</span><span>${d.origem==='simpliroute'?'via SimpliRoute':'via painel'}</span></div></article>`).join('')}</div>`}
+async function enviarRota(k,lote){const r=(E.sr||[]).find(x=>chave(x)===k);if(!r)return;const e=estado(r),auto=achaProf(r);const pid=+(E.pick[k]||(auto&&auto.id)||(e.d&&e.d.profissional_id)||0);
+ if(!pid)throw new Error('Escolha o profissional da rota '+r.veiculo+'.');
+ const res=await rpc('eq_publicar_rota',{p_token:S.token,p_data:E.data,p_placa:k,p_motorista:r.motorista||'',p_profissional_id:pid,p_pacientes:pacOf(r),p_sr_route_id:r.route_id,p_origem:'simpliroute'});
+ if(!res.ok){if(res.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');throw new Error(res.erro||'Não foi possível enviar.')}
+ if(!lote)await carregarEnv(false,true)}
+
+/* ===== Relatório das mudanças ===== */
+const R={de:hojeSP().slice(0,8)+'01',ate:hojeSP(7),itens:null,busy:false,err:'',f:'feitas',teste:false};
+const RF=[['feitas','Mudanças feitas',x=>x.status==='aprovada'||x.status==='aplicada'],['aplicada','Aplicadas no SimpliRoute',x=>x.status==='aplicada'],['aprovada','Aprovadas (falta aplicar)',x=>x.status==='aprovada'],['recusada','Recusadas',x=>x.status==='recusada'],['pendente','Pendentes',x=>x.status==='pendente'],['','Todas',()=>true]];
+const dtSP=t=>t?new Date(t).toLocaleString('sv-SE',{timeZone:'America/Sao_Paulo'}).slice(0,16):'';
+const brD=k=>k?k.slice(8,10)+'/'+k.slice(5,7)+'/'+k.slice(0,4):'';
+const brDT=t=>t?new Date(t).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
+async function carregarRel(){if(!S.token)return;R.busy=true;R.err='';render();
+ try{const r=await rpc('eq_relatorio',{p_token:S.token,p_de:R.de,p_ate:R.ate});if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');throw new Error(r.erro)}R.itens=r.itens||[]}catch(e){R.err=e.message}
+ R.busy=false;render()}
+const relLista=()=>{const f=RF.find(x=>x[0]===R.f)[2];return(R.itens||[]).filter(x=>(R.teste||!x.teste)&&f(x))};
+function renderRel(){
+ let h=`<div class="bar"><label class="ck">De <input type="date" id="rde" value="${R.de}"></label><label class="ck">Até <input type="date" id="rate" value="${R.ate}"></label><button class="btn wine sm" type="button" data-a="rger"${R.busy?' disabled':''}>${R.busy?'Gerando…':'Gerar relatório'}</button><label class="ck"><input type="checkbox" id="rtst"${R.teste?' checked':''}> Incluir pedidos de teste</label><span class="sp"></span>${R.itens&&relLista().length?`<button class="btn sun sm" type="button" data-a="rcsv">Baixar para o Lists (CSV)</button>`:''}</div>`;
+ if(R.err)h+=`<p class="err" role="alert">${esc(R.err)}</p>`;
+ if(R.itens===null)return h+`<div class="empty">${R.busy?'Gerando o relatório…':'Escolha o período e clique em <b>Gerar relatório</b>.'}</div>`;
+ const base=R.itens.filter(x=>R.teste||!x.teste),cnt=st=>base.filter(x=>x.status===st).length;
+ const resp=base.filter(x=>x.respondido_em&&x.criado_em).map(x=>(new Date(x.respondido_em)-new Date(x.criado_em))/6e4);const med=resp.length?Math.round(resp.reduce((a,b)=>a+b,0)/resp.length):null;
+ h+=`<div class="resumo"><div class="kpi"><b>${base.length}</b><span>pedidos no período</span></div><div class="kpi"><b>${cnt('aprovada')+cnt('aplicada')}</b><span>mudanças feitas</span></div><div class="kpi"><b>${cnt('recusada')}</b><span>recusadas</span></div><div class="kpi"><b>${med===null?'—':med<60?med+' min':Math.floor(med/60)+'h'+String(med%60).padStart(2,'0')}</b><span>tempo médio de resposta</span></div></div>`;
+ h+=`<div class="bar"><div class="chips" role="group" aria-label="Filtrar situação">${RF.map(f=>{const n=base.filter(f[2]).length;return`<button type="button" data-rf="${f[0]}" class="${R.f===f[0]?'on':''}">${f[1]}<b>${n}</b></button>`}).join('')}</div></div>`;
+ const L=relLista();
+ if(!L.length)return h+'<div class="empty">Nenhum pedido com esse filtro no período.</div>';
+ h+=`<div class="tw"><table class="rel"><thead><tr><th>Data da rota</th><th>Veículo</th><th>Profissional</th><th>Paciente</th><th>Necessidade</th><th>Horário</th><th>Motivo</th><th>Situação</th><th>Resposta</th><th>Respondido por</th><th>Respondido em</th></tr></thead><tbody>${L.map(x=>`<tr><td class="n">${brD(x.data_rota)}</td><td>${esc(x.placa||'')}${x.motorista?`<br><small>${esc(x.motorista)}</small>`:''}</td><td>${esc(x.profissional||'')}${x.especialidade?`<br><small>${esc(x.especialidade)}</small>`:''}</td><td>${x.paciente_ordem?esc(x.paciente_ordem)+'. ':''}${esc(x.paciente||'')}${x.bairro?`<br><small>${esc(x.bairro)}</small>`:''}${x.teste?' <em class="tt">teste</em>':''}</td><td>${esc(TIPOS[x.tipo]||x.tipo)}</td><td class="n">${esc(jan(x))}</td><td>${esc(x.motivo||'')}</td><td class="n"><span class="bd ${x.status}">${STN[x.status]||x.status}</span></td><td>${esc(x.resposta||'')}</td><td>${esc(x.respondido_por||'')}</td><td class="n">${brDT(x.respondido_em)}</td></tr>`).join('')}</tbody></table></div>
+ <p class="dica">Para levar ao Microsoft Lists: baixe o CSV e, no Lists, use <b>Nova lista › Do CSV</b>. A coluna <b>ID do pedido</b> não se repete, o que ajuda a não duplicar linhas quando você importar os próximos períodos.</p>`;
+ return h}
+function baixarCSV(){const L=relLista();const cols=[['ID do pedido',x=>x.id],['Data da rota',x=>x.data_rota],['Veiculo',x=>x.placa],['Motorista',x=>x.motorista],['Profissional',x=>x.profissional],['Especialidade',x=>x.especialidade],['Ordem na rota',x=>x.paciente_ordem],['Paciente',x=>x.paciente],['Bairro',x=>x.bairro],['Necessidade',x=>TIPOS[x.tipo]||x.tipo],['Horario de',x=>x.horario_de],['Horario ate',x=>x.horario_ate],['Motivo',x=>x.motivo],['Situacao',x=>STN[x.status]||x.status],['Resposta',x=>x.resposta],['Respondido por',x=>x.respondido_por],['Pedido em',x=>dtSP(x.criado_em)],['Respondido em',x=>dtSP(x.respondido_em)],['Teste',x=>x.teste?'Sim':'Nao']];
+ const q=v=>{const t=String(v==null?'':v).replace(/\r?\n/g,' ');return /[",;]/.test(t)?'"'+t.replace(/"/g,'""')+'"':t};
+ const csv='﻿'+[cols.map(c=>q(c[0])).join(','),...L.map(x=>cols.map(c=>q(c[1](x))).join(','))].join('\r\n');
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='mudancas-rotas_'+R.de+'_a_'+R.ate+'.csv';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+function render(){
+ const app=$('#app');
+ if(!S.token){app.innerHTML=`<section class="login"><div class="lbox"><div class="logo" aria-label="Solar"><span>S</span><i></i><span>L</span><span>A</span><span>R</span></div>
+  <div><h1>Central de Solicitações</h1><p>Área da logística para responder os pedidos dos profissionais de saúde.</p></div>
+  <form id="flog" novalidate>${S.err?`<p class="err" role="alert">${esc(S.err)}</p>`:''}<label>Celular cadastrado<input id="cel" type="tel" inputmode="tel" autocomplete="tel" placeholder="(21) 9 0000-0000"></label><label>PIN<input id="pin" type="password" inputmode="numeric" autocomplete="current-password" maxlength="6" placeholder="4 a 6 números"></label><button class="btn sun" type="submit"${S.busy?' disabled':''}>${S.busy?'Entrando…':'Entrar'}</button></form></div></section>`;return}
+ const all=S.itens||[];const cnt=st=>all.filter(r=>r.status===st).length;
+ const esps=[...new Set(all.map(r=>r.especialidade).filter(Boolean))].sort(),dias=[...new Set(all.map(r=>r.data_rota))].sort();
+ const L=all.filter(r=>(!S.f.st||r.status===S.f.st)&&(!S.f.esp||r.especialidade===S.f.esp)&&(!S.f.dia||r.data_rota===S.f.dia));
+ const npend=cnt('pendente');
+ let h=`<header class="top"><div class="topin"><div><h2>Central de Solicitações</h2><small>Logística · Solar Cuidados</small></div><nav class="tabs" aria-label="Seções"><button type="button" data-tab="sol" class="${S.tab==='sol'?'on':''}">Solicitações${npend?`<b>${npend}</b>`:''}</button><button type="button" data-tab="env" class="${S.tab==='env'?'on':''}">Envio de rotas</button><button type="button" data-tab="rel" class="${S.tab==='rel'?'on':''}">Relatório</button></nav><span class="sp"></span><span class="who">${esc(S.nome)}</span><button class="out" type="button" data-a="sair">Sair</button></div></header><main>`;
+ if(S.tab==='env'){app.innerHTML=h+renderEnv()+'</main>';return}
+ if(S.tab==='rel'){app.innerHTML=h+renderRel()+'</main>';return}
+ h+=`<div class="bar"><div class="chips" role="group" aria-label="Filtrar por situação">${['pendente','aprovada','recusada','aplicada'].map(st=>`<button type="button" data-st="${st}" class="${S.f.st===st?'on':''}">${STN[st].replace(' no SimpliRoute','')}<b>${cnt(st)}</b></button>`).join('')}<button type="button" data-st="" class="${!S.f.st?'on':''}">Todas<b>${all.length}</b></button></div>
+  <select id="fesp" aria-label="Equipe"><option value="">Todas as equipes</option>${esps.map(e=>`<option${S.f.esp===e?' selected':''}>${esc(e)}</option>`).join('')}</select>
+  <select id="fdia" aria-label="Dia da rota"><option value="">Todos os dias</option>${dias.map(d=>`<option value="${d}"${S.f.dia===d?' selected':''}>${dm(d)}</option>`).join('')}</select>
+  <span class="sp"></span><span class="upd">${S.at?'Atualizado às '+new Date(S.at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+' · a cada 30 s':''}</span><button class="btn ghost sm" type="button" data-a="atualizar">Atualizar</button></div>`;
+ if(S.err)h+=`<p class="err" role="alert">${esc(S.err)}</p>`;
+ if(S.itens===null)h+='<div class="empty">Carregando…</div>';
+ else if(!L.length)h+='<div class="empty">Nenhuma solicitação com esses filtros.</div>';
+ else{const byD={};L.forEach(r=>{const rk=(r.placa||'')+'|'+r.profissional;((byD[r.data_rota]=byD[r.data_rota]||{})[rk]=byD[r.data_rota][rk]||[]).push(r)});
+  Object.keys(byD).sort().forEach(d=>{const rts=byD[d];const ks=Object.keys(rts).sort((a,b)=>rts[b].filter(r=>r.status==='pendente').length-rts[a].filter(r=>r.status==='pendente').length||a.localeCompare(b));
+   h+=`<h3 class="day">Rotas de ${esc(dExt(d))}, ${dm(d)}<span>${ks.length} ${ks.length===1?'rota':'rotas'}</span></h3><div class="grid">`;
+   ks.forEach(rk=>{const rs=rts[rk].slice().sort((a,b)=>(a.status==='pendente'?0:1)-(b.status==='pendente'?0:1)||String(a.criado_em).localeCompare(String(b.criado_em)));const r0=rs[0];
+    const tot=all.filter(x=>x.data_rota===d&&(x.placa||'')+'|'+x.profissional===rk),np=tot.filter(x=>x.status==='pendente').length,id='r'+d+rk.replace(/[^A-Za-z0-9]/g,'');
+    const ab=S.open[id]!==undefined?S.open[id]:np>0;
+    h+=`<article class="rt${np?'':' ok'}"><button type="button" class="rth" data-tg="${id}" aria-expanded="${ab}"><span class="p"><b>${esc(r0.profissional)}</b>${r0.especialidade?`<small>${esc(r0.especialidade)}</small>`:''}</span><span class="c">${r0.placa?`<code>${esc(r0.placa)}</code>`:''}${r0.motorista?' · '+esc(r0.motorista):''}${r0.rota_confirmada?' · rota confirmada '+esc(r0.rota_confirmada):''}</span><span class="r">${np?`<span class="bd pendente">${np} ${np===1?'pendente':'pendentes'}</span>`:'<span class="bd aprovada">Tudo respondido</span>'}<small>${tot.length} ${tot.length===1?'pedido':'pedidos'}</small><span aria-hidden="true">${ab?'▾':'▸'}</span></span></button>`;
+    if(ab){h+='<ol class="ls">';rs.forEach(r=>{const pend=r.status==='pendente',j=jan(r);
+     h+=`<li><div class="lh"><span class="tp">${esc(TIPOS[r.tipo]||r.tipo)}</span>${j?`<span class="jn">${esc(j)}</span>`:''}<span class="bd ${r.status}">${STN[r.status]||r.status}</span></div>
+      <div class="pc">${r.paciente_ordem?esc(r.paciente_ordem)+'. ':''}<b>${esc(r.paciente)}</b>${r.bairro?' · '+esc(r.bairro):''}${r.teste?' <em class="tt">teste</em>':''}<small> · pedido ${hm(r.criado_em)}</small></div>
+      ${r.motivo?`<p class="mo">“${esc(r.motivo)}”</p>`:''}
+      ${pend?`<div class="act"><input type="text" data-rs="${r.id}" maxlength="500" placeholder="Resposta ao profissional (obrigatória para recusar)" value="${esc(S.draft[r.id]||'')}" aria-label="Resposta para ${esc(r.paciente)}"><button class="btn wine sm" type="button" data-ok="${r.id}">Aprovar</button><button class="btn ghost sm" type="button" data-no="${r.id}">Recusar</button></div>`
+       :`<div class="resp">${r.resposta?`<span><b>Resposta:</b> ${esc(r.resposta)}</span>`:'<span>Sem resposta escrita.</span>'}<small>${esc(r.respondido_por||'')} · ${hm(r.respondido_em)}</small><div class="act">${r.status==='aprovada'?`<button class="btn ghost sm" type="button" data-ap="${r.id}">Marcar como aplicada</button>`:''}${r.status!=='aplicada'?`<button class="btn ghost sm" type="button" data-re="${r.id}">Reabrir</button>`:''}</div></div>`}</li>`});
+     h+='</ol>';const pids=rs.filter(r=>r.status==='pendente').map(r=>r.id);if(pids.length>1)h+=`<div class="all"><button class="btn ghost sm" type="button" data-all="${pids.join(',')}">Aprovar os ${pids.length} pendentes desta rota</button></div>`}
+    h+='</article>'});h+='</div>'})}
+ h+='</main>';app.innerHTML=h}
+async function responder(id,st,resp,lote){const r=await rpc('eq_responder',{p_token:S.token,p_id:+id,p_status:st,p_resposta:resp||''});
+ if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');throw new Error(r.erro||'Não foi possível salvar.')}delete S.draft[id];if(!lote)await carregar(true)}
+document.addEventListener('submit',async e=>{if(e.target.id!=='flog')return;e.preventDefault();const cel=$('#cel').value,pin=$('#pin').value;if(!cel||!pin){S.err='Preencha o celular e o PIN.';render();return}
+ S.busy=true;S.err='';render();try{const r=await rpc('eq_login',{p_celular:cel,p_pin:pin});S.busy=false;if(!r.ok){S.err=r.erro;render();$('#cel').value=cel;return}
+  S.token=r.token;S.nome=r.nome;try{sessionStorage.setItem('lg-token',r.token);sessionStorage.setItem('lg-nome',r.nome);marcaUso()}catch(x){}render();carregar()}catch(x){S.busy=false;S.err=x.message;render()}});
+document.addEventListener('input',e=>{const t=e.target.closest('[data-rs]');if(t)S.draft[t.dataset.rs]=t.value});
+document.addEventListener('change',e=>{if(e.target.id==='rde'){R.de=e.target.value;return}if(e.target.id==='rate'){R.ate=e.target.value;return}if(e.target.id==='rtst'){R.teste=e.target.checked;render();return}if(e.target.id==='edata'){E.data=e.target.value||hojeSP();E.sr=null;E.db=null;carregarEnv(true);return}if(e.target.id==='eini'){E.ini=e.target.checked;try{localStorage.setItem('lg-ini',E.ini?'1':'0')}catch(x){}render();return}if(e.target.dataset&&e.target.dataset.pick!==undefined){E.pick[e.target.dataset.pick]=e.target.value;render();return}if(e.target.id==='fesp'){S.f.esp=e.target.value;render()}if(e.target.id==='fdia'){S.f.dia=e.target.value;render()}});
+document.addEventListener('click',async e=>{const b=e.target.closest('button');if(!b)return;const d=b.dataset;
+ try{
+  if(d.a==='sair'){sair();return}
+  if(d.a==='atualizar'){await carregar();toast('Atualizado.');return}
+  if(d.tab){S.tab=d.tab;try{localStorage.setItem('lg-tab',d.tab)}catch(x){}render();if(d.tab==='env'&&E.sr===null)carregarEnv(true);if(d.tab==='rel'&&R.itens===null)carregarRel();return}
+  if(d.a==='rger'){await carregarRel();return}
+  if(d.a==='rcsv'){baixarCSV();toast('CSV baixado.');return}
+  if(d.rf!==undefined){R.f=d.rf;render();return}
+  if(d.a==='puxar'){await carregarEnv(true);if(!E.err)toast('Rotas do SimpliRoute atualizadas.');return}
+  if(d.dia!==undefined){E.data=hojeSP(+d.dia);E.sr=null;E.db=null;await carregarEnv(true);return}
+  if(d.ef!==undefined){E.f=d.ef;render();return}
+  if(d.env){b.disabled=true;b.textContent='Enviando…';await enviarRota(d.env);toast('Rota enviada. O profissional já vê no Minha Rota.');return}
+  if(d.a==='envtodas'){b.disabled=true;const ks=(E.sr||[]).filter(r=>{const e=estado(r);const a=achaProf(r);return(E.pick[chave(r)]||a||(e.d&&e.d.profissional_id))&&(e.k==='nao'||e.k==='mud')}).map(chave);let ok=0,er=[];for(const k of ks){b.textContent='Enviando '+(ok+er.length+1)+' de '+ks.length+'…';try{await enviarRota(k,true);ok++}catch(x){er.push(k)}}await carregarEnv(false,true);toast(ok+' '+(ok===1?'rota enviada':'rotas enviadas')+(er.length?' · '+er.length+' com erro':'')+'.');return}
+  if(d.st!==undefined){S.f.st=d.st;render();return}
+  if(d.tg){S.open[d.tg]=b.getAttribute('aria-expanded')!=='true';render();return}
+  if(d.ok){b.disabled=true;await responder(d.ok,'aprovada',S.draft[d.ok]);toast('Aprovada. O profissional já vê no app.');return}
+  if(d.no){if(!(S.draft[d.no]||'').trim()){toast('Para recusar, escreva o motivo na resposta.');const i=document.querySelector(`[data-rs="${d.no}"]`);if(i)i.focus();return}b.disabled=true;await responder(d.no,'recusada',S.draft[d.no]);toast('Recusada. O profissional já vê no app.');return}
+  if(d.ap){b.disabled=true;await responder(d.ap,'aplicada');toast('Marcada como aplicada.');return}
+  if(d.re){b.disabled=true;await responder(d.re,'pendente');toast('Solicitação reaberta.');return}
+  if(d.all){b.disabled=true;const ids=d.all.split(',');for(const id of ids)await responder(id,'aprovada',S.draft[id],true);await carregar(true);toast(ids.length+' pedidos aprovados.');return}
+ }catch(x){b.disabled=false;toast(x.message)}});
+setInterval(()=>{try{if(S.token&&Date.now()-(+sessionStorage.getItem('lg-ult')||0)>INATIVO_MIN*6e4){sair('Por segurança, a sessão foi encerrada após '+INATIVO_MIN+' minutos sem uso. Entre de novo.');return}}catch(e){}if(S.token&&!document.hidden&&!document.querySelector('[data-rs]:focus,select:focus')){carregar(true);if(S.tab==='env'&&E.sr!==null&&!E.busy)carregarEnv(false,true)}},30000);
+document.addEventListener('visibilitychange',()=>{if(document.hidden||!S.token)return;try{if(Date.now()-(+sessionStorage.getItem('lg-ult')||0)>INATIVO_MIN*6e4)return sair('Por segurança, a sessão foi encerrada após '+INATIVO_MIN+' minutos sem uso. Entre de novo.')}catch(e){}carregar(true)});
+render();if(S.token){carregar();if(S.tab==='env')carregarEnv(true);if(S.tab==='rel')carregarRel()}
+</script>
+</body>
+</html>
