@@ -172,47 +172,29 @@ const temGeo=ro=>ro&&!ro.print&&(ro.pacientes||[]).filter(p=>p.lat&&p.lng).lengt
 function gmaps(ro){const pts=(ro.pacientes||[]).filter(p=>p.lat&&p.lng).map(p=>p.lat+','+p.lng);if(!pts.length)return'';const dst=pts.slice(0,10).pop(),wp=pts.slice(0,Math.min(pts.length,10)-1);
  return 'https://www.google.com/maps/dir/?api=1&travelmode=driving&destination='+encodeURIComponent(dst)+(wp.length?'&waypoints='+encodeURIComponent(wp.join('|')):'')}
 
-/* ===== Acompanhar o motorista (MyGeotab) ===== */
-const T={rota:null,d:null,err:'',at:0,busy:false,me:null,watch:null,vibrou:false};
-const TM={el:null,map:null,car:null,me:null};
+/* ===== Chegada do motorista: horário previsto (SimpliRoute), costume do motorista e, nos carros da frota, distância pelo Geotab ===== */
+const T={rota:null,d:null,err:'',at:0,busy:false};
 const embarcado=id=>{try{return localStorage.getItem('rp-emb-'+id)==='1'}catch(e){return false}};
-const trkAtivo=ro=>ro&&ro.motorista&&ro.data===hoje()&&!embarcado(ro.id);
-function km(a,b){const R=6371,r=x=>x*Math.PI/180,dl=r(b.lat-a.lat),dg=r(b.lng-a.lng);const h=Math.sin(dl/2)**2+Math.cos(r(a.lat))*Math.cos(r(b.lat))*Math.sin(dg/2)**2;return 2*R*Math.asin(Math.sqrt(h))}
+const chegouMin=ro=>ro&&ro.sr_inicio?(Date.now()-new Date(ro.sr_inicio))/6e4:null;
+const trkAtivo=ro=>ro&&ro.motorista&&ro.data===hoje()&&!embarcado(ro.id)&&(!ro.sr_inicio||chegouMin(ro)<30);
 function ha(t){if(!t)return'';const s=Math.max(0,Math.round((Date.now()-new Date(t))/1000));return s<60?'há '+s+' s':s<3600?'há '+Math.round(s/60)+' min':'há '+Math.floor(s/3600)+' h'}
-function trkHtml(ro){return `<div class="card trk" id="trk"><div class="trkh"><b>Seu motorista</b><span>${esc(ro.motorista)}${T.d&&T.d.placa?' · '+esc(T.d.placa):''}</span></div><div class="mapa2" id="mapa2" role="img" aria-label="Mapa com o carro do motorista"></div><div class="trki" id="trki" aria-live="polite">${trkInfo()}</div><div class="trka">${T.me?'':'<button class="btn line" type="button" data-a="minhaloc">Usar minha localização</button>'}<button class="btn line" type="button" data-a="embarquei">Já estou no carro</button></div></div>`}
-function trkInfo(){
- if(T.err==='sem_login')return '<span class="big">Motorista ainda não iniciou a jornada</span><small>Assim que ele entrar no carro pelo MyGeotab Drive, a posição aparece aqui.</small>';
- if(/não encontrado no Geotab/.test(T.err))return '<span class="big">Acompanhamento indisponível</span><small>Este carro não tem o rastreador da Solar (por exemplo, motorista terceirizado). Combine pelo telefone com a logística.</small>';
- if(T.err==='Acompanhamento ainda não configurado pela logística.')return '<span class="big">Em breve</span><small>O acompanhamento do motorista está sendo configurado pela logística.</small>';
- if(T.err)return `<span class="big">Posição indisponível</span><small>${esc(T.err)}</small>`;
- const d=T.d;if(!d)return '<small>Localizando o carro…</small>';
- const velho=d.posicao_em&&(Date.now()-new Date(d.posicao_em))>10*6e4;
- let l1='',l2='';
- if(T.me){const k=km(T.me,{lat:d.lat,lng:d.lng});const v=d.dirigindo&&+d.velocidade>15?+d.velocidade:25;const min=Math.max(1,Math.round(k*1.35/v*60));
-  if(k<0.3){l1='<span class="big ok">Motorista chegando!</span>';if(!T.vibrou){T.vibrou=true;try{navigator.vibrate&&navigator.vibrate([300,150,300])}catch(e){}}}
-  else l1=`<span class="big">A ${k<1?Math.round(k*1000)+' m':k.toFixed(1).replace('.',',')+' km'} de você · chega em ~${min} min</span>`}
- else l1=`<span class="big">${d.dirigindo?'Carro em movimento':'Carro parado'}</span>`;
- l2=`<small>${velho?'Sem atualização ':'Posição atualizada '}${ha(d.posicao_em)}${d.dirigindo?' · '+Math.round(+d.velocidade||0)+' km/h':''}${T.me?'':' · toque em “Usar minha localização” para ver a distância até você'}</small>`;
- return l1+l2}
-async function trkCarrega(ro){if(T.busy||!S.token)return;T.busy=true;
+function atrasoAgora(ro){if(!ro.prev_inicio)return null;const [h,m]=ro.prev_inicio.split(':').map(Number);const p=new Date();p.setHours(h,m,0,0);return Math.round((Date.now()-p)/6e4)}
+function trkHtml(ro){return `<div class="card trk${ro.sr_inicio?' perto':''}" id="trk"><div class="trkh"><b>Seu motorista</b><span>${esc(ro.motorista)}${T.d&&T.d.placa&&!ro.sr_inicio?' · '+esc(T.d.placa):''}</span></div><div class="trki" id="trki" aria-live="polite">${trkInfo(ro)}</div>${ro.sr_inicio?'':'<div class="trka"><button class="btn line" type="button" data-a="embarquei">Já estou no carro</button></div>'}</div>`}
+function trkInfo(ro){
+ if(ro.sr_inicio)return `<span class="big ok">Motorista chegou às ${esc(hm(ro.sr_inicio))}</span><small>Ele iniciou a rota no SimpliRoute. Boa rota!</small>`;
+ const at=atrasoAgora(ro),d=T.d;let l1='',l2=[];
+ if(d&&d.min!=null){l1=d.km<0.3?'<span class="big ok">Motorista chegando!</span>':`<span class="big">Chega em ~${d.min} min</span>`;l2.push(`a ${d.km<1?Math.round(d.km*1000)+' m':String(d.km.toFixed(1)).replace('.',',')+' km'} de você · posição ${ha(d.posicao_em)}`)}
+ if(ro.prev_inicio){const t=`Previsto às <b>${esc(ro.prev_inicio)}</b>`;if(!l1)l1=`<span class="big">${t.replace(/<\/?b>/g,'')}</span>`;else l2.unshift(t);if(at!=null&&at>5)l2.push(`<b style="color:var(--bad)">${at} min de atraso</b>`)}
+ if(!l1)l1='<span class="big">Aguardando o motorista</span>';
+ if(ro.hist_n>=3&&ro.atraso_medio!=null){const a=+ro.atraso_medio;l2.push(Math.abs(a)<=5?'Costuma chegar no horário':a>0?`Nos últimos dias chegou, em média, ${a} min depois do previsto`:`Nos últimos dias chegou, em média, ${-a} min antes do previsto`)}
+ if(T.err==='sem_login')l2.push('Ainda não entrou no carro (MyGeotab)');
+ return l1+(l2.length?`<small>${l2.join(' · ')}</small>`:'')}
+async function trkCarrega(ro){if(T.busy||!S.token||ro.sr_inicio)return;T.busy=true;
  try{const r=await fetch(SB+'/functions/v1/motorista-posicao',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({token:S.token,rota:ro.id})}).then(r=>r.json());
-  if(r.ok){T.d=r;T.err=''}else{if(r.erro==='sessao'){T.busy=false;return sair('Sua sessão expirou. Entre de novo.')}T.err=r.erro||'Não foi possível consultar agora.'}}catch(e){T.err='Sem conexão agora. Tentando de novo…'}
+  if(r.ok){T.d=r;T.err=''}else{if(r.erro==='sessao'){T.busy=false;return sair('Sua sessão expirou. Entre de novo.')}T.d=null;T.err=r.erro||''}}catch(e){T.err=''}
  T.at=Date.now();T.busy=false;trkAtualiza()}
-async function trkAtualiza(){const box=document.getElementById('trki');if(box)box.innerHTML=trkInfo();
- const card=document.getElementById('trk');if(card&&T.me&&T.d&&km(T.me,{lat:T.d.lat,lng:T.d.lng})<0.3)card.classList.add('perto');
- const pl=card&&card.querySelector('.trkh span');const ro=rotaAtual();if(pl&&ro)pl.textContent=ro.motorista+(T.d&&T.d.placa?' · '+T.d.placa:'');
- const el=document.getElementById('mapa2');if(!el||!T.d)return;
- try{await carregaLeaflet()}catch(e){return}
- if(TM.el!==el){TM.el=el;TM.map=L.map(el,{zoomControl:false,attributionControl:true,scrollWheelZoom:false});L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap'}).addTo(TM.map);TM.car=null;TM.me=null}
- const c=[+T.d.lat,+T.d.lng];
- if(!TM.car)TM.car=L.marker(c,{icon:L.divIcon({className:'',html:'<div class="mk car">🚗</div>',iconSize:[32,32],iconAnchor:[16,16]}),title:'Carro do motorista'}).addTo(TM.map);else TM.car.setLatLng(c);
- if(T.me){const m=[T.me.lat,T.me.lng];if(!TM.me)TM.me=L.marker(m,{icon:L.divIcon({className:'',html:'<div class="mk eu"></div>',iconSize:[18,18],iconAnchor:[9,9]}),title:'Você'}).addTo(TM.map);else TM.me.setLatLng(m);TM.map.fitBounds(L.latLngBounds([c,m]).pad(.3),{maxZoom:16})}
- else TM.map.setView(c,14)}
-function minhaLoc(){if(!navigator.geolocation){toast('Este celular não permite localização.');return}
- if(T.watch!==null)return;T.watch=navigator.geolocation.watchPosition(p=>{T.me={lat:p.coords.latitude,lng:p.coords.longitude};try{localStorage.setItem('rp-loc','1')}catch(e){}const b=document.querySelector('[data-a="minhaloc"]');if(b)b.remove();trkAtualiza()},
-  e=>{T.watch=null;try{localStorage.removeItem('rp-loc')}catch(x){}toast(e.code===1?'Localização não permitida. Libere nas configurações do navegador.':'Não foi possível pegar sua localização.')},{enableHighAccuracy:true,maximumAge:30000,timeout:20000})}
-try{if(localStorage.getItem('rp-loc')==='1')setTimeout(minhaLoc,800)}catch(e){}
-setInterval(()=>{const ro=rotaAtual();if(S.token&&!document.hidden&&S.tela==='rota'&&trkAtivo(ro))trkCarrega(ro)},20000);
+function trkAtualiza(){const ro=rotaAtual();const box=document.getElementById('trki');if(box&&ro)box.innerHTML=trkInfo(ro)}
+setInterval(()=>{const ro=rotaAtual();if(S.token&&!document.hidden&&S.tela==='rota'&&trkAtivo(ro)){trkAtualiza();trkCarrega(ro)}},30000);
 let LF=null;
 function carregaLeaflet(){if(window.L)return Promise.resolve();if(LF)return LF;LF=new Promise((ok,no)=>{const sc=document.createElement('script');sc.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';sc.crossOrigin='';sc.onload=ok;sc.onerror=no;document.head.appendChild(sc)});return LF}
 async function desenhaMapa(ro){const el=document.getElementById('mapa');if(!el)return;try{await carregaLeaflet()}catch(e){el.textContent='Mapa indisponível agora.';return}
@@ -257,6 +239,7 @@ function render(){
   else if(S.tela==='rota'){
     h+=ro.confirmado_em?`<div class="note ok">Rota confirmada às ${hm(ro.confirmado_em)}.</div>`:ro.atualizado_em?`<div class="note pend">A logística atualizou esta rota às ${hm(ro.atualizado_em)}. Confira de novo e confirme.</div>`:`<div class="note pend">Confira sua rota e indique as necessidades dos pacientes o quanto antes.</div>`;
     if(trkAtivo(ro))h+=trkHtml(ro);
+    else if(!ro.motorista&&ro.data>=hoje()&&!embarcado(ro.id))h+=`<div class="card trk"><div class="trkh"><b>Seu motorista</b><span>Ainda não definido</span></div><div class="trki"><small>Assim que a logística definir o motorista no SimpliRoute, o nome dele aparece aqui${ro.data===hoje()?' e você acompanha o carro chegando':''}.</small></div></div>`;
     else if(ro.motorista&&ro.data>hoje())h+=`<div class="card trk"><div class="trkh"><b>Seu motorista</b><span>${esc(ro.motorista)}</span></div><div class="trki"><small>O acompanhamento do carro aparece aqui no dia da rota (${esc(ro.data.slice(8,10)+'/'+ro.data.slice(5,7))}), com a distância até você e a previsão de chegada.</small></div></div>`;
     const gm=gmaps(ro);
     h+=`<div class="card">${temGeo(ro)?'<div class="mapa" id="mapa" role="img" aria-label="Mapa com os pacientes na ordem da rota"></div>':ro.print?`<button class="print" type="button" data-a="zoom" aria-label="Ampliar o print da rota"><img src="${esc(ro.print)}" alt="Print da rota de ${esc(dExt(ro.data))}"></button>`:'<div class="noprint">Print da rota ainda não enviado</div>'}
@@ -290,7 +273,7 @@ function render(){
   if(S.zoom&&ro&&ro.print)h+=`<div class="zoom" role="dialog" aria-modal="true" aria-label="Print da rota"><div><img src="${esc(ro.print)}" alt="Print da rota ampliado"></div><button type="button" data-a="fechar">Fechar</button></div>`;
   app.innerHTML=h;
   if(ro&&S.tela==='rota'&&temGeo(ro))desenhaMapa(ro);
-  if(ro&&S.tela==='rota'&&trkAtivo(ro)){if(T.rota!==ro.id){T.rota=ro.id;T.d=null;T.err='';T.vibrou=false}TM.el=null;trkAtualiza();if(Date.now()-T.at>15000)trkCarrega(ro)}
+  if(ro&&S.tela==='rota'&&trkAtivo(ro)){if(T.rota!==ro.id){T.rota=ro.id;T.d=null;T.err=''}if(Date.now()-T.at>15000)trkCarrega(ro)}
 }
 document.addEventListener('submit',async e=>{
   e.preventDefault();
@@ -333,8 +316,7 @@ document.addEventListener('click',async e=>{
   if(b.dataset.tipo){const mot=$('#mot')?$('#mot').value:'';S.tipo=b.dataset.tipo;render();if($('#mot'))$('#mot').value=mot;return}
   const a=b.dataset.a;if(!a)return;
   if(a==='sair'){sair();return}
-  if(a==='minhaloc'){minhaLoc();return}
-  if(a==='embarquei'){const ro=rotaAtual();if(ro){try{localStorage.setItem('rp-emb-'+ro.id,'1')}catch(x){}}if(T.watch!==null){navigator.geolocation.clearWatch(T.watch);T.watch=null}render();toast('Boa rota!');return}
+  if(a==='embarquei'){const ro=rotaAtual();if(ro){try{localStorage.setItem('rp-emb-'+ro.id,'1')}catch(x){}}render();toast('Boa rota!');return}
   if(a==='instalar'&&INST){INST.prompt();const c=await INST.userChoice.catch(()=>null);INST=null;render();return}
   if(a==='instx'){instFechado=true;try{localStorage.setItem('rp-inst','x')}catch(x){}render();return}
   if(a==='rota'||a==='pedidos'){S.tela=a;render();window.scrollTo(0,0);if(a==='pedidos')carregar(true);return}
