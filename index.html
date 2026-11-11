@@ -57,6 +57,20 @@ header.top{background:var(--wine);color:#fff;padding:calc(16px + env(safe-area-i
 .days button{flex:none;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:999px;padding:7px 13px;font-size:12.5px;font-weight:700;min-height:36px}
 .days button.on{background:var(--wine);color:#fff;border-color:var(--wine)}
 main{flex:1;padding:14px 16px calc(90px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:12px}
+.evo{border-radius:14px;overflow:hidden;border:2px solid #b4232b;background:#fff}
+.evo.am{border-color:var(--sun)}
+.evo>button{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;background:#b4232b;color:#fff;cursor:pointer;min-height:56px}
+.evo.am>button{background:#fff0d6;color:var(--pend)}
+.evo>button b{font-size:15px;display:block}.evo>button small{font-size:12px;opacity:.9;display:block;margin-top:2px}
+.evo>button .en{flex:none;min-width:38px;height:38px;border-radius:50%;background:#fff;color:#b4232b;font:800 17px Montserrat,Arial,sans-serif;display:flex;align-items:center;justify-content:center}
+.evo.am>button .en{background:var(--sun);color:var(--wine-d)}
+.evo>button .ec{margin-left:auto;font-size:20px;flex:none}
+.evo ul{list-style:none;margin:0;padding:4px 14px 6px}
+.evo li{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.evo li:last-child{border-bottom:0}.evo li b{font-weight:700;color:var(--ink)}.evo li span{flex:none;font-weight:800;color:#b4232b;font-size:12.5px;text-align:right}
+.evo li span.am{color:var(--pend)}
+.evo .ecoord{margin:10px 14px 0;padding:8px 10px;border-radius:10px;background:#fbe3e4;color:#8f1d2b;font-size:12.5px;font-weight:700}
+.evo .erod{padding:8px 14px 12px;font-size:11.5px;color:var(--muted);border-top:1px solid var(--line)}
 .note{border-radius:12px;padding:10px 14px;font-size:13px;font-weight:600}
 .note.pend{background:var(--pend-bg);color:var(--pend)}
 .note.ok{background:var(--ok-bg);color:var(--ok);font-weight:700}
@@ -145,14 +159,14 @@ function toast(t){const d=document.createElement('div');d.className='toast';d.se
 const dExt=k=>{const d=new Date(k+'T12:00:00');const s=d.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'2-digit'});return s[0].toUpperCase()+s.slice(1)};
 const hm=t=>t?new Date(t).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'';
 const hoje=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
-function sair(msg){try{if(S.token)rpc('app_sair',{p_token:S.token}).catch(()=>{});localStorage.removeItem('rp-token');localStorage.removeItem('rp-trocar')}catch(e){}S.trocar=false;PIN_TMP='';S.token=null;S.rotas=[];S.err=msg||'';render()}
+function sair(msg){try{if(S.token)rpc('app_sair',{p_token:S.token}).catch(()=>{});localStorage.removeItem('rp-token');localStorage.removeItem('rp-trocar')}catch(e){}S.trocar=false;PIN_TMP='';S.token=null;S.rotas=[];S.evo=null;S.evoAberto=false;S.err=msg||'';render()}
 async function carregar(silencioso){
   if(!S.token||S.trocar)return;
   try{const r=await rpc('app_minhas_rotas',{p_token:S.token});
     if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');throw new Error(r.erro)}
     S.nome=r.nome;S.rotas=r.rotas||[];
     if(!S.dia||!S.rotas.some(x=>String(x.id)===String(S.dia))){const h=hoje();const prox=S.rotas.find(x=>x.data>=h)||S.rotas[S.rotas.length-1];S.dia=prox?String(prox.id):null}
-    S.err='';render();
+    S.err='';render();carregarEvo();
   }catch(e){if(!silencioso){S.err=e.message;render()}}
 }
 const rotaAtual=()=>S.rotas.find(x=>String(x.id)===String(S.dia));
@@ -172,6 +186,12 @@ const temGeo=ro=>ro&&!ro.print&&(ro.pacientes||[]).filter(p=>p.lat&&p.lng).lengt
 function gmaps(ro){const pts=(ro.pacientes||[]).filter(p=>p.lat&&p.lng).map(p=>p.lat+','+p.lng);if(!pts.length)return'';const dst=pts.slice(0,10).pop(),wp=pts.slice(0,Math.min(pts.length,10)-1);
  return 'https://www.google.com/maps/dir/?api=1&travelmode=driving&destination='+encodeURIComponent(dst)+(wp.length?'&waypoints='+encodeURIComponent(wp.join('|')):'')}
 
+/* ===== Evoluções atrasadas (prontuário IW, via Dashboard de visitas): só status e datas ===== */
+async function carregarEvo(){if(!S.token||S.trocar)return;try{const r=await rpc('app_evolucoes_pendentes',{p_token:S.token});if(r&&r.ok){const a=JSON.stringify(S.evo);S.evo={l:r.atrasadas||[],base:r.base_iw};if(a!==JSON.stringify(S.evo))render()}}catch(e){}}
+function evoHtml(){const E=S.evo;if(!E||!E.l.length)return'';const n=E.l.length,max=Math.max(...E.l.map(x=>x.dias||0)),grave=max>=2,coord=E.l.some(x=>x.dias>=5);
+ const dm=d=>d?d.slice(8,10)+'/'+d.slice(5,7):'';const bs=E.base?new Date(E.base):null;
+ const base=bs?(bs.toDateString()===new Date().toDateString()?'hoje':bs.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}))+' às '+hm(E.base):'';
+ return `<section class="evo${grave?'':' am'}" aria-label="Evoluções atrasadas"><button type="button" data-a="evo" aria-expanded="${!!S.evoAberto}"><span class="en">${n}</span><span><b>${n===1?'Você tem 1 evolução atrasada':'Você tem '+n+' evoluções atrasadas'}</b><small>Visitas feitas há mais de 24h sem evolução no prontuário. Toque para ver.</small></span><span class="ec" aria-hidden="true">${S.evoAberto?'▴':'▾'}</span></button>${S.evoAberto?`${coord?'<div class="ecoord">Há evolução com 5 dias ou mais de atraso: ela já aparece para a coordenação.</div>':''}<ul>${E.l.map(x=>`<li><b>${esc(x.paciente)}<br><small style="font-weight:500;color:var(--muted)">visita em ${esc(dm(x.data))}</small></b><span class="${x.dias>=2?'':'am'}">${x.dias<=1?'1 dia':x.dias+' dias'}<br>da visita</span></li>`).join('')}</ul><div class="erod">Situação do prontuário de ${esc(base)}. Evoluções registradas depois disso saem da lista na próxima atualização (manhã seguinte).</div>`:''}</section>`}
 /* ===== Chegada do motorista: horário previsto (SimpliRoute), costume do motorista e, nos carros da frota, distância pelo Geotab ===== */
 const T={rota:null,d:null,err:'',at:0,busy:false};
 const embarcado=id=>{try{return localStorage.getItem('rp-emb-'+id)==='1'}catch(e){return false}};
@@ -241,7 +261,7 @@ function render(){
    <h2>${S.tela==='pedido'?'Necessidade do paciente':S.tela==='pedidos'?'Meus pedidos':'Minha rota'}</h2>
    ${ro?`<div class="sub">${esc(dExt(ro.data))} · ${/^carro\b/i.test(ro.placa||'')?'':'Carro '}${esc(ro.placa)}${ro.motorista?' · Motorista '+esc(ro.motorista):''}</div>`:''}</header>`;
   if(S.rotas.length>1&&S.tela!=='pedido')h+=`<div class="days" role="tablist" aria-label="Dias">${S.rotas.map(x=>{const on=String(x.id)===String(S.dia),dup=S.rotas.filter(y=>y.data===x.data).length>1;return `<button type="button" role="tab" data-dia="${x.id}" class="${on?'on':''}" aria-selected="${on}">${esc(dExt(x.data).split(',')[0].slice(0,3))} ${x.data.slice(8,10)}/${x.data.slice(5,7)}${dup?' · '+esc(x.placa||''):''}</button>`}).join('')}</div>`;
-  h+='<main>'+bannerInst();
+  h+='<main>'+bannerInst();if(S.tela!=='pedido')h+=evoHtml();
   if(S.err)h+=`<p class="err" role="alert">${esc(S.err)}</p>`;
   if(!ro){h+=`<p class="empty">Nenhuma rota publicada para você ainda.<br>Quando a logística publicar, ela aparece aqui.</p><button class="btn line" type="button" data-a="atualizar" style="align-self:center">Atualizar</button>`}
   else if(S.tela==='rota'){
@@ -326,6 +346,7 @@ document.addEventListener('click',async e=>{
   if(a==='sair'){sair();return}
   if(a==='embarquei'){const ro=rotaAtual();if(ro){try{localStorage.setItem('rp-emb-'+ro.id,'1')}catch(x){}}render();toast('Boa rota!');return}
   if(a==='instalar'&&INST){INST.prompt();const c=await INST.userChoice.catch(()=>null);INST=null;render();return}
+  if(a==='evo'){S.evoAberto=!S.evoAberto;render();return}
   if(a==='instx'){instFechado=true;try{localStorage.setItem('rp-inst','x')}catch(x){}render();return}
   if(a==='rota'||a==='pedidos'){S.tela=a;render();window.scrollTo(0,0);if(a==='pedidos')carregar(true);return}
   if(a==='zoom'){S.zoom=true;render();return}

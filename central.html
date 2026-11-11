@@ -111,6 +111,9 @@ table.rel td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align
 table.rel td small{color:var(--muted)}
 table.rel td.n{white-space:nowrap}
 table.rel tr:last-child td{border-bottom:0}
+table.rel td.at{font-weight:800;color:#b4232b}table.rel tr.ex td{background:var(--off)}
+.evl{margin:0;padding-left:18px;columns:2;font-size:12px}.evl li{break-inside:avoid;padding:2px 0}
+.bxv{background:none;border:0;color:var(--wine);font-weight:700;cursor:pointer;padding:0;font-size:12.5px}
 .dica{font-size:12px;color:var(--muted);line-height:1.5;margin:0}
 .cad{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
 .cad h3{margin:0;font-size:15px;color:var(--wine);display:flex;align-items:center;gap:8px}.cad h3 span{font-size:11px;background:var(--off);color:var(--muted);border-radius:999px;padding:2px 9px}
@@ -244,6 +247,29 @@ function baixarCSV(){const L=relLista();const cols=[['ID do pedido',x=>x.id],['D
  const csv='﻿'+[cols.map(c=>q(c[0])).join(','),...L.map(x=>cols.map(c=>q(c[1](x))).join(','))].join('\r\n');
  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='mudancas-rotas_'+R.de+'_a_'+R.ate+'.csv';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
 
+/* ===== Evoluções atrasadas por médico (prontuário IW via Dashboard de visitas; só status e datas) ===== */
+const V={d:null,busy:false,err:'',ab:null,so:true};
+async function carregarEvoC(){if(!S.token||S.trocar)return;V.busy=true;render();
+ try{const r=await rpc('eq_evolucoes',{p_token:S.token});if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');throw new Error(r.erro)}V.d=r;V.err=''}catch(e){V.err=e.message}
+ V.busy=false;render()}
+function renderEvoC(){
+ let h='';if(V.err)h+=`<p class="err" role="alert">${esc(V.err)}</p>`;
+ if(!V.d)return h+`<div class="empty">${V.busy?'Carregando evoluções…':'Sem dados.'}</div>`;
+ const M=V.d.medicos||[],tot=k=>M.reduce((a,x)=>a+(x[k]||0),0),reg=tot('no_prazo')+tot('fora_prazo'),base=reg+tot('atrasadas');
+ const L=V.so?M.filter(x=>x.atrasadas>0):M;
+ h+=`<div class="resumo"><div class="kpi"><b>${tot('atrasadas')}</b><span>evoluções atrasadas agora</span></div><div class="kpi"><b>${M.filter(x=>x.atrasadas>0).length}</b><span>médicos com atraso</span></div><div class="kpi"><b>${tot('atrasadas_5d')}</b><span>atrasadas há 5 dias ou mais</span></div><div class="kpi"><b>${base?Math.round(tot('no_prazo')/base*100)+'%':'—'}</b><span>no prazo de 24h (últimos 60 dias)</span></div></div>`;
+ h+=`<div class="bar"><label class="ck"><input type="checkbox" id="vso"${V.so?' checked':''}> Só médicos com evolução atrasada</label><span class="sp"></span><button class="btn ghost sm" type="button" data-a="vrec"${V.busy?' disabled':''}>Atualizar</button>${M.length?'<button class="btn sun sm" type="button" data-a="vcsv">Baixar para o Lists (CSV)</button>':''}</div>`;
+ if(!L.length)return h+'<div class="empty">Nenhuma evolução atrasada. 👏</div>';
+ h+=`<div class="tw"><table class="rel" style="min-width:760px"><thead><tr><th>Médico</th><th>Atrasadas</th><th>5+ dias</th><th>Mais antiga</th><th>No prazo (60 dias)</th><th>Visitas (60 dias)</th><th></th></tr></thead><tbody>${L.map((x,i)=>{const b=x.no_prazo+x.fora_prazo+x.atrasadas,ab=V.ab===x.profissional;
+  return `<tr class="${ab?'ex':''}"><td>${esc(x.profissional)}</td><td class="${x.atrasadas?'at':''}">${x.atrasadas}</td><td class="${x.atrasadas_5d?'at':''}">${x.atrasadas_5d}</td><td class="n">${x.mais_antiga!=null?x.mais_antiga+' dias':'—'}</td><td class="n">${b?Math.round(x.no_prazo/b*100)+'%':'—'}</td><td class="n">${x.visitas}</td><td>${x.atrasadas?`<button class="bxv" type="button" data-vab="${i}">${ab?'Fechar':'Ver pacientes'}</button>`:''}</td></tr>${ab?`<tr class="ex"><td colspan="7"><ol class="evl">${x.lista.map(y=>`<li>${esc(y.paciente)} · visita ${brD(y.data)} · <b>${y.dias===1?"1 dia":y.dias+" dias"}</b></li>`).join('')}</ol></td></tr>`:''}`}).join('')}</tbody></table></div>`;
+ const bs=V.d.base_iw?brDT(V.d.base_iw):'';
+ h+=`<p class="dica">Fonte: Dashboard de visitas (prontuário IW, situação de ${esc(bs)}; sincronizado ${esc(brDT(V.d.sincronizado_em))}). Atrasada = visita médica com check-out há mais de 24h e sem evolução registrada. Os médicos veem as próprias pendências no Minha Rota; a partir de 5 dias o app avisa que a coordenação está vendo.</p>`;
+ return h}
+function baixarEvoCSV(){const M=(V.d&&V.d.medicos)||[];const q=v=>{const t=String(v==null?'':v);return /[",;]/.test(t)?'"'+t.replace(/"/g,'""')+'"':t};
+ const lin=[['Medico','Paciente','Data da visita','Dias desde a visita','Situacao base IW'].join(',')];
+ M.forEach(x=>(x.lista||[]).forEach(y=>lin.push([x.profissional,y.paciente,y.data,y.dias,V.d.base_iw?String(V.d.base_iw).slice(0,10):''].map(q).join(','))));
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+lin.join('\r\n')],{type:'text/csv;charset=utf-8'}));a.download='evolucoes-atrasadas_'+hojeSP()+'.csv';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+
 /* ===== Cadastros (profissionais do Minha Rota e equipe da Central) ===== */
 const C={d:null,busy:false,err:'',ed:null,pin:null};
 const soDig=t=>String(t||'').replace(/\D/g,'');
@@ -291,10 +317,11 @@ function render(){
  const esps=[...new Set(all.map(r=>r.especialidade).filter(Boolean))].sort(),dias=[...new Set(all.map(r=>r.data_rota))].sort();
  const L=all.filter(r=>(!S.f.st||r.status===S.f.st)&&(!S.f.esp||r.especialidade===S.f.esp)&&(!S.f.dia||r.data_rota===S.f.dia));
  const npend=cnt('pendente');
- let h=`<header class="top"><div class="topin"><div><h2>Central de Solicitações</h2><small>Logística · Solar Cuidados</small></div><nav class="tabs" aria-label="Seções"><button type="button" data-tab="sol" class="${S.tab==='sol'?'on':''}">Solicitações${npend?`<b>${npend}</b>`:''}</button><button type="button" data-tab="env" class="${S.tab==='env'?'on':''}">Envio de rotas</button><button type="button" data-tab="rel" class="${S.tab==='rel'?'on':''}">Relatório</button><button type="button" data-tab="cad" class="${S.tab==='cad'?'on':''}">Cadastros</button></nav><span class="sp"></span><span class="who">${esc(S.nome)}</span><button class="out" type="button" data-a="sair">Sair</button></div></header><main>`;
+ let h=`<header class="top"><div class="topin"><div><h2>Central de Solicitações</h2><small>Logística · Solar Cuidados</small></div><nav class="tabs" aria-label="Seções"><button type="button" data-tab="sol" class="${S.tab==='sol'?'on':''}">Solicitações${npend?`<b>${npend}</b>`:''}</button><button type="button" data-tab="env" class="${S.tab==='env'?'on':''}">Envio de rotas</button><button type="button" data-tab="rel" class="${S.tab==='rel'?'on':''}">Relatório</button><button type="button" data-tab="evo" class="${S.tab==='evo'?'on':''}">Evoluções</button><button type="button" data-tab="cad" class="${S.tab==='cad'?'on':''}">Cadastros</button></nav><span class="sp"></span><span class="who">${esc(S.nome)}</span><button class="out" type="button" data-a="sair">Sair</button></div></header><main>`;
  if(S.tab==='env'){app.innerHTML=h+renderEnv()+'</main>';return}
  if(S.tab==='rel'){app.innerHTML=h+renderRel()+'</main>';return}
  if(S.tab==='cad'){app.innerHTML=h+renderCad()+'</main>';return}
+ if(S.tab==='evo'){app.innerHTML=h+renderEvoC()+'</main>';return}
  h+=`<div class="bar"><div class="chips" role="group" aria-label="Filtrar por situação">${['pendente','aprovada','recusada','aplicada'].map(st=>`<button type="button" data-st="${st}" class="${S.f.st===st?'on':''}">${STN[st].replace(' no SimpliRoute','')}<b>${cnt(st)}</b></button>`).join('')}<button type="button" data-st="" class="${!S.f.st?'on':''}">Todas<b>${all.length}</b></button></div>
   <select id="fesp" aria-label="Equipe"><option value="">Todas as equipes</option>${esps.map(e=>`<option${S.f.esp===e?' selected':''}>${esc(e)}</option>`).join('')}</select>
   <select id="fdia" aria-label="Dia da rota"><option value="">Todos os dias</option>${dias.map(d=>`<option value="${d}"${S.f.dia===d?' selected':''}>${dm(d)}</option>`).join('')}</select>
@@ -325,22 +352,25 @@ document.addEventListener('submit',async e=>{if(e.target.id!=='fpin')return;e.pr
  if(!pn){S.err='Digite o novo PIN.';render();return}if(pn!==pn2){S.err='Os dois PINs não são iguais.';render();return}
  S.busy=true;S.err='';render();try{const r=await rpc('eq_trocar_pin',{p_token:S.token,p_atual:PIN_TMP,p_novo:pn});S.busy=false;
   if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo com o PIN provisório.');S.err=r.erro;render();return}
-  S.trocar=false;PIN_TMP='';toast('PIN criado. Use ele nas próximas vezes.');render();carregar();if(S.tab==='env')carregarEnv(true);if(S.tab==='rel')carregarRel();if(S.tab==='cad')carregarCad()}catch(x){S.busy=false;S.err=x.message;render()}});
+  S.trocar=false;PIN_TMP='';toast('PIN criado. Use ele nas próximas vezes.');render();carregar();if(S.tab==='env')carregarEnv(true);if(S.tab==='rel')carregarRel();if(S.tab==='cad')carregarCad();if(S.tab==='evo')carregarEvoC()}catch(x){S.busy=false;S.err=x.message;render()}});
 document.addEventListener('submit',async e=>{if(e.target.id!=='flog')return;e.preventDefault();const cel=$('#cel').value,pin=$('#pin').value;if(!cel||!pin){S.err='Preencha o celular e o PIN.';render();return}
  S.busy=true;S.err='';render();try{const r=await rpc('eq_login',{p_celular:cel,p_pin:pin});S.busy=false;if(!r.ok){S.err=r.erro;render();$('#cel').value=cel;return}
   S.token=r.token;S.nome=r.nome;try{sessionStorage.setItem('lg-token',r.token);sessionStorage.setItem('lg-nome',r.nome);marcaUso()}catch(x){}if(r.trocar_pin){S.trocar=true;PIN_TMP=pin;render();return}render();carregar()}catch(x){S.busy=false;S.err=x.message;render()}});
 document.addEventListener('input',e=>{const t=e.target.closest('[data-rs]');if(t)S.draft[t.dataset.rs]=t.value});
-document.addEventListener('change',e=>{if(e.target.id==='rde'){R.de=e.target.value;return}if(e.target.id==='rate'){R.ate=e.target.value;return}if(e.target.id==='rtst'){R.teste=e.target.checked;render();return}if(e.target.id==='edata'){E.data=e.target.value||hojeSP();E.sr=null;E.db=null;carregarEnv(true);return}if(e.target.id==='eini'){E.ini=e.target.checked;try{localStorage.setItem('lg-ini',E.ini?'1':'0')}catch(x){}render();return}if(e.target.dataset&&e.target.dataset.pick!==undefined){E.pick[e.target.dataset.pick]=e.target.value;render();return}if(e.target.id==='fesp'){S.f.esp=e.target.value;render()}if(e.target.id==='fdia'){S.f.dia=e.target.value;render()}});
+document.addEventListener('change',e=>{if(e.target.id==='vso'){V.so=e.target.checked;V.ab=null;render();return}if(e.target.id==='rde'){R.de=e.target.value;return}if(e.target.id==='rate'){R.ate=e.target.value;return}if(e.target.id==='rtst'){R.teste=e.target.checked;render();return}if(e.target.id==='edata'){E.data=e.target.value||hojeSP();E.sr=null;E.db=null;carregarEnv(true);return}if(e.target.id==='eini'){E.ini=e.target.checked;try{localStorage.setItem('lg-ini',E.ini?'1':'0')}catch(x){}render();return}if(e.target.dataset&&e.target.dataset.pick!==undefined){E.pick[e.target.dataset.pick]=e.target.value;render();return}if(e.target.id==='fesp'){S.f.esp=e.target.value;render()}if(e.target.id==='fdia'){S.f.dia=e.target.value;render()}});
 document.addEventListener('click',async e=>{const b=e.target.closest('button');if(!b)return;const d=b.dataset;
  try{
   if(d.a==='sair'){sair();return}
   if(d.a==='atualizar'){await carregar();toast('Atualizado.');return}
-  if(d.tab){S.tab=d.tab;try{localStorage.setItem('lg-tab',d.tab)}catch(x){}render();if(d.tab==='env'&&E.sr===null)carregarEnv(true);if(d.tab==='rel'&&R.itens===null)carregarRel();if(d.tab==='cad')carregarCad(C.d!==null);return}
+  if(d.tab){S.tab=d.tab;try{localStorage.setItem('lg-tab',d.tab)}catch(x){}render();if(d.tab==='env'&&E.sr===null)carregarEnv(true);if(d.tab==='rel'&&R.itens===null)carregarRel();if(d.tab==='cad')carregarCad(C.d!==null);if(d.tab==='evo'&&V.d===null)carregarEvoC();return}
   if(d.ced){C.ed=C.ed===d.ced?null:d.ced;C.pin=null;render();const i=document.querySelector(`[data-csave="${d.ced}"] input`);if(i)i.focus();return}
   if(d.cpin){C.pin=C.pin===d.cpin?null:d.cpin;C.ed=null;render();const i=document.querySelector(`[data-cpinok="${d.cpin}"] input`);if(i){i.focus();i.select()}return}
   if(d.cx!==undefined){C.ed=null;C.pin=null;render();return}
   if(d.cat){const {tipo,id,p}=cadAchar(d.cat);b.disabled=true;await cadRpc('eq_cad_ativo',{p_tipo:tipo,p_id:id,p_ativo:!p.ativo},p.nome+(p.ativo?' desativado. As sessões dele foram encerradas.':' reativado.'));return}
   if(d.a==='rger'){await carregarRel();return}
+  if(d.a==='vrec'){await carregarEvoC();return}
+  if(d.a==='vcsv'){baixarEvoCSV();return}
+  if(d.vab!=null){const x=(V.so?(V.d.medicos||[]).filter(m=>m.atrasadas>0):(V.d.medicos||[]))[+d.vab];V.ab=x&&V.ab!==x.profissional?x.profissional:null;render();return}
   if(d.a==='rcsv'){baixarCSV();toast('CSV baixado.');return}
   if(d.rf!==undefined){R.f=d.rf;render();return}
   if(d.a==='puxar'){await carregarEnv(true);if(!E.err)toast('Rotas do SimpliRoute atualizadas.');return}
@@ -358,7 +388,7 @@ document.addEventListener('click',async e=>{const b=e.target.closest('button');i
  }catch(x){b.disabled=false;toast(x.message)}});
 setInterval(()=>{try{if(S.token&&Date.now()-(+sessionStorage.getItem('lg-ult')||0)>INATIVO_MIN*6e4){sair('Por segurança, a sessão foi encerrada após '+INATIVO_MIN+' minutos sem uso. Entre de novo.');return}}catch(e){}if(S.token&&!document.hidden&&!document.querySelector('[data-rs]:focus,select:focus')){carregar(true);if(S.tab==='env'&&E.sr!==null&&!E.busy)carregarEnv(false,true)}},30000);
 document.addEventListener('visibilitychange',()=>{if(document.hidden||!S.token)return;try{if(Date.now()-(+sessionStorage.getItem('lg-ult')||0)>INATIVO_MIN*6e4)return sair('Por segurança, a sessão foi encerrada após '+INATIVO_MIN+' minutos sem uso. Entre de novo.')}catch(e){}carregar(true)});
-render();if(S.token){carregar();if(S.tab==='env')carregarEnv(true);if(S.tab==='rel')carregarRel();if(S.tab==='cad')carregarCad()}
+render();if(S.token){carregar();if(S.tab==='env')carregarEnv(true);if(S.tab==='rel')carregarRel();if(S.tab==='cad')carregarCad();if(S.tab==='evo')carregarEvoC()}
 </script>
 </body>
 </html>
