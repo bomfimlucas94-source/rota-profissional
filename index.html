@@ -57,6 +57,16 @@ header.top{background:var(--wine);color:#fff;padding:calc(16px + env(safe-area-i
 .days button{flex:none;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:999px;padding:7px 13px;font-size:12.5px;font-weight:700;min-height:36px}
 .days button.on{background:var(--wine);color:#fff;border-color:var(--wine)}
 main{flex:1;padding:14px 16px calc(90px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:12px}
+.evk{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.evk div{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
+.evk b{display:block;font:800 22px Montserrat,Arial,sans-serif;color:var(--wine)}.evk b.r{color:#b4232b}.evk span{font-size:11.5px;color:var(--muted);font-weight:600}
+.evok{background:var(--ok-bg);color:var(--ok);border-radius:14px;padding:16px;font-weight:700;font-size:14px;text-align:center}
+.evr{list-style:none;margin:0;padding:0;background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.evr li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);font-size:13.5px}
+.evr li:last-child{border-bottom:0}.evr li small{display:block;color:var(--muted);font-size:12px}
+.evs{flex:none;font-size:11.5px;font-weight:800;border-radius:999px;padding:4px 9px}
+.evs.np{background:var(--ok-bg);color:var(--ok)}.evs.fp{background:var(--pend-bg);color:var(--pend)}.evs.at{background:#fbe3e4;color:#b4232b}.evs.ag{background:#eee;color:var(--muted)}
+nav.tabs button b.nb{display:inline-block;min-width:18px;padding:0 5px;margin-left:4px;border-radius:9px;background:#b4232b;color:#fff;font-size:11px;line-height:18px}
 .evo{border-radius:14px;overflow:hidden;border:2px solid #b4232b;background:#fff}
 .evo.am{border-color:var(--sun)}
 .evo>button{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;background:#b4232b;color:#fff;cursor:pointer;min-height:56px}
@@ -187,11 +197,21 @@ function gmaps(ro){const pts=(ro.pacientes||[]).filter(p=>p.lat&&p.lng).map(p=>p
  return 'https://www.google.com/maps/dir/?api=1&travelmode=driving&destination='+encodeURIComponent(dst)+(wp.length?'&waypoints='+encodeURIComponent(wp.join('|')):'')}
 
 /* ===== Evoluções atrasadas (prontuário IW, via Dashboard de visitas): só status e datas ===== */
-async function carregarEvo(){if(!S.token||S.trocar)return;try{const r=await rpc('app_evolucoes_pendentes',{p_token:S.token});if(r&&r.ok){const a=JSON.stringify(S.evo);S.evo={l:r.atrasadas||[],base:r.base_iw};if(a!==JSON.stringify(S.evo))render()}}catch(e){}}
-function evoHtml(){const E=S.evo;if(!E||!E.l.length)return'';const n=E.l.length,max=Math.max(...E.l.map(x=>x.dias||0)),grave=max>=2,coord=E.l.some(x=>x.dias>=5);
+async function carregarEvo(){if(!S.token||S.trocar)return;try{const r=await rpc('app_evolucoes_pendentes',{p_token:S.token});if(r&&r.ok){const a=JSON.stringify(S.evo);S.evo={l:r.atrasadas||[],base:r.base_iw,res:r.resumo||{},rec:r.recentes||[]};if(a!==JSON.stringify(S.evo))render()}}catch(e){}}
+function evoHtml(fixo){const E=S.evo;if(!E||!E.l.length)return'';const n=E.l.length,max=Math.max(...E.l.map(x=>x.dias||0)),grave=max>=2,coord=E.l.some(x=>x.dias>=5);
  const dm=d=>d?d.slice(8,10)+'/'+d.slice(5,7):'';const bs=E.base?new Date(E.base):null;
  const base=bs?(bs.toDateString()===new Date().toDateString()?'hoje':bs.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}))+' às '+hm(E.base):'';
- return `<section class="evo${grave?'':' am'}" aria-label="Evoluções atrasadas"><button type="button" data-a="evo" aria-expanded="${!!S.evoAberto}"><span class="en">${n}</span><span><b>${n===1?'Você tem 1 evolução atrasada':'Você tem '+n+' evoluções atrasadas'}</b><small>Visitas feitas há mais de 24h sem evolução no prontuário. Toque para ver.</small></span><span class="ec" aria-hidden="true">${S.evoAberto?'▴':'▾'}</span></button>${S.evoAberto?`${coord?'<div class="ecoord">Há evolução com 5 dias ou mais de atraso: ela já aparece para a coordenação.</div>':''}<ul>${E.l.map(x=>`<li><b>${esc(x.paciente)}<br><small style="font-weight:500;color:var(--muted)">visita em ${esc(dm(x.data))}</small></b><span class="${x.dias>=2?'':'am'}">${x.dias<=1?'1 dia':x.dias+' dias'}<br>da visita</span></li>`).join('')}</ul><div class="erod">Situação do prontuário de ${esc(base)}. Evoluções registradas depois disso saem da lista na próxima atualização (manhã seguinte).</div>`:''}</section>`}
+ return `<section class="evo${grave?'':' am'}" aria-label="Evoluções atrasadas"><button type="button" data-a="${fixo?'evotab':'evo'}" aria-expanded="${fixo||!!S.evoAberto}"><span class="en">${n}</span><span><b>${n===1?'Você tem 1 evolução atrasada':'Você tem '+n+' evoluções atrasadas'}</b><small>Visitas feitas há mais de 24h sem evolução no prontuário.${fixo?'':' Toque para ver.'}</small></span>${fixo?'':`<span class="ec" aria-hidden="true">${S.evoAberto?'▴':'▾'}</span>`}</button>${fixo||S.evoAberto?`${coord?'<div class="ecoord">Há evolução com 5 dias ou mais de atraso: ela já aparece para a coordenação.</div>':''}<ul>${E.l.map(x=>`<li><b>${esc(x.paciente)}<br><small style="font-weight:500;color:var(--muted)">visita em ${esc(dm(x.data))}</small></b><span class="${x.dias>=2?'':'am'}">${x.dias<=1?'1 dia':x.dias+' dias'}<br>da visita</span></li>`).join('')}</ul><div class="erod">Situação do prontuário de ${esc(base)}. Evoluções registradas depois disso saem da lista na próxima atualização (manhã seguinte).</div>`:''}</section>`}
+function evoTela(){const E=S.evo;if(!E)return'<p class="empty">Carregando suas evoluções…</p>';
+ const R=E.res||{},reg=(R.no_prazo||0)+(R.fora_prazo||0),base=reg+(R.atrasadas||0),pct=base?Math.round((R.no_prazo||0)/base*100):null;
+ const dm=d=>d?d.slice(8,10)+'/'+d.slice(5,7):'';const bs=E.base?new Date(E.base):null;
+ const SN={no_prazo:['No prazo','np'],fora_prazo:['Fora do prazo','fp'],atrasada:['Atrasada','at'],pendente:['Dentro das 24h','ag'],aguardando:['Aguardando prontuário','ag']};
+ let h=`<div class="evk"><div><b class="${E.l.length?'r':''}">${E.l.length}</b><span>atrasadas agora</span></div><div><b>${pct==null?'—':pct+'%'}</b><span>no prazo (30 dias)</span></div><div><b>${R.horas_media==null?'—':String(R.horas_media).replace('.',',')+'h'}</b><span>tempo médio p/ evoluir</span></div></div>`;
+ h+=E.l.length?evoHtml(true):'<div class="evok">✅ Nenhuma evolução atrasada. Obrigado!</div>';
+ h+='<h3>Suas visitas dos últimos 14 dias</h3>';
+ h+=E.rec.length?'<ul class="evr">'+E.rec.map(x=>{const st=SN[x.st]||[x.st,'ag'];return `<li><span><b>${esc(x.paciente)}</b><small>visita em ${esc(dm(x.data))}${x.evo_em?' · evoluída em '+esc(new Date(x.evo_em).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}))+(x.horas!=null?' ('+x.horas+'h depois)':''):''}</small></span><span class="evs ${st[1]}">${st[0]}</span></li>`}).join('')+'</ul>':'<p class="empty">Nenhuma visita médica sua encontrada nos últimos 14 dias.</p>';
+ h+=`<p class="lgpd" style="margin-top:4px">Prazo: 24h após o check-out da visita. Situação do prontuário de ${esc(bs?bs.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' às '+hm(E.base):'—')}; evoluções feitas depois disso aparecem na próxima atualização (manhã seguinte).</p>`;
+ return h}
 /* ===== Chegada do motorista: horário previsto (SimpliRoute), costume do motorista e, nos carros da frota, distância pelo Geotab ===== */
 const T={rota:null,d:null,err:'',at:0,busy:false};
 const embarcado=id=>{try{return localStorage.getItem('rp-emb-'+id)==='1'}catch(e){return false}};
@@ -258,12 +278,13 @@ function render(){
   const ro=rotaAtual();
   const nPend=ro?ro.pedidos.filter(p=>p.status==='pendente').length:0;
   let h=`<header class="top"><div class="r1"><span class="hi">Olá, ${esc(S.nome)}</span><button class="out" type="button" data-a="sair">Sair</button></div>
-   <h2>${S.tela==='pedido'?'Necessidade do paciente':S.tela==='pedidos'?'Meus pedidos':'Minha rota'}</h2>
-   ${ro?`<div class="sub">${esc(dExt(ro.data))} · ${/^carro\b/i.test(ro.placa||'')?'':'Carro '}${esc(ro.placa)}${ro.motorista?' · Motorista '+esc(ro.motorista):''}</div>`:''}</header>`;
-  if(S.rotas.length>1&&S.tela!=='pedido')h+=`<div class="days" role="tablist" aria-label="Dias">${S.rotas.map(x=>{const on=String(x.id)===String(S.dia),dup=S.rotas.filter(y=>y.data===x.data).length>1;return `<button type="button" role="tab" data-dia="${x.id}" class="${on?'on':''}" aria-selected="${on}">${esc(dExt(x.data).split(',')[0].slice(0,3))} ${x.data.slice(8,10)}/${x.data.slice(5,7)}${dup?' · '+esc(x.placa||''):''}</button>`}).join('')}</div>`;
-  h+='<main>'+bannerInst();if(S.tela!=='pedido')h+=evoHtml();
+   <h2>${S.tela==='pedido'?'Necessidade do paciente':S.tela==='pedidos'?'Meus pedidos':S.tela==='evo'?'Evoluções':'Minha rota'}</h2>
+   ${ro&&S.tela!=='evo'?`<div class="sub">${esc(dExt(ro.data))} · ${/^carro\b/i.test(ro.placa||'')?'':'Carro '}${esc(ro.placa)}${ro.motorista?' · Motorista '+esc(ro.motorista):''}</div>`:''}</header>`;
+  if(S.rotas.length>1&&S.tela!=='pedido'&&S.tela!=='evo')h+=`<div class="days" role="tablist" aria-label="Dias">${S.rotas.map(x=>{const on=String(x.id)===String(S.dia),dup=S.rotas.filter(y=>y.data===x.data).length>1;return `<button type="button" role="tab" data-dia="${x.id}" class="${on?'on':''}" aria-selected="${on}">${esc(dExt(x.data).split(',')[0].slice(0,3))} ${x.data.slice(8,10)}/${x.data.slice(5,7)}${dup?' · '+esc(x.placa||''):''}</button>`}).join('')}</div>`;
+  h+='<main>'+bannerInst();if(S.tela==='rota'||S.tela==='pedidos')h+=evoHtml();
   if(S.err)h+=`<p class="err" role="alert">${esc(S.err)}</p>`;
-  if(!ro){h+=`<p class="empty">Nenhuma rota publicada para você ainda.<br>Quando a logística publicar, ela aparece aqui.</p><button class="btn line" type="button" data-a="atualizar" style="align-self:center">Atualizar</button>`}
+  if(S.tela==='evo'){h+=evoTela()}
+  else if(!ro){h+=`<p class="empty">Nenhuma rota publicada para você ainda.<br>Quando a logística publicar, ela aparece aqui.</p><button class="btn line" type="button" data-a="atualizar" style="align-self:center">Atualizar</button>`}
   else if(S.tela==='rota'){
     h+=ro.confirmado_em?`<div class="note ok">Rota confirmada às ${hm(ro.confirmado_em)}.</div>`:ro.atualizado_em?`<div class="note pend">A logística atualizou esta rota às ${hm(ro.atualizado_em)}. Confira de novo e confirme.</div>`:`<div class="note pend">Confira sua rota e indique as necessidades dos pacientes o quanto antes.</div>`;
     if(trkAtivo(ro))h+=trkHtml(ro);
@@ -297,7 +318,7 @@ function render(){
     h+=`<button class="btn line" type="button" data-a="atualizar" style="align-self:center">Atualizar</button>`;
   }
   h+=`<p class="lgpd">Dados de pacientes são sigilosos (LGPD). Não compartilhe prints desta tela.</p></main>`;
-  h+=`<nav class="tabs" aria-label="Navegação"><div><button type="button" data-a="rota" class="${S.tela!=='pedidos'?'on':''}">Minha rota</button><button type="button" data-a="pedidos" class="${S.tela==='pedidos'?'on':''}">Meus pedidos${nPend?' ('+nPend+')':''}</button></div></nav>`;
+  h+=`<nav class="tabs" aria-label="Navegação"><div><button type="button" data-a="rota" class="${S.tela==='rota'||S.tela==='pedido'?'on':''}">Minha rota</button><button type="button" data-a="pedidos" class="${S.tela==='pedidos'?'on':''}">Meus pedidos${nPend?' ('+nPend+')':''}</button><button type="button" data-a="evotab" class="${S.tela==='evo'?'on':''}">Evoluções${S.evo&&S.evo.l.length?'<b class="nb">'+S.evo.l.length+'</b>':''}</button></div></nav>`;
   if(S.zoom&&ro&&ro.print)h+=`<div class="zoom" role="dialog" aria-modal="true" aria-label="Print da rota"><div><img src="${esc(ro.print)}" alt="Print da rota ampliado"></div><button type="button" data-a="fechar">Fechar</button></div>`;
   app.innerHTML=h;
   if(ro&&S.tela==='rota'&&temGeo(ro))desenhaMapa(ro);
@@ -348,6 +369,7 @@ document.addEventListener('click',async e=>{
   if(a==='instalar'&&INST){INST.prompt();const c=await INST.userChoice.catch(()=>null);INST=null;render();return}
   if(a==='evo'){S.evoAberto=!S.evoAberto;render();return}
   if(a==='instx'){instFechado=true;try{localStorage.setItem('rp-inst','x')}catch(x){}render();return}
+  if(a==='evotab'){S.tela='evo';render();window.scrollTo(0,0);carregarEvo();return}
   if(a==='rota'||a==='pedidos'){S.tela=a;render();window.scrollTo(0,0);if(a==='pedidos')carregar(true);return}
   if(a==='zoom'){S.zoom=true;render();return}
   if(a==='fechar'){S.zoom=false;render();return}
