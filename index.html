@@ -180,15 +180,23 @@ const trkAtivo=ro=>ro&&ro.motorista&&ro.data===hoje()&&!embarcado(ro.id)&&(!ro.s
 function ha(t){if(!t)return'';const s=Math.max(0,Math.round((Date.now()-new Date(t))/1000));return s<60?'há '+s+' s':s<3600?'há '+Math.round(s/60)+' min':'há '+Math.floor(s/3600)+' h'}
 function atrasoAgora(ro){if(!ro.prev_inicio)return null;const [h,m]=ro.prev_inicio.split(':').map(Number);const p=new Date();p.setHours(h,m,0,0);return Math.round((Date.now()-p)/6e4)}
 function trkHtml(ro){return `<div class="card trk${ro.sr_inicio?' perto':''}" id="trk"><div class="trkh"><b>Seu motorista</b><span>${esc(ro.motorista)}${T.d&&T.d.placa&&!ro.sr_inicio?' · '+esc(T.d.placa):''}</span></div><div class="trki" id="trki" aria-live="polite">${trkInfo(ro)}</div>${ro.sr_inicio?'':'<div class="trka"><button class="btn line" type="button" data-a="embarquei">Já estou no carro</button></div>'}</div>`}
+const hhmm=d=>String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
 function trkInfo(ro){
  if(ro.sr_inicio)return `<span class="big ok">Motorista chegou às ${esc(hm(ro.sr_inicio))}</span><small>Ele iniciou a rota no SimpliRoute. Boa rota!</small>`;
- const at=atrasoAgora(ro),d=T.d;let l1='',l2=[];
- if(d&&d.min!=null){l1=d.km<0.3?'<span class="big ok">Motorista chegando!</span>':`<span class="big">Chega em ~${d.min} min</span>`;l2.push(`a ${d.km<1?Math.round(d.km*1000)+' m':String(d.km.toFixed(1)).replace('.',',')+' km'} de você · posição ${ha(d.posicao_em)}`)}
- if(ro.prev_inicio){const t=`Previsto às <b>${esc(ro.prev_inicio)}</b>`;if(!l1)l1=`<span class="big">${t.replace(/<\/?b>/g,'')}</span>`;else l2.unshift(t);if(at!=null&&at>5)l2.push(`<b style="color:var(--bad)">${at} min de atraso</b>`)}
+ const d=T.d,ex=[];let l1='';
+ // 1) carros da frota: posição ao vivo pelo Geotab
+ if(d&&d.min!=null){l1=d.km<0.3?'<span class="big ok">Motorista chegando!</span>':`<span class="big">Chega em ~${d.min} min</span>`;
+  ex.push(`a ${d.km<1?Math.round(d.km*1000)+' m':String(d.km.toFixed(1)).replace('.',',')+' km'} de você · posição ${ha(d.posicao_em)}`);if(ro.prev_inicio)ex.push(`previsto às ${esc(ro.prev_inicio)}`)}
+ // 2) terceiros (sem Geotab): horário do SimpliRoute + costume do motorista + atividade no app
+ else if(ro.prev_inicio){const [h,m]=ro.prev_inicio.split(':').map(Number),prev=new Date();prev.setHours(h,m,0,0);
+  const hist=ro.hist_n>=3&&ro.atraso_medio!=null,aj=hist?Math.max(-30,Math.min(60,+ro.atraso_medio)):0,est=new Date(+prev+aj*6e4),falta=Math.round((est-Date.now())/6e4);
+  l1=hist&&Math.abs(aj)>5?`<span class="big">Chegada estimada ~${hhmm(est)}</span>`:`<span class="big">Previsto às ${esc(ro.prev_inicio)}</span>`;
+  if(hist&&Math.abs(aj)>5)ex.push(`previsto no SimpliRoute às ${esc(ro.prev_inicio)}, costuma chegar ${Math.abs(aj)} min ${aj>0?'depois':'antes'}`);else if(hist)ex.push('costuma chegar no horário');
+  if(falta>1&&falta<=90)ex.push(`faltam ~${falta} min`);else if(falta<-5)ex.push(`<b style="color:var(--bad)">${-falta} min além do esperado</b>`)}
  if(!l1)l1='<span class="big">Aguardando o motorista</span>';
- if(ro.hist_n>=3&&ro.atraso_medio!=null){const a=+ro.atraso_medio;l2.push(Math.abs(a)<=5?'Costuma chegar no horário':a>0?`Nos últimos dias chegou, em média, ${a} min depois do previsto`:`Nos últimos dias chegou, em média, ${-a} min antes do previsto`)}
- if(T.err==='sem_login')l2.push('Ainda não entrou no carro (MyGeotab)');
- return l1+(l2.length?`<small>${l2.join(' · ')}</small>`:'')}
+ if(!(d&&d.min!=null)){if(ro.mot_ativo_em)ex.push(`ativo no app SimpliRoute às ${esc(hm(ro.mot_ativo_em))}`);else if(ro.prev_inicio)ex.push('ainda não abriu o app SimpliRoute hoje')}
+ if(T.err==='sem_login')ex.push('ainda não entrou no carro (MyGeotab)');
+ return l1+(ex.length?`<small>${ex.join(' · ')}</small>`:'')}
 async function trkCarrega(ro){if(T.busy||!S.token||ro.sr_inicio)return;T.busy=true;
  try{const r=await fetch(SB+'/functions/v1/motorista-posicao',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({token:S.token,rota:ro.id})}).then(r=>r.json());
   if(r.ok){T.d=r;T.err=''}else{if(r.erro==='sessao'){T.busy=false;return sair('Sua sessão expirou. Entre de novo.')}T.d=null;T.err=r.erro||''}}catch(e){T.err=''}
