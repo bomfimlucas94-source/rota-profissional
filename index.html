@@ -107,6 +107,8 @@ nav.tabs button b.nb{display:inline-block;min-width:18px;padding:0 5px;margin-le
 .trki small{font-size:12px;color:var(--muted)}
 .trka{display:flex;gap:8px;flex-wrap:wrap;padding:0 14px 12px}
 .trka .btn{flex:1;min-width:140px}
+.trkc{display:flex;gap:8px;padding:0 14px 12px}.trkc a{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;min-height:44px;border-radius:10px;font-weight:800;font-size:13.5px;text-decoration:none}
+.trkc a.tel{background:var(--wine);color:#fff}.trkc a.wa{background:#1f8f4e;color:#fff}.trkc small{padding:0 2px;font-size:12px;color:var(--muted)}
 .mk.car{background:var(--sun);color:var(--wine-d);width:32px;height:32px;font-size:16px}
 .mk.eu{background:#1f6fd1;width:18px;height:18px}
 .pi small{display:block;color:var(--muted);font-size:11.5px;line-height:1.35;margin-top:2px}
@@ -219,7 +221,11 @@ const chegouMin=ro=>ro&&ro.sr_inicio?(Date.now()-new Date(ro.sr_inicio))/6e4:nul
 const trkAtivo=ro=>ro&&ro.motorista&&ro.data===hoje()&&!embarcado(ro.id)&&(!ro.sr_inicio||chegouMin(ro)<30);
 function ha(t){if(!t)return'';const s=Math.max(0,Math.round((Date.now()-new Date(t))/1000));return s<60?'há '+s+' s':s<3600?'há '+Math.round(s/60)+' min':'há '+Math.floor(s/3600)+' h'}
 function atrasoAgora(ro){if(!ro.prev_inicio)return null;const [h,m]=ro.prev_inicio.split(':').map(Number);const p=new Date();p.setHours(h,m,0,0);return Math.round((Date.now()-p)/6e4)}
-function trkHtml(ro){return `<div class="card trk${ro.sr_inicio?' perto':''}" id="trk"><div class="trkh"><b>Seu motorista</b><span>${esc(ro.motorista)}${T.d&&T.d.placa&&!ro.sr_inicio?' · '+esc(T.d.placa):''}</span></div><div class="trki" id="trki" aria-live="polite">${trkInfo(ro)}</div>${ro.sr_inicio?'':'<div class="trka"><button class="btn line" type="button" data-a="embarquei">Já estou no carro</button></div>'}</div>`}
+function trkContato(ro){if(ro.sr_inicio)return'';const d=String(ro.mot_fone||'').replace(/\D/g,'');
+ if(!d)return '<div class="trkc"><small>Telefone do motorista não cadastrado. Se precisar falar com ele, chame a logística.</small></div>';
+ const i=(d.length<=11?'55':'')+d,pn=(S.nome||'').trim(),msg='Olá, '+String(ro.motorista||'').split(' ')[0]+'! Aqui é '+pn+', da sua rota de hoje pela Solar Cuidados.';
+ return `<div class="trkc"><a class="tel" href="tel:+${esc(i)}" aria-label="Ligar para o motorista ${esc(ro.motorista)}">📞 Ligar</a><a class="wa" href="https://wa.me/${esc(i)}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener" aria-label="Chamar o motorista ${esc(ro.motorista)} no WhatsApp">💬 WhatsApp</a></div>`}
+function trkHtml(ro){return `<div class="card trk${ro.sr_inicio?' perto':''}" id="trk"><div class="trkh"><b>Seu motorista</b><span>${esc(ro.motorista)}${T.d&&T.d.placa&&!ro.sr_inicio?' · '+esc(T.d.placa):''}</span></div><div class="trki" id="trki" aria-live="polite">${trkInfo(ro)}</div>${trkContato(ro)}${ro.sr_inicio?'':'<div class="trka"><button class="btn line" type="button" data-a="embarquei">Já estou no carro</button></div>'}</div>`}
 const hhmm=d=>String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
 function trkInfo(ro){
  if(ro.sr_inicio)return `<span class="big ok">Motorista chegou às ${esc(hm(ro.sr_inicio))}</span><small>Ele iniciou a rota no SimpliRoute. Boa rota!</small>`;
