@@ -111,6 +111,27 @@ table.rel td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align
 table.rel td small{color:var(--muted)}
 table.rel td.n{white-space:nowrap}
 table.rel tr:last-child td{border-bottom:0}
+
+.fgrid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:12px;align-items:start}
+@media(max-width:980px){.fgrid{grid-template-columns:1fr}}
+#fmapa,.fmapa{height:560px;border-radius:14px;border:1px solid var(--line);overflow:hidden;background:var(--off)}
+@media(max-width:980px){#fmapa,.fmapa{height:380px}}
+.flist{display:flex;flex-direction:column;gap:8px;max-height:560px;overflow:auto;padding-right:2px}
+.fr{all:unset;box-sizing:border-box;display:block;width:100%;background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--warm);border-radius:12px;padding:10px 12px;cursor:pointer}
+.fr:hover,.fr.on{border-color:var(--wine)}.fr.on{box-shadow:0 0 0 2px var(--peach)}
+.fr.st-rota{border-left-color:var(--sun)}.fr.st-cam{border-left-color:var(--wine)}.fr.st-ok{border-left-color:var(--ok)}
+.fr .l1{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}.fr .l1 b{font-size:14px;color:var(--wine)}.fr .l1 .sp{flex:1}
+.fr .l2{font-size:12.5px;color:var(--ink);margin-top:3px}.fr .l3{font-size:12px;color:var(--muted);margin-top:4px;display:flex;gap:10px;flex-wrap:wrap}
+.fbar{height:6px;border-radius:3px;background:var(--off);overflow:hidden;margin-top:7px;display:flex}.fbar i{display:block;background:var(--ok)}.fbar i.f{background:var(--bad)}
+.fst{font-size:11px;font-weight:800;border-radius:999px;padding:2px 8px;white-space:nowrap}
+.fst.ok{background:var(--ok-bg);color:var(--ok)}.fst.rota{background:var(--pend-bg);color:var(--pend)}.fst.cam{background:var(--peach);color:var(--wine-d)}.fst.ag{background:var(--off);color:var(--muted)}
+.fsrc{font-size:10.5px;font-weight:800;border-radius:6px;padding:1px 6px;background:var(--off);color:var(--muted)}.fsrc.g{background:#e3eefc;color:#1d4f91}
+.fcar{width:30px;height:30px;border-radius:50%;background:var(--wine);color:#fff;border:2px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;font:800 11px Montserrat,Arial,sans-serif}
+.fcar.mov{background:var(--sun);color:var(--wine-d);animation:fpul 1.6s infinite}.fcar.off{background:#9a8f94}
+@keyframes fpul{0%{box-shadow:0 0 0 0 rgba(251,176,64,.7)}70%{box-shadow:0 0 0 12px rgba(251,176,64,0)}100%{box-shadow:0 0 0 0 rgba(251,176,64,0)}}
+@media(prefers-reduced-motion:reduce){.fcar.mov{animation:none}}
+.fout{width:12px;height:12px;border-radius:50%;background:#9a8f94;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.3)}.fout.mov{background:#c9a35c}
+.fnx{width:14px;height:14px;border-radius:50%;background:#fff;border:3px solid var(--wine)}
 table.rel td.at{font-weight:800;color:#b4232b}table.rel tr.ex td{background:var(--off)}
 .evl{margin:0;padding-left:18px;columns:2;font-size:12px}.evl li{break-inside:avoid;padding:2px 0}
 .bxv{background:none;border:0;color:var(--wine);font-weight:700;cursor:pointer;padding:0;font-size:12.5px}
@@ -247,6 +268,50 @@ function baixarCSV(){const L=relLista();const cols=[['ID do pedido',x=>x.id],['D
  const csv='﻿'+[cols.map(c=>q(c[0])).join(','),...L.map(x=>cols.map(c=>q(c[1](x))).join(','))].join('\r\n');
  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='mudancas-rotas_'+R.de+'_a_'+R.ate+'.csv';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
 
+/* ===== Frota ao vivo: rotas médicas do dia (SimpliRoute) + carros da frota (MyGeotab) ===== */
+const F={d:null,busy:false,err:'',sel:null,outros:false,at:0,map:null,el:null,lay:null,fit:false};
+async function carregarFrota(sil){if(!S.token||S.trocar||F.busy)return;F.busy=true;if(!sil)render();
+ try{const r=await fetch(SB+'/functions/v1/frota-ao-vivo',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({token:S.token})}).then(r=>r.json());
+  if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');throw new Error(r.erro)}F.d=r;F.err='';F.at=Date.now()}catch(e){F.err=e.message||'Falha ao carregar.'}
+ F.busy=false;if(S.tab==='fro')render()}
+const fNum=v=>{const m=String(v||'').match(/(extra)?\D*(\d+)\s*$/i);return m?(m[1]?'E':'')+m[2]:String(v||'?').slice(0,2)};
+const fMod=c=>String(c.modelo||'').split('|').pop().trim();
+const fIdade=t=>{if(!t)return'';const m=Math.round((Date.now()-new Date(t))/6e4);return m<1?'agora':m<60?'há '+m+' min':'há '+Math.floor(m/60)+'h'+String(m%60).padStart(2,'0')};
+function fSit(r){const f=r.feitas+r.falhas;if(f>=r.total)return['Concluída','ok','st-ok'];if(f>0)return['Em rota','rota','st-rota'];if(r.carro&&r.carro.dirigindo)return['A caminho','cam','st-cam'];return['Aguardando início','ag','']}
+function renderFrota(){
+ let h='';if(F.err)h+=`<p class="err" role="alert">${esc(F.err)}</p>`;
+ if(!F.d)return h+`<div class="empty">${F.busy||!F.err?'Buscando as rotas no SimpliRoute e os carros no MyGeotab…':'Sem dados.'}</div>`;
+ const R=F.d.rotas||[],sit=R.map(fSit),n=k=>sit.filter(x=>x[1]===k).length,rast=R.filter(r=>r.carro).length,vis=R.reduce((a,r)=>a+r.total,0),fe=R.reduce((a,r)=>a+r.feitas,0);
+ h+=`<div class="resumo"><div class="kpi"><b>${R.length}</b><span>rotas médicas hoje</span></div><div class="kpi"><b>${n('cam')+n('rota')}</b><span>a caminho ou em rota</span></div><div class="kpi"><b>${n('ok')}</b><span>concluídas</span></div><div class="kpi"><b>${fe}/${vis}</b><span>visitas realizadas</span></div><div class="kpi"><b>${rast}</b><span>carros no MyGeotab</span></div></div>`;
+ h+=`<div class="bar"><label class="ck"><input type="checkbox" id="fout"${F.outros?' checked':''}> Mostrar os outros carros da frota no mapa</label><span class="sp"></span><small class="sub">${F.busy?'Atualizando…':'Atualizado '+fIdade(F.at)+' · atualiza sozinho a cada minuto'}</small><button class="btn ghost sm" type="button" data-a="frec"${F.busy?' disabled':''}>Atualizar</button></div>`;
+ if(F.d.geotab_erro)h+=`<p class="err" role="alert">MyGeotab: ${esc(F.d.geotab_erro)} O painel mostra só os dados do SimpliRoute.</p>`;
+ if(!R.length)return h+'<div class="empty">Nenhuma rota médica no SimpliRoute hoje.</div>';
+ h+=`<div class="fgrid"><div id="fmapa-slot" class="fmapa"></div><div class="flist" role="list">${R.map((r,i)=>{const st=sit[i],c=r.carro,pf=r.total?r.feitas/r.total*100:0,pl=r.total?r.falhas/r.total*100:0;
+  const pos=c?(c.comunicando===false?'sem sinal':c.dirigindo?`${c.velocidade} km/h`:'parado')+' · '+fIdade(c.posicao_em):'';
+  return `<button type="button" role="listitem" class="fr ${st[2]}${F.sel===r.route_id?' on':''}" data-fsel="${esc(r.route_id)}"><div class="l1"><b>${esc(r.veiculo)}</b><span class="fst ${st[1]}">${st[0]}</span><span class="sp"></span>${c?`<span class="fsrc g">MyGeotab · ${esc(c.placa)}</span>`:'<span class="fsrc">SimpliRoute</span>'}</div>
+   <div class="l2">${esc(r.medicos.join(', ')||'Médico não identificado')}${r.motorista?' · <span style="color:var(--muted)">mot. '+esc(r.motorista)+'</span>':''}</div>
+   <div class="fbar" aria-hidden="true"><i style="width:${pf}%"></i><i class="f" style="width:${pl}%"></i></div>
+   <div class="l3"><span>${r.feitas}/${r.total} visitas${r.falhas?' · '+r.falhas+' com falha':''}</span>${r.prox?`<span>Próxima: ${r.prox.ordem}ª ${r.prox.hora?'prev. '+esc(r.prox.hora):''}${r.prox.bairro?' · '+esc(r.prox.bairro):''}${r.km!=null?' · <b>'+String(r.km).replace('.',',')+' km, ~'+r.min+' min</b>':''}</span>`:r.ult_checkout?`<span>Última visita às ${hmSP(r.ult_checkout)}</span>`:`<span>Previsto ${esc(r.inicio_prev)}–${esc(r.fim_prev)}</span>`}${pos?`<span>${pos}</span>`:''}</div></button>`}).join('')}</div></div>
+  <p class="dica">Carros identificados pelo login do motorista no MyGeotab Drive hoje. Rotas sem esse login (terceiros ou motorista que não entrou no app) mostram só o andamento do SimpliRoute. Distância até a próxima visita em linha reta ajustada (estimativa).</p>`;
+ return h}
+const hmSP=t=>t?new Date(t).toLocaleTimeString('pt-BR',{timeZone:'America/Sao_Paulo',hour:'2-digit',minute:'2-digit'}):'';
+function carregaLeafletC(){if(window.L)return Promise.resolve();return new Promise((ok,no)=>{const c=document.createElement('link');c.rel='stylesheet';c.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';document.head.appendChild(c);const j=document.createElement('script');j.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';j.onload=ok;j.onerror=no;document.head.appendChild(j)})}
+async function desenhaFrota(){const slot=document.getElementById('fmapa-slot');if(!slot||!F.d)return;
+ if(!F.el){F.el=document.createElement('div');F.el.id='fmapa'}
+ slot.replaceWith(F.el);
+ try{await carregaLeafletC()}catch(e){F.el.textContent='Mapa indisponível agora.';return}
+ if(!F.map){F.map=L.map(F.el,{scrollWheelZoom:true});L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap'}).addTo(F.map);F.map.setView([-22.93,-43.3],10)}
+ setTimeout(()=>F.map&&F.map.invalidateSize(),0);
+ if(F.lay)F.lay.remove();F.lay=L.layerGroup().addTo(F.map);const pts=[];
+ if(F.outros)(F.d.outros||[]).forEach(c=>{L.marker([c.lat,c.lng],{icon:L.divIcon({className:'',html:`<div class="fout${c.dirigindo?' mov':''}"></div>`,iconSize:[12,12],iconAnchor:[6,6]})}).bindTooltip(esc(c.placa)+' · '+esc(fMod(c))+(c.motorista?'<br>'+esc(c.motorista):'')+'<br>'+(c.dirigindo?c.velocidade+' km/h':'parado')+' · '+fIdade(c.posicao_em)).addTo(F.lay)});
+ (F.d.rotas||[]).forEach(r=>{const c=r.carro;if(!c||c.lat==null)return;const st=fSit(r);
+  const tip=`<b>${esc(r.veiculo)}</b> · ${esc(c.placa)}<br>${esc(r.medicos.join(', '))}<br>Mot. ${esc(r.motorista)}<br>${st[0]} · ${r.feitas}/${r.total} visitas<br>${c.comunicando===false?'sem sinal':c.dirigindo?c.velocidade+' km/h':'parado'} · ${fIdade(c.posicao_em)}`;
+  L.marker([c.lat,c.lng],{zIndexOffset:500,icon:L.divIcon({className:'',html:`<div class="fcar${c.comunicando===false?' off':c.dirigindo?' mov':''}">${esc(fNum(r.veiculo))}</div>`,iconSize:[30,30],iconAnchor:[15,15]})}).bindTooltip(tip).on('click',()=>{F.sel=r.route_id;render()}).addTo(F.lay);pts.push([c.lat,c.lng]);
+  if(r.prox&&r.prox.lat&&st[1]!=='ok'&&(F.sel===r.route_id||!F.sel)){L.polyline([[c.lat,c.lng],[r.prox.lat,r.prox.lng]],{color:'#5f0040',weight:2,opacity:.6,dashArray:'5 6'}).addTo(F.lay);L.marker([r.prox.lat,r.prox.lng],{icon:L.divIcon({className:'',html:'<div class="fnx"></div>',iconSize:[14,14],iconAnchor:[7,7]})}).bindTooltip('Próxima visita de '+esc(r.veiculo)+(r.prox.hora?' · prev. '+esc(r.prox.hora):'')+(r.prox.bairro?' · '+esc(r.prox.bairro):'')).addTo(F.lay)}});
+ const sel=(F.d.rotas||[]).find(r=>r.route_id===F.sel);
+ if(sel&&sel.carro&&sel.carro.lat!=null){if(F.fly){F.map.flyTo([sel.carro.lat,sel.carro.lng],14,{duration:.6});F.fly=false}}
+ else if(!F.fit&&pts.length){F.map.fitBounds(pts,{padding:[40,40],maxZoom:13});F.fit=true}}
+
 /* ===== Evoluções atrasadas por médico (prontuário IW via Dashboard de visitas; só status e datas) ===== */
 const V={d:null,busy:false,err:'',ab:null,so:true};
 async function carregarEvoC(){if(!S.token||S.trocar)return;V.busy=true;render();
@@ -317,11 +382,12 @@ function render(){
  const esps=[...new Set(all.map(r=>r.especialidade).filter(Boolean))].sort(),dias=[...new Set(all.map(r=>r.data_rota))].sort();
  const L=all.filter(r=>(!S.f.st||r.status===S.f.st)&&(!S.f.esp||r.especialidade===S.f.esp)&&(!S.f.dia||r.data_rota===S.f.dia));
  const npend=cnt('pendente');
- let h=`<header class="top"><div class="topin"><div><h2>Central de Solicitações</h2><small>Logística · Solar Cuidados</small></div><nav class="tabs" aria-label="Seções"><button type="button" data-tab="sol" class="${S.tab==='sol'?'on':''}">Solicitações${npend?`<b>${npend}</b>`:''}</button><button type="button" data-tab="env" class="${S.tab==='env'?'on':''}">Envio de rotas</button><button type="button" data-tab="rel" class="${S.tab==='rel'?'on':''}">Relatório</button><button type="button" data-tab="evo" class="${S.tab==='evo'?'on':''}">Evoluções</button><button type="button" data-tab="cad" class="${S.tab==='cad'?'on':''}">Cadastros</button></nav><span class="sp"></span><span class="who">${esc(S.nome)}</span><button class="out" type="button" data-a="sair">Sair</button></div></header><main>`;
+ let h=`<header class="top"><div class="topin"><div><h2>Central de Solicitações</h2><small>Logística · Solar Cuidados</small></div><nav class="tabs" aria-label="Seções"><button type="button" data-tab="sol" class="${S.tab==='sol'?'on':''}">Solicitações${npend?`<b>${npend}</b>`:''}</button><button type="button" data-tab="env" class="${S.tab==='env'?'on':''}">Envio de rotas</button><button type="button" data-tab="rel" class="${S.tab==='rel'?'on':''}">Relatório</button><button type="button" data-tab="fro" class="${S.tab==='fro'?'on':''}">Frota ao vivo</button><button type="button" data-tab="evo" class="${S.tab==='evo'?'on':''}">Evoluções</button><button type="button" data-tab="cad" class="${S.tab==='cad'?'on':''}">Cadastros</button></nav><span class="sp"></span><span class="who">${esc(S.nome)}</span><button class="out" type="button" data-a="sair">Sair</button></div></header><main>`;
  if(S.tab==='env'){app.innerHTML=h+renderEnv()+'</main>';return}
  if(S.tab==='rel'){app.innerHTML=h+renderRel()+'</main>';return}
  if(S.tab==='cad'){app.innerHTML=h+renderCad()+'</main>';return}
  if(S.tab==='evo'){app.innerHTML=h+renderEvoC()+'</main>';return}
+ if(S.tab==='fro'){app.innerHTML=h+renderFrota()+'</main>';desenhaFrota();return}
  h+=`<div class="bar"><div class="chips" role="group" aria-label="Filtrar por situação">${['pendente','aprovada','recusada','aplicada'].map(st=>`<button type="button" data-st="${st}" class="${S.f.st===st?'on':''}">${STN[st].replace(' no SimpliRoute','')}<b>${cnt(st)}</b></button>`).join('')}<button type="button" data-st="" class="${!S.f.st?'on':''}">Todas<b>${all.length}</b></button></div>
   <select id="fesp" aria-label="Equipe"><option value="">Todas as equipes</option>${esps.map(e=>`<option${S.f.esp===e?' selected':''}>${esc(e)}</option>`).join('')}</select>
   <select id="fdia" aria-label="Dia da rota"><option value="">Todos os dias</option>${dias.map(d=>`<option value="${d}"${S.f.dia===d?' selected':''}>${dm(d)}</option>`).join('')}</select>
@@ -352,23 +418,25 @@ document.addEventListener('submit',async e=>{if(e.target.id!=='fpin')return;e.pr
  if(!pn){S.err='Digite o novo PIN.';render();return}if(pn!==pn2){S.err='Os dois PINs não são iguais.';render();return}
  S.busy=true;S.err='';render();try{const r=await rpc('eq_trocar_pin',{p_token:S.token,p_atual:PIN_TMP,p_novo:pn});S.busy=false;
   if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo com o PIN provisório.');S.err=r.erro;render();return}
-  S.trocar=false;PIN_TMP='';toast('PIN criado. Use ele nas próximas vezes.');render();carregar();if(S.tab==='env')carregarEnv(true);if(S.tab==='rel')carregarRel();if(S.tab==='cad')carregarCad();if(S.tab==='evo')carregarEvoC()}catch(x){S.busy=false;S.err=x.message;render()}});
+  S.trocar=false;PIN_TMP='';toast('PIN criado. Use ele nas próximas vezes.');render();carregar();if(S.tab==='env')carregarEnv(true);if(S.tab==='rel')carregarRel();if(S.tab==='cad')carregarCad();if(S.tab==='evo')carregarEvoC();if(S.tab==='fro')carregarFrota()}catch(x){S.busy=false;S.err=x.message;render()}});
 document.addEventListener('submit',async e=>{if(e.target.id!=='flog')return;e.preventDefault();const cel=$('#cel').value,pin=$('#pin').value;if(!cel||!pin){S.err='Preencha o celular e o PIN.';render();return}
  S.busy=true;S.err='';render();try{const r=await rpc('eq_login',{p_celular:cel,p_pin:pin});S.busy=false;if(!r.ok){S.err=r.erro;render();$('#cel').value=cel;return}
   S.token=r.token;S.nome=r.nome;try{sessionStorage.setItem('lg-token',r.token);sessionStorage.setItem('lg-nome',r.nome);marcaUso()}catch(x){}if(r.trocar_pin){S.trocar=true;PIN_TMP=pin;render();return}render();carregar()}catch(x){S.busy=false;S.err=x.message;render()}});
 document.addEventListener('input',e=>{const t=e.target.closest('[data-rs]');if(t)S.draft[t.dataset.rs]=t.value});
-document.addEventListener('change',e=>{if(e.target.id==='vso'){V.so=e.target.checked;V.ab=null;render();return}if(e.target.id==='rde'){R.de=e.target.value;return}if(e.target.id==='rate'){R.ate=e.target.value;return}if(e.target.id==='rtst'){R.teste=e.target.checked;render();return}if(e.target.id==='edata'){E.data=e.target.value||hojeSP();E.sr=null;E.db=null;carregarEnv(true);return}if(e.target.id==='eini'){E.ini=e.target.checked;try{localStorage.setItem('lg-ini',E.ini?'1':'0')}catch(x){}render();return}if(e.target.dataset&&e.target.dataset.pick!==undefined){E.pick[e.target.dataset.pick]=e.target.value;render();return}if(e.target.id==='fesp'){S.f.esp=e.target.value;render()}if(e.target.id==='fdia'){S.f.dia=e.target.value;render()}});
+document.addEventListener('change',e=>{if(e.target.id==='fout'){F.outros=e.target.checked;render();return}if(e.target.id==='vso'){V.so=e.target.checked;V.ab=null;render();return}if(e.target.id==='rde'){R.de=e.target.value;return}if(e.target.id==='rate'){R.ate=e.target.value;return}if(e.target.id==='rtst'){R.teste=e.target.checked;render();return}if(e.target.id==='edata'){E.data=e.target.value||hojeSP();E.sr=null;E.db=null;carregarEnv(true);return}if(e.target.id==='eini'){E.ini=e.target.checked;try{localStorage.setItem('lg-ini',E.ini?'1':'0')}catch(x){}render();return}if(e.target.dataset&&e.target.dataset.pick!==undefined){E.pick[e.target.dataset.pick]=e.target.value;render();return}if(e.target.id==='fesp'){S.f.esp=e.target.value;render()}if(e.target.id==='fdia'){S.f.dia=e.target.value;render()}});
 document.addEventListener('click',async e=>{const b=e.target.closest('button');if(!b)return;const d=b.dataset;
  try{
   if(d.a==='sair'){sair();return}
   if(d.a==='atualizar'){await carregar();toast('Atualizado.');return}
-  if(d.tab){S.tab=d.tab;try{localStorage.setItem('lg-tab',d.tab)}catch(x){}render();if(d.tab==='env'&&E.sr===null)carregarEnv(true);if(d.tab==='rel'&&R.itens===null)carregarRel();if(d.tab==='cad')carregarCad(C.d!==null);if(d.tab==='evo'&&V.d===null)carregarEvoC();return}
+  if(d.tab){S.tab=d.tab;try{localStorage.setItem('lg-tab',d.tab)}catch(x){}render();if(d.tab==='env'&&E.sr===null)carregarEnv(true);if(d.tab==='rel'&&R.itens===null)carregarRel();if(d.tab==='cad')carregarCad(C.d!==null);if(d.tab==='evo'&&V.d===null)carregarEvoC();if(d.tab==='fro')carregarFrota(F.d!==null);return}
   if(d.ced){C.ed=C.ed===d.ced?null:d.ced;C.pin=null;render();const i=document.querySelector(`[data-csave="${d.ced}"] input`);if(i)i.focus();return}
   if(d.cpin){C.pin=C.pin===d.cpin?null:d.cpin;C.ed=null;render();const i=document.querySelector(`[data-cpinok="${d.cpin}"] input`);if(i){i.focus();i.select()}return}
   if(d.cx!==undefined){C.ed=null;C.pin=null;render();return}
   if(d.cat){const {tipo,id,p}=cadAchar(d.cat);b.disabled=true;await cadRpc('eq_cad_ativo',{p_tipo:tipo,p_id:id,p_ativo:!p.ativo},p.nome+(p.ativo?' desativado. As sessões dele foram encerradas.':' reativado.'));return}
   if(d.a==='rger'){await carregarRel();return}
   if(d.a==='vrec'){await carregarEvoC();return}
+  if(d.a==='frec'){await carregarFrota(true);return}
+  if(d.fsel){F.sel=F.sel===d.fsel?null:d.fsel;F.fly=!!F.sel;render();return}
   if(d.a==='vcsv'){baixarEvoCSV();return}
   if(d.vab!=null){const x=(V.so?(V.d.medicos||[]).filter(m=>m.atrasadas>0):(V.d.medicos||[]))[+d.vab];V.ab=x&&V.ab!==x.profissional?x.profissional:null;render();return}
   if(d.a==='rcsv'){baixarCSV();toast('CSV baixado.');return}
@@ -388,7 +456,8 @@ document.addEventListener('click',async e=>{const b=e.target.closest('button');i
  }catch(x){b.disabled=false;toast(x.message)}});
 setInterval(()=>{try{if(S.token&&Date.now()-(+sessionStorage.getItem('lg-ult')||0)>INATIVO_MIN*6e4){sair('Por segurança, a sessão foi encerrada após '+INATIVO_MIN+' minutos sem uso. Entre de novo.');return}}catch(e){}if(S.token&&!document.hidden&&!document.querySelector('[data-rs]:focus,select:focus')){carregar(true);if(S.tab==='env'&&E.sr!==null&&!E.busy)carregarEnv(false,true)}},30000);
 document.addEventListener('visibilitychange',()=>{if(document.hidden||!S.token)return;try{if(Date.now()-(+sessionStorage.getItem('lg-ult')||0)>INATIVO_MIN*6e4)return sair('Por segurança, a sessão foi encerrada após '+INATIVO_MIN+' minutos sem uso. Entre de novo.')}catch(e){}carregar(true)});
-render();if(S.token){carregar();if(S.tab==='env')carregarEnv(true);if(S.tab==='rel')carregarRel();if(S.tab==='cad')carregarCad();if(S.tab==='evo')carregarEvoC()}
+render();if(S.token){carregar();if(S.tab==='env')carregarEnv(true);if(S.tab==='rel')carregarRel();if(S.tab==='cad')carregarCad();if(S.tab==='evo')carregarEvoC();if(S.tab==='fro')carregarFrota()}
+setInterval(()=>{if(S.token&&!S.trocar&&S.tab==='fro'&&!document.hidden&&Date.now()-F.at>55e3)carregarFrota(true)},15000);
 </script>
 </body>
 </html>
