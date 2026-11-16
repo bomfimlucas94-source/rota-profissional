@@ -107,6 +107,7 @@ nav.tabs button b.nb{display:inline-block;min-width:18px;padding:0 5px;margin-le
 .trki small{font-size:12px;color:var(--muted)}
 .trka{display:flex;gap:8px;flex-wrap:wrap;padding:0 14px 12px}
 .trka .btn{flex:1;min-width:140px}
+.trkav{margin:-2px 14px 12px;font-size:12px;color:var(--muted);font-weight:600}.trkav.cedo{background:var(--pend-bg,#fff0d6);color:var(--pend,#7a4300);border-radius:8px;padding:6px 9px;font-weight:600}
 .trkc{display:flex;gap:8px;padding:0 14px 12px}.trkc a{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;min-height:44px;border-radius:10px;font-weight:800;font-size:13.5px;text-decoration:none}
 .trkc a.tel{background:var(--wine);color:#fff}.trkc a.wa{background:#1f8f4e;color:#fff}.trkc small{padding:0 2px;font-size:12px;color:var(--muted)}
 .mk.car{background:var(--sun);color:var(--wine-d);width:32px;height:32px;font-size:16px}
@@ -229,7 +230,7 @@ function atrasoAgora(ro){if(!ro.prev_inicio)return null;const [h,m]=ro.prev_inic
 function trkContato(ro){if(ro.sr_inicio)return'';const d=String(ro.mot_fone||'').replace(/\D/g,'');
  if(!d)return '<div class="trkc"><small>Telefone do motorista não cadastrado. Se precisar falar com ele, chame a logística.</small></div>';
  const i=(d.length<=11?'55':'')+d,pn=(S.nome||'').trim(),msg='Olá, '+String(ro.motorista||'').split(' ')[0]+'! Aqui é '+pn+', da sua rota de hoje pela Solar Cuidados.';
- return `<div class="trkc"><a class="tel" href="tel:+${esc(i)}" aria-label="Ligar para o motorista ${esc(ro.motorista)}">📞 Ligar</a><a class="wa" href="https://wa.me/${esc(i)}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener" aria-label="Chamar o motorista ${esc(ro.motorista)} no WhatsApp">💬 WhatsApp</a></div>`}
+ return `<div class="trkc"><a class="tel" href="tel:+${esc(i)}" aria-label="Ligar para o motorista ${esc(ro.motorista)}">📞 Ligar</a><a class="wa" href="https://wa.me/${esc(i)}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener" aria-label="Chamar o motorista ${esc(ro.motorista)} no WhatsApp">💬 WhatsApp</a></div><p class="trkav${new Date().getHours()<8?' cedo':''}">🕗 O motorista só está disponível a partir das 08:00.</p>`}
 function trkHtml(ro){return `<div class="card trk${ro.sr_inicio?' perto':''}" id="trk"><div class="trkh"><b>Seu motorista</b><span>${esc(ro.motorista)}${T.d&&T.d.placa&&!ro.sr_inicio?' · '+esc(T.d.placa):''}</span></div><div class="trki" id="trki" aria-live="polite">${trkInfo(ro)}</div>${trkContato(ro)}${ro.sr_inicio?'':'<div class="trka"><button class="btn line" type="button" data-a="embarquei">Já estou no carro</button></div>'}</div>`}
 const hhmm=d=>String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
 function trkInfo(ro){
