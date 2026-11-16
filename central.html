@@ -243,6 +243,7 @@ async function enviarRota(k,lote){const r=(E.sr||[]).find(x=>chave(x)===k);if(!r
  if(!pid)throw new Error('O médico da rota '+r.veiculo+' não está cadastrado no Minha Rota.');
  const res=await rpc('eq_publicar_rota',{p_token:S.token,p_data:E.data,p_placa:k,p_motorista:r.motorista||'',p_profissional_id:pid,p_pacientes:pacOf(r),p_sr_route_id:r.route_id,p_origem:'simpliroute'});
  if(!res.ok){if(res.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');throw new Error(res.erro||'Não foi possível enviar.')}
+ if(res.id)fetch(SB+'/functions/v1/push-rota',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({token:S.token,rota:res.id})}).catch(()=>{}); // avisa o celular do médico
  if(!lote)await carregarEnv(false,true)}
 
 /* ===== Relatório das mudanças ===== */

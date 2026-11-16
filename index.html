@@ -184,7 +184,7 @@ async function carregar(silencioso){
     if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');throw new Error(r.erro)}
     S.nome=r.nome;S.rotas=r.rotas||[];
     if(!S.dia||!S.rotas.some(x=>String(x.id)===String(S.dia))){const h=hoje();const prox=S.rotas.find(x=>x.data>=h)||S.rotas[S.rotas.length-1];S.dia=prox?String(prox.id):null}
-    S.err='';render();carregarEvo();
+    S.err='';render();carregarEvo();if(!pushSalvo&&pushSuporta()&&Notification.permission==='granted')pushAssinar(false);
   }catch(e){if(!silencioso){S.err=e.message;render()}}
 }
 const rotaAtual=()=>S.rotas.find(x=>String(x.id)===String(S.dia));
@@ -195,6 +195,23 @@ let instFechado=false;try{instFechado=localStorage.getItem('rp-inst')==='x'}catc
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();INST=e;render()});
 addEventListener('appinstalled',()=>{INST=null;toast('Minha Rota instalado na tela inicial.');render()});
 if('serviceWorker' in navigator&&location.protocol==='https:')addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+/* notificações: avisa quando a Central envia rota nova ou atualizada */
+const VAPID='BJtcxQcuxJz_-k4vrCm9Wh9J5pkCLa7dSDPlCxN4gdvtf-hXwyUIchWSVV4G3cUGHYCZtmLTrZaPtK57gizWNVs';
+const pushSuporta=()=>'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window&&location.protocol==='https:';
+let pushFechado=false,pushSalvo=false;try{pushFechado=localStorage.getItem('rp-push')==='x'}catch(e){}
+const b64u=s=>{const p='='.repeat((4-s.length%4)%4),b=atob((s+p).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from(b,c=>c.charCodeAt(0))};
+async function pushAssinar(pedir){if(!pushSuporta()||S.leitura||!S.token||S.trocar)return false;
+ try{if(pedir&&Notification.permission==='default'){const r=await Notification.requestPermission();if(r!=='granted'){render();return false}}
+  if(Notification.permission!=='granted')return false;
+  const reg=await navigator.serviceWorker.ready;let sub=await reg.pushManager.getSubscription();
+  if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u(VAPID)});
+  const r=await rpc('app_push_salvar',{p_token:S.token,p_sub:sub.toJSON()});pushSalvo=!!(r&&r.ok);return pushSalvo}catch(e){return false}}
+function bannerPush(){if(S.leitura||pushFechado||!('Notification' in window&&'serviceWorker' in navigator))return'';
+ if(ehIOS&&!instalado()&&!('PushManager' in window))return `<div class="inst"><div><b>Receba aviso quando sua rota chegar</b>No iPhone, primeiro instale o app: toque em Compartilhar › <b style="display:inline">Adicionar à Tela de Início</b> e abra por lá.</div><button class="ix" type="button" data-a="pushx" aria-label="Fechar aviso">×</button></div>`;
+ if(!pushSuporta()||Notification.permission!=='default')return'';
+ return `<div class="inst"><div><b>🔔 Ativar notificações</b>Saiba na hora quando a logística enviar ou mudar a sua rota.</div><button class="ib" type="button" data-a="pushon">Ativar</button><button class="ix" type="button" data-a="pushx" aria-label="Agora não">×</button></div>`}
+if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.tipo==='rota-nova'&&S.token)carregar()});
+
 function bannerInst(){if(instalado()||instFechado)return'';
  if(INST)return`<div class="inst"><img src="https://sizbevhqreaccxrlimup.supabase.co/storage/v1/object/public/app-icones/icon-192.png" alt=""><div><b>Instale o Minha Rota</b>Abre em tela cheia, direto do ícone no celular.</div><button class="ib" type="button" data-a="instalar">Instalar</button><button class="ix" type="button" data-a="instx" aria-label="Fechar aviso">×</button></div>`;
  if(ehIOS)return`<div class="inst"><img src="https://sizbevhqreaccxrlimup.supabase.co/storage/v1/object/public/app-icones/icon-192.png" alt=""><div><b>Instale o Minha Rota</b>No Safari, toque em <b style="display:inline">Compartilhar</b> (quadrado com seta) e depois em <b style="display:inline">Adicionar à Tela de Início</b>.</div><button class="ix" type="button" data-a="instx" aria-label="Fechar aviso">×</button></div>`;
@@ -293,7 +310,7 @@ function render(){
    <h2>${S.tela==='pedido'?'Necessidade do paciente':S.tela==='pedidos'?'Meus pedidos':S.tela==='evo'?'Evoluções':'Minha rota'}</h2>
    ${ro&&S.tela!=='evo'?`<div class="sub">${esc(dExt(ro.data))} · ${/^carro\b/i.test(ro.placa||'')?'':'Carro '}${esc(ro.placa)}${ro.motorista?' · Motorista '+esc(ro.motorista):''}</div>`:''}</header>`;
   if(S.rotas.length>1&&S.tela!=='pedido'&&S.tela!=='evo')h+=`<div class="days" role="tablist" aria-label="Dias">${S.rotas.map(x=>{const on=String(x.id)===String(S.dia),dup=S.rotas.filter(y=>y.data===x.data).length>1;return `<button type="button" role="tab" data-dia="${x.id}" class="${on?'on':''}" aria-selected="${on}">${esc(dExt(x.data).split(',')[0].slice(0,3))} ${x.data.slice(8,10)}/${x.data.slice(5,7)}${dup?' · '+esc(x.placa||''):''}</button>`}).join('')}</div>`;
-  h+='<main>'+(S.leitura?`<div class="verb" role="status"><span>👁 Você está vendo o app como <b>${esc(S.nome||'o médico')}</b>. Só leitura: nada é enviado e a rota não é marcada como vista.</span><button type="button" data-a="sair">Encerrar</button></div>`:bannerInst());if(S.tela==='rota'||S.tela==='pedidos')h+=evoHtml();
+  h+='<main>'+(S.leitura?`<div class="verb" role="status"><span>👁 Você está vendo o app como <b>${esc(S.nome||'o médico')}</b>. Só leitura: nada é enviado e a rota não é marcada como vista.</span><button type="button" data-a="sair">Encerrar</button></div>`:bannerInst()+(S.tela==='rota'?bannerPush():''));if(S.tela==='rota'||S.tela==='pedidos')h+=evoHtml();
   if(S.err)h+=`<p class="err" role="alert">${esc(S.err)}</p>`;
   if(S.tela==='evo'){h+=evoTela()}
   else if(!ro){h+=`<p class="empty">Nenhuma rota publicada para você ainda.<br>Quando a logística publicar, ela aparece aqui.</p><button class="btn line" type="button" data-a="atualizar" style="align-self:center">Atualizar</button>`}
@@ -382,6 +399,8 @@ document.addEventListener('click',async e=>{
   if(a==='embarquei'){const ro=rotaAtual();if(ro){try{localStorage.setItem('rp-emb-'+ro.id,'1')}catch(x){}}render();toast('Boa rota!');return}
   if(a==='instalar'&&INST){INST.prompt();const c=await INST.userChoice.catch(()=>null);INST=null;render();return}
   if(a==='evo'){S.evoAberto=!S.evoAberto;render();return}
+  if(a==='pushon'){const ok=await pushAssinar(true);toast(ok?'Notificações ativadas.':Notification.permission==='denied'?'Notificações bloqueadas. Libere nas configurações do navegador.':'Não foi possível ativar agora.');render();return}
+  if(a==='pushx'){pushFechado=true;try{localStorage.setItem('rp-push','x')}catch(x){}render();return}
   if(a==='instx'){instFechado=true;try{localStorage.setItem('rp-inst','x')}catch(x){}render();return}
   if(a==='evotab'){S.tela='evo';render();window.scrollTo(0,0);carregarEvo();return}
   if(a==='rota'||a==='pedidos'){S.tela=a;render();window.scrollTo(0,0);if(a==='pedidos')carregar(true);return}
