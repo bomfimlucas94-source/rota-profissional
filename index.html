@@ -108,6 +108,10 @@ nav.tabs button b.nb{display:inline-block;min-width:18px;padding:0 5px;margin-le
 .trka{display:flex;gap:8px;flex-wrap:wrap;padding:0 14px 12px}
 .trka .btn{flex:1;min-width:140px}
 .trkav{margin:-2px 14px 12px;font-size:12px;color:var(--muted);font-weight:600}.trkav.cedo{background:var(--pend-bg,#fff0d6);color:var(--pend,#7a4300);border-radius:8px;padding:6px 9px;font-weight:600}
+.trkmap{height:190px;margin:0 14px 12px;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#eee}
+.mkcar{width:34px;height:34px;border-radius:50%;background:#fff;border:3px solid var(--wine);display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:0 2px 8px rgba(0,0,0,.3)}.mkcar.mov{border-color:var(--sun);animation:mkp 1.6s infinite}
+@keyframes mkp{0%{box-shadow:0 0 0 0 rgba(251,176,64,.7)}70%{box-shadow:0 0 0 12px rgba(251,176,64,0)}100%{box-shadow:0 0 0 0 rgba(251,176,64,0)}}@media(prefers-reduced-motion:reduce){.mkcar.mov{animation:none}}
+.mkcasa{width:30px;height:30px;border-radius:50%;background:var(--wine);display:flex;align-items:center;justify-content:center;font-size:15px;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.3)}
 .trkc{display:flex;gap:8px;padding:0 14px 12px}.trkc a{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;min-height:44px;border-radius:10px;font-weight:800;font-size:13.5px;text-decoration:none}
 .trkc a.tel{background:var(--wine);color:#fff}.trkc a.wa{background:#1f8f4e;color:#fff}.trkc small{padding:0 2px;font-size:12px;color:var(--muted)}
 .mk.car{background:var(--sun);color:var(--wine-d);width:32px;height:32px;font-size:16px}
@@ -258,7 +262,7 @@ function trkContato(ro){if(ro.sr_inicio)return'';const d=String((T.d&&T.d.rid===
  if(!d)return T.err==='sem_login'?'<div class="trkc"><small>O telefone do carro aparece aqui quando o motorista entrar no carro (MyGeotab). Se precisar antes, chame a logística.</small></div>':'<div class="trkc"><small>Telefone do motorista não cadastrado. Se precisar falar com ele, chame a logística.</small></div>';
  const i=(d.length<=11?'55':'')+d,pn=(S.nome||'').trim(),msg='Olá, '+String(ro.motorista||'').split(' ')[0]+'! Aqui é '+pn+', da sua rota de hoje pela Solar Cuidados.';
  return `<div class="trkc"><a class="tel" href="tel:+${esc(i)}" aria-label="Ligar para o motorista ${esc(ro.motorista)}">📞 Ligar</a><a class="wa" href="https://wa.me/${esc(i)}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener" aria-label="Chamar o motorista ${esc(ro.motorista)} no WhatsApp">💬 WhatsApp</a></div><p class="trkav${new Date().getHours()<8?' cedo':''}">🕗 O motorista só está disponível a partir das 08:00.</p>`}
-function trkHtml(ro){return `<div class="card trk${ro.sr_inicio?' perto':''}" id="trk"><div class="trkh"><b>Seu motorista</b><span>${esc(ro.motorista)}${T.d&&T.d.placa&&!ro.sr_inicio?' · '+esc(T.d.placa):''}</span></div><div class="trki" id="trki" aria-live="polite">${trkInfo(ro)}</div><div id="trkcw">${trkContato(ro)}</div>${ro.sr_inicio?'':'<div class="trka"><button class="btn line" type="button" data-a="embarquei">Já estou no carro</button></div>'}</div>`}
+function trkHtml(ro){return `<div class="card trk${ro.sr_inicio?' perto':''}" id="trk"><div class="trkh"><b>Seu motorista</b><span>${esc(ro.motorista)}${T.d&&T.d.placa&&!ro.sr_inicio?' · '+esc(T.d.placa):''}</span></div><div class="trki" id="trki" aria-live="polite">${trkInfo(ro)}</div><div id="trkmap-slot"></div><div id="trkcw">${trkContato(ro)}</div>${ro.sr_inicio?'':'<div class="trka"><button class="btn line" type="button" data-a="embarquei">Já estou no carro</button></div>'}</div>`}
 const hhmm=d=>String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
 function trkInfo(ro){
  if(ro.sr_inicio)return `<span class="big ok">Motorista chegou às ${esc(hm(ro.sr_inicio))}</span><small>Ele iniciou a rota no SimpliRoute. Boa rota!</small>`;
@@ -280,8 +284,22 @@ async function trkCarrega(ro){if(T.busy||!S.token||ro.sr_inicio)return;T.busy=tr
  try{const r=await fetch(SB+'/functions/v1/motorista-posicao',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({token:S.token,rota:ro.id})}).then(r=>r.json());
   if(r.ok){T.d=r;T.d.rid=ro.id;T.err=''}else{if(r.erro==='sessao'){T.busy=false;return sair('Sua sessão expirou. Entre de novo.')}T.d=null;T.err=r.erro||''}}catch(e){T.err=''}
  T.at=Date.now();T.busy=false;trkAtualiza()}
-function trkAtualiza(){const ro=rotaAtual();const box=document.getElementById('trki');if(box&&ro)box.innerHTML=trkInfo(ro);const cw=document.getElementById('trkcw');if(cw&&ro)cw.innerHTML=trkContato(ro)}
-setInterval(()=>{const ro=rotaAtual();if(S.token&&!document.hidden&&S.tela==='rota'&&trkAtivo(ro)){trkAtualiza();trkCarrega(ro)}},30000);
+function trkAtualiza(){const ro=rotaAtual();const box=document.getElementById('trki');if(box&&ro)box.innerHTML=trkInfo(ro);const cw=document.getElementById('trkcw');if(cw&&ro)cw.innerHTML=trkContato(ro);if(ro)trkMapa(ro)}
+/* mapa do carro a caminho (só frota com MyGeotab, até o motorista chegar) */
+async function trkMapa(ro){const slot=document.getElementById('trkmap-slot');if(!slot)return;const d=T.d;
+ if(!d||d.rid!==ro.id||d.lat==null||ro.sr_inicio){slot.innerHTML='';return}
+ if(T.mapRota!==ro.id){if(T.map){try{T.map.remove()}catch(e){}}T.map=null;T.mk=null;T.mel=null;T.mapRota=ro.id}
+ if(!T.mel){T.mel=document.createElement('div');T.mel.className='trkmap';T.mel.setAttribute('role','img');T.mel.setAttribute('aria-label','Mapa com a posição do carro do motorista')}
+ if(T.mel.parentNode!==slot){slot.innerHTML='';slot.appendChild(T.mel)}
+ try{await carregaLeaflet()}catch(e){T.mel.textContent='Mapa indisponível agora.';return}
+ const car=[+d.lat,+d.lng],casa=d.cd_lat!=null?[+d.cd_lat,+d.cd_lng]:null;
+ const ic=L.divIcon({className:'',html:`<div class="mkcar${d.dirigindo?' mov':''}">🚗</div>`,iconSize:[34,34],iconAnchor:[17,17]});
+ if(!T.map){T.map=L.map(T.mel,{zoomControl:false,attributionControl:true,scrollWheelZoom:false,dragging:true});L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap'}).addTo(T.map);
+  if(casa)L.marker(casa,{icon:L.divIcon({className:'',html:'<div class="mkcasa">🏠</div>',iconSize:[30,30],iconAnchor:[15,15]}),title:'Sua casa'}).addTo(T.map);
+  T.mk=L.marker(car,{icon:ic,title:'Carro do motorista',zIndexOffset:500}).addTo(T.map);
+  if(casa)T.map.fitBounds(L.latLngBounds([car,casa]).pad(.25),{maxZoom:15});else T.map.setView(car,14)}
+ else{T.mk.setLatLng(car);T.mk.setIcon(ic);setTimeout(()=>T.map&&T.map.invalidateSize(),0)}}
+setInterval(()=>{const ro=rotaAtual();if(S.token&&!document.hidden&&S.tela==="rota"&&trkAtivo(ro)){trkAtualiza();trkCarrega(ro)}},20000);
 let LF=null;
 function carregaLeaflet(){if(window.L)return Promise.resolve();if(LF)return LF;LF=new Promise((ok,no)=>{const sc=document.createElement('script');sc.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';sc.crossOrigin='';sc.onload=ok;sc.onerror=no;document.head.appendChild(sc)});return LF}
 async function desenhaMapa(ro){const el=document.getElementById('mapa');if(!el)return;try{await carregaLeaflet()}catch(e){el.textContent='Mapa indisponível agora.';return}
@@ -361,7 +379,7 @@ function render(){
   if(S.zoom&&ro&&ro.print)h+=`<div class="zoom" role="dialog" aria-modal="true" aria-label="Print da rota"><div><img src="${esc(ro.print)}" alt="Print da rota ampliado"></div><button type="button" data-a="fechar">Fechar</button></div>`;
   app.innerHTML=h;
   if(ro&&S.tela==='rota'&&temGeo(ro))desenhaMapa(ro);
-  if(ro&&S.tela==='rota'&&trkAtivo(ro)){if(T.rota!==ro.id){T.rota=ro.id;T.d=null;T.err=''}if(Date.now()-T.at>15000)trkCarrega(ro)}
+  if(ro&&S.tela==='rota'&&trkAtivo(ro)){if(T.rota!==ro.id){T.rota=ro.id;T.d=null;T.err=''}if(Date.now()-T.at>15000)trkCarrega(ro);else trkMapa(ro)}
 }
 document.addEventListener('submit',async e=>{
   e.preventDefault();
