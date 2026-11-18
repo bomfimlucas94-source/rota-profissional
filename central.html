@@ -285,7 +285,7 @@ async function carregarFrota(sil){if(!S.token||S.trocar||F.busy)return;F.busy=tr
 const fNum=v=>{const m=String(v||'').match(/(extra)?\D*(\d+)\s*$/i);return m?(m[1]?'E':'')+m[2]:String(v||'?').slice(0,2)};
 const fMod=c=>String(c.modelo||'').split('|').pop().trim();
 const fIdade=t=>{if(!t)return'';const m=Math.round((Date.now()-new Date(t))/6e4);return m<1?'agora':m<60?'há '+m+' min':'há '+Math.floor(m/60)+'h'+String(m%60).padStart(2,'0')};
-function fSit(r){const f=r.feitas+r.falhas;if(f>=r.total)return['Concluída','ok','st-ok'];if(f>0)return['Em rota','rota','st-rota'];if(r.carro&&r.carro.dirigindo)return['A caminho','cam','st-cam'];return['Aguardando início','ag','']}
+function fSit(r){const f=r.feitas+r.falhas;if(f>=r.total)return['Concluída','ok','st-ok'];if(r.sr_status==='finished')return['Concluída','ok','st-ok'];if(f>0)return['Em rota','rota','st-rota'];if(r.sr_inicio)return['A caminho · saiu '+hmSP(r.sr_inicio),'cam','st-cam'];if(r.carro&&r.carro.dirigindo)return['A caminho','cam','st-cam'];return['Aguardando início','ag','']}
 function renderFrota(){
  let h='';if(F.err)h+=`<p class="err" role="alert">${esc(F.err)}</p>`;
  if(!F.d)return h+`<div class="empty">${F.busy||!F.err?'Buscando as rotas no SimpliRoute e os carros no MyGeotab…':'Sem dados.'}</div>`;
