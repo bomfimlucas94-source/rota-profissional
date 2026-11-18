@@ -256,18 +256,17 @@ function evoTela(){const E=S.evo;if(!E)return'<p class="empty">Carregando suas e
 const T={rota:null,d:null,err:'',at:0,busy:false};
 const embarcado=id=>{try{return localStorage.getItem('rp-emb-'+id)==='1'}catch(e){return false}};
 const chegouMin=ro=>ro&&ro.sr_inicio?(Date.now()-new Date(ro.sr_inicio))/6e4:null;
-const trkAtivo=ro=>ro&&ro.motorista&&ro.data===hoje()&&!embarcado(ro.id)&&(!ro.sr_inicio||chegouMin(ro)<30);
+const trkAtivo=ro=>ro&&ro.motorista&&ro.data===hoje()&&!embarcado(ro.id)&&(!ro.sr_inicio||chegouMin(ro)<120);
 function ha(t){if(!t)return'';const s=Math.max(0,Math.round((Date.now()-new Date(t))/1000));return s<60?'há '+s+' s':s<3600?'há '+Math.round(s/60)+' min':'há '+Math.floor(s/3600)+' h'}
 function atrasoAgora(ro){if(!ro.prev_inicio)return null;const [h,m]=ro.prev_inicio.split(':').map(Number);const p=new Date();p.setHours(h,m,0,0);return Math.round((Date.now()-p)/6e4)}
-function trkContato(ro){if(ro.sr_inicio)return'';const d=String((T.d&&T.d.rid===ro.id&&T.d.fone)||ro.mot_fone||'').replace(/\D/g,'');
+function trkContato(ro){const d=String((T.d&&T.d.rid===ro.id&&T.d.fone)||ro.mot_fone||'').replace(/\D/g,'');
  if(!d)return T.err==='sem_login'?'<div class="trkc"><small>O telefone do carro aparece aqui quando o motorista entrar no carro (MyGeotab). Se precisar antes, chame a logística.</small></div>':'<div class="trkc"><small>Telefone do motorista não cadastrado. Se precisar falar com ele, chame a logística.</small></div>';
  const i=(d.length<=11?'55':'')+d,pn=(S.nome||'').trim(),msg='Olá, '+String(ro.motorista||'').split(' ')[0]+'! Aqui é '+pn+', da sua rota de hoje pela Solar Cuidados.';
  return `<div class="trkc"><a class="tel" href="tel:+${esc(i)}" aria-label="Ligar para o motorista ${esc(ro.motorista)}">📞 Ligar</a><a class="wa" href="https://wa.me/${esc(i)}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener" aria-label="Chamar o motorista ${esc(ro.motorista)} no WhatsApp">💬 WhatsApp</a></div><p class="trkav${new Date().getHours()<8?' cedo':''}">🕗 O motorista só está disponível a partir das 08:00.</p>`}
-function trkHtml(ro){return `<div class="card trk${ro.sr_inicio?' perto':''}" id="trk"><div class="trkh"><b>Seu motorista</b><span>${esc(ro.motorista)}${T.d&&T.d.placa&&!ro.sr_inicio?' · '+esc(T.d.placa):''}</span></div><div class="trki" id="trki" aria-live="polite">${trkInfo(ro)}</div><div id="trkmap-slot"></div><div id="trkcw">${trkContato(ro)}</div>${ro.sr_inicio?'':'<div class="trka"><button class="btn line" type="button" data-a="embarquei">Já estou no carro</button></div>'}</div>`}
+function trkHtml(ro){return `<div class="card trk" id="trk"><div class="trkh"><b>Seu motorista</b><span>${esc(ro.motorista)}${T.d&&T.d.placa?' · '+esc(T.d.placa):''}</span></div><div class="trki" id="trki" aria-live="polite">${trkInfo(ro)}</div><div id="trkmap-slot"></div><div id="trkcw">${trkContato(ro)}</div><div class="trka"><button class="btn line" type="button" data-a="embarquei">Já estou no carro</button></div></div>`}
 const hhmm=d=>String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
 function trkInfo(ro){
- if(ro.sr_inicio)return `<span class="big ok">Motorista chegou às ${esc(hm(ro.sr_inicio))}</span><small>Ele iniciou a rota no SimpliRoute. Boa rota!</small>`;
- const d=T.d,ex=[];let l1='';
+ const d0=T.d,velha=d0&&d0.posicao_em&&(Date.now()-new Date(d0.posicao_em))>30*6e4,d=velha?null:d0,ex=[];let l1='';
  // 1) carros da frota: posição ao vivo pelo Geotab
  if(d&&d.min!=null){const eta=new Date(Date.now()+d.min*6e4),parado=!d.dirigindo&&d.km>=0.5;
   l1=d.km<0.3?'<span class="big ok">Motorista chegando!</span>':`<span class="big">Chega às ${hhmm(eta)}</span>`;
@@ -279,18 +278,21 @@ function trkInfo(ro){
   l1=hist&&Math.abs(aj)>5?`<span class="big">Chegada estimada ~${hhmm(est)}</span>`:`<span class="big">Previsto às ${esc(ro.prev_inicio)}</span>`;
   if(hist&&Math.abs(aj)>5)ex.push(`previsto no SimpliRoute às ${esc(ro.prev_inicio)}, costuma chegar ${Math.abs(aj)} min ${aj>0?'depois':'antes'}`);else if(hist)ex.push('costuma chegar no horário');
   if(falta>1&&falta<=90)ex.push(`faltam ~${falta} min`);else if(falta<-5)ex.push(`<b style="color:var(--bad)">${-falta} min além do esperado</b>`)}
+ if(ro.sr_inicio&&!(d&&d.min!=null)){l1='<span class="big">Motorista a caminho</span>';ex.length=0;ex.push(`saiu às ${esc(hm(ro.sr_inicio))} (iniciou a rota no SimpliRoute)`);if(velha)ex.push('sem posição ao vivo do carro agora')}
+ else if(ro.sr_inicio&&d&&d.min!=null&&d.km>=0.3)ex.push(`saiu às ${esc(hm(ro.sr_inicio))}`);
  if(!l1)l1='<span class="big">Aguardando o motorista</span>';
- if(!(d&&d.min!=null)){if(ro.mot_ativo_em)ex.push(`ativo no app SimpliRoute às ${esc(hm(ro.mot_ativo_em))}`);else if(ro.prev_inicio)ex.push('ainda não abriu o app SimpliRoute hoje')}
+ if(velha)ex.push(`o rastreador do carro${d0.placa?' '+esc(d0.placa):''} não envia posição desde ${esc(new Date(d0.posicao_em).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(',',' às'))} (o motorista pode estar em outro carro)`);
+ if(!(d&&d.min!=null)&&!ro.sr_inicio){if(ro.mot_ativo_em)ex.push(`ativo no app SimpliRoute às ${esc(hm(ro.mot_ativo_em))}`);else if(ro.prev_inicio)ex.push('ainda não abriu o app SimpliRoute hoje')}
  if(T.err==='sem_login')ex.push('ainda não entrou no carro (MyGeotab)');
  return l1+(ex.length?`<small>${ex.join(' · ')}</small>`:'')}
-async function trkCarrega(ro){if(T.busy||!S.token||ro.sr_inicio)return;T.busy=true;
+async function trkCarrega(ro){if(T.busy||!S.token)return;T.busy=true;
  try{const r=await fetch(SB+'/functions/v1/motorista-posicao',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({token:S.token,rota:ro.id})}).then(r=>r.json());
   if(r.ok){T.d=r;T.d.rid=ro.id;T.err=''}else{if(r.erro==='sessao'){T.busy=false;return sair('Sua sessão expirou. Entre de novo.')}T.d=null;T.err=r.erro||''}}catch(e){T.err=''}
  T.at=Date.now();T.busy=false;trkAtualiza()}
 function trkAtualiza(){const ro=rotaAtual();const box=document.getElementById('trki');if(box&&ro)box.innerHTML=trkInfo(ro);const cw=document.getElementById('trkcw');if(cw&&ro)cw.innerHTML=trkContato(ro);if(ro)trkMapa(ro)}
 /* mapa do carro a caminho (só frota com MyGeotab, até o motorista chegar) */
 async function trkMapa(ro){const slot=document.getElementById('trkmap-slot');if(!slot)return;const d=T.d;
- if(!d||d.rid!==ro.id||d.lat==null||ro.sr_inicio){slot.innerHTML='';return}
+ if(!d||d.rid!==ro.id||d.lat==null||(d.posicao_em&&Date.now()-new Date(d.posicao_em)>30*6e4)){slot.innerHTML='';return}
  if(T.mapRota!==ro.id){if(T.map){try{T.map.remove()}catch(e){}}T.map=null;T.mk=null;T.mel=null;T.mapRota=ro.id}
  if(!T.mel){T.mel=document.createElement('div');T.mel.className='trkmap';T.mel.setAttribute('role','img');T.mel.setAttribute('aria-label','Mapa com a posição do carro do motorista')}
  if(!T.mctl){T.mctl=document.createElement('div');T.mctl.className='trkmc';T.mctl.innerHTML='<button type="button" data-a="carver">🚗 Ver o carro de perto</button><button type="button" data-a="carmax">⤢ Ampliar mapa</button>'}
@@ -350,6 +352,7 @@ function render(){
     h+=ro.confirmado_em?`<div class="note ok">Rota confirmada às ${hm(ro.confirmado_em)}.</div>`:ro.atualizado_em?`<div class="note pend">A logística atualizou esta rota às ${hm(ro.atualizado_em)}. Confira de novo e confirme.</div>`:`<div class="note pend">Confira sua rota e indique as necessidades dos pacientes o quanto antes.</div>`;
     if(trkAtivo(ro))h+=trkHtml(ro);
     else if(!ro.motorista&&ro.data>=hoje()&&!embarcado(ro.id))h+=`<div class="card trk"><div class="trkh"><b>Seu motorista</b><span>Ainda não definido</span></div><div class="trki"><small>Assim que a logística definir o motorista no SimpliRoute, o nome dele aparece aqui${ro.data===hoje()?' e você acompanha o carro chegando':''}.</small></div></div>`;
+    else if(ro.motorista&&ro.data===hoje())h+=`<div class="card trk"><div class="trkh"><b>Seu motorista hoje</b><span>${esc(ro.motorista)}</span></div><div class="trki"><small>${ro.sr_inicio?'Saiu às '+esc(hm(ro.sr_inicio))+'. Boa rota!':'Você já está no carro. Boa rota!'}</small></div></div>`;
     else if(ro.motorista&&ro.data>hoje())h+=`<div class="card trk"><div class="trkh"><b>Seu motorista</b><span>${esc(ro.motorista)}</span></div><div class="trki"><small>O acompanhamento do carro aparece aqui no dia da rota (${esc(ro.data.slice(8,10)+'/'+ro.data.slice(5,7))}), com a distância até você e a previsão de chegada.</small></div></div>`;
     const gm=gmaps(ro);
     h+=`<div class="card">${temGeo(ro)?'<div class="mapa" id="mapa" role="img" aria-label="Mapa com os pacientes na ordem da rota"></div>':ro.print?`<button class="print" type="button" data-a="zoom" aria-label="Ampliar o print da rota"><img src="${esc(ro.print)}" alt="Print da rota de ${esc(dExt(ro.data))}"></button>`:'<div class="noprint">Print da rota ainda não enviado</div>'}

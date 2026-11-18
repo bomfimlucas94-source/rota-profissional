@@ -163,10 +163,12 @@ const STN={pendente:'Pendente',aprovada:'Aprovada',recusada:'Recusada',aplicada:
 const LOGI=()=>S.perfil!=='adm_medico';
 const S={token:null,nome:'',perfil:'logistica',itens:null,err:'',busy:false,f:{st:'',esp:'',dia:''},open:{},draft:{},at:0,tab:'sol'};
 // Segurança: a sessão fica só nesta aba (sessionStorage). Fechou o navegador ou abriu o link em outra aba/pessoa → pede celular e PIN.
-const INATIVO_MIN=30;
+const INATIVO_MIN=120;
 try{localStorage.removeItem('lg-token');localStorage.removeItem('lg-nome');S.token=sessionStorage.getItem('lg-token');S.nome=sessionStorage.getItem('lg-nome')||'';S.tab=localStorage.getItem('lg-tab')||'sol';S.perfil=sessionStorage.getItem('lg-perfil')||'logistica';
  const ult=+sessionStorage.getItem('lg-ult')||0;if(S.token&&Date.now()-ult>INATIVO_MIN*6e4){S.token=null;sessionStorage.removeItem('lg-token')}}catch(e){}
 const marcaUso=()=>{try{sessionStorage.setItem('lg-ult',String(Date.now()))}catch(e){}};marcaUso();
+/* qualquer uso (clique, toque, digitação, rolagem) conta como atividade */
+let _ultUso=0;['pointerdown','keydown','input','wheel','touchstart'].forEach(ev=>document.addEventListener(ev,()=>{const t=Date.now();if(t-_ultUso>15000){_ultUso=t;marcaUso()}},{passive:true,capture:true}));
 ['click','keydown','touchstart'].forEach(ev=>addEventListener(ev,marcaUso,{passive:true}));
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
