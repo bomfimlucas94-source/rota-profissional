@@ -91,7 +91,7 @@ dialog .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .ass{border:1px solid var(--warm);border-radius:12px;background:#fff;touch-action:none;width:100%;height:160px;display:block}
 .wrap.comnav{padding-bottom:76px}
 nav.nav{position:fixed;left:0;right:0;bottom:0;z-index:5;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom)}
-nav.nav div{display:grid;grid-template-columns:repeat(3,1fr);width:100%;max-width:520px}
+nav.nav div{display:grid;grid-template-columns:repeat(4,1fr);width:100%;max-width:520px}
 nav.nav button{background:none;border:0;min-height:62px;font-size:12px;font-weight:700;color:var(--muted);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;position:relative}
 nav.nav button svg{width:22px;height:22px}
 nav.nav button[aria-current=page]{color:var(--wine)}
@@ -120,6 +120,12 @@ nav.nav b{position:absolute;top:6px;left:calc(50% + 6px);background:var(--bad);c
 .rsp{display:flex;gap:6px;align-items:center}.rsp input{flex:1;border:1px solid var(--warm);border-radius:10px;padding:10px 12px;font-size:16px;min-height:46px}
 .rsp button{min-width:44px;min-height:44px;border:1px solid var(--line);background:#fff;border-radius:10px;font-size:16px;cursor:pointer;color:var(--wine)}
 .rsp button:disabled{opacity:.35}
+.fdia{font-size:26px;font-weight:800;color:var(--wine)}
+.dgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.dgrid button{min-height:56px;border-radius:12px;border:1px solid var(--warm);background:#fff;color:var(--ink);font-weight:800;font-size:15px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+.dgrid button small{font-size:11px;font-weight:600;color:var(--muted)}
+.dgrid button[aria-pressed=true]{background:var(--wine);border-color:var(--wine);color:#fff}.dgrid button[aria-pressed=true] small{color:var(--peach)}
+.dgrid button:disabled{background:#efeae4;color:#b9aeb3;border-color:#efeae4;cursor:default}.dgrid button.atual{border:2px dashed var(--wine);color:var(--wine)}
 .link{background:none;border:0;color:var(--wine);font-weight:700;font-size:13px;padding:0;min-height:32px;cursor:pointer;text-decoration:underline}
 </style>
 </head>
@@ -128,7 +134,7 @@ nav.nav b{position:absolute;top:6px;left:calc(50% + 6px);background:var(--bad);c
 <dialog id="dlg"><h3 id="dlgT"></h3><p id="dlgP"></p><div class="row"><button class="btn line" id="dlgN" type="button">Cancelar</button><button class="btn wine" id="dlgS" type="button">Confirmar</button></div></dialog>
 <script>
 const SB='https://sizbevhqreaccxrlimup.supabase.co',KEY='sb_publishable_sOPBmFvZMrGj3JvHzxIyYQ_4LsvUbSG';
-const S={token:null,nome:'',trocar:false,etapa:'carregando',turno:null,lista:null,carros:null,gps:null,busca:'',sec:0,resp:{},busy:false,err:'',rotas:null,motivos:[],rotaErr:'',vis:null,co:null,aba:'hoje',naoLidas:0,
+const S={token:null,nome:'',trocar:false,etapa:'carregando',turno:null,lista:null,carros:null,gps:null,busca:'',sec:0,resp:{},busy:false,err:'',rotas:null,motivos:[],rotaErr:'',vis:null,co:null,aba:'hoje',naoLidas:0,fg:{d:null,err:'',sel:{},mot:{}},
  chat:{rotas:null,rota:null,msgs:[],resp:[],txt:'',err:'',ed:null,n:-1},oc:{lista:null,tipo:'',texto:'',valor:'',foto:null,avisar:true,err:''}};
 try{S.token=localStorage.getItem('rm-token');S.nome=localStorage.getItem('rm-nome')||'';S.trocar=localStorage.getItem('rm-trocar')==='1'}catch(e){}
 let PIN_TMP='';
@@ -173,8 +179,8 @@ function topo(sub){const d=new Date().toLocaleDateString('pt-BR',{weekday:'short
 const saud=()=>{const h=new Date().getHours();return h<12?'Bom dia':h<18?'Boa tarde':'Boa noite'};
 function itensSec(i){return (S.lista&&S.lista[i])?S.lista[i].itens:[]}
 function secCompleta(i){return itensSec(i).every(it=>{const r=S.resp[it.id];return r&&(r.ok||String(r.obs||'').trim())})}
-const IC={hoje:'<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',chat:'<path d="M4 5h16v11H8l-4 4z"/>',ocor:'<path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.5"/>'};
-function nav(){const it=[['hoje','Hoje'],['chat','Conversa'],['ocor','Ocorrências']];
+const IC={folga:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',hoje:'<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',chat:'<path d="M4 5h16v11H8l-4 4z"/>',ocor:'<path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.5"/>'};
+function nav(){const it=[['hoje','Hoje'],['chat','Conversa'],['ocor','Ocorrências'],['folga','Folga']];
  return `<nav class="nav" aria-label="Seções"><div>${it.map(([k,t])=>`<button type="button" data-aba="${k}"${S.aba===k||(k==='chat'&&S.aba==='resp')?' aria-current="page"':''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[k]}</svg>${t}${k==='chat'&&S.naoLidas?`<b aria-label="${S.naoLidas} não lidas">${S.naoLidas}</b>`:''}</button>`).join('')}</div></nav>`}
 const comNav=()=>S.etapa==='carro'||S.etapa==='pronto';
 async function carregaChat(sil){const C=S.chat;
@@ -219,6 +225,35 @@ function renderOcor(){const O=S.oc;let h=topo('Avise a Central na hora');h+='<ma
  if(O.lista==null)h+='<p class="carregando">Carregando…</p>';else if(!O.lista.length)h+='<p class="meta">Nenhuma ocorrência.</p>';
  else O.lista.forEach(o=>{h+=`<div class="oc"><div class="h"><b>${esc(o.tipo)}${o.valor!=null?' · R$ '+Number(o.valor).toFixed(2).replace('.',','):''}</b>${o.visto_em?'<span class="pill fim">Recebido</span>':'<span class="pill and">Aguardando</span>'}</div>${o.texto?`<span>${esc(o.texto)}</span>`:''}<span class="meta">${new Date(o.em).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(',',' ·')}${o.placa?' · '+esc(o.placa):''}${o.avisou_medico?' · profissional avisado':''}${o.visto_por?' · '+esc(o.visto_por.split(' ')[0])+' viu':''}</span>${o.foto?`<a href="${esc(o.foto)}" target="_blank" rel="noopener" class="meta">ver foto</a>`:''}</div>`});
  return h+'</div></main>'}
+// ===== Folga mensal (sorteada pela logística; o motorista pode pedir outro dia) =====
+const WD=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+const pdk=k=>{const[a,b,c]=String(k).slice(0,10).split('-').map(Number);return new Date(a,b-1,c)};
+const ddm=k=>String(k).slice(8,10)+'/'+String(k).slice(5,7);
+const dlong=k=>WD[pdk(k).getDay()]+', '+ddm(k);
+const mesN=ym=>new Date(+ym.slice(0,4),+ym.slice(5,7)-1,1).toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+async function carregaFolga(){const F=S.fg;try{const r=await rpc('mot_folga',{p_token:S.token});if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');F.err=r.erro;F.d={meses:[]}}else{F.d=r;F.err=''}}
+ catch(e){F.err=e.message;F.d=F.d||{meses:[]}}if(S.aba==='folga')render()}
+function renderFolga(){const F=S.fg;let h=topo('Sua folga mensal');h+='<main>';
+ if(!F.d)return h+'<p class="carregando">Carregando…</p></main>';
+ if(F.err)h+=`<p class="err" role="alert">${esc(F.err)}</p>`;
+ if(!F.d.meses.length)return h+'<div class="card"><h2>Folga mensal</h2><p class="meta">A logística ainda não sorteou a folga do próximo mês. Quando sortear, ela aparece aqui e você pode pedir outro dia, com 10 dias de antecedência.</p></div></main>';
+ const lim=pdk(F.d.hoje);lim.setDate(lim.getDate()+(F.d.antecedencia||10));const limK=lim.getFullYear()+'-'+String(lim.getMonth()+1).padStart(2,'0')+'-'+String(lim.getDate()).padStart(2,'0');
+ F.d.meses.forEach(m=>{const pend=(m.pedidos||[]).find(p=>p.status==='pendente');const ult=(m.pedidos||[]).find(p=>p.status!=='pendente'&&p.status!=='cancelado');
+  h+=`<div class="card"><h2>Folga de ${esc(mesN(m.ym))}</h2>`;
+  if(m.sem_direito){h+=`<p class="msg bad" style="margin:0">${esc(m.sem_direito)}. Pela regra, quem tem falta no mês perde a folga mensal do mês seguinte. Dúvidas? Fale com a logística.</p></div>`;return}
+  h+=m.dia?`<span class="fdia">${esc(dlong(m.dia))}</span><p class="meta">${m.origem==='troca'?'Troca aprovada pela logística':m.origem==='sorteio'?'Sorteada pela logística':'Definida pela logística'}</p>`:'<p class="meta">Ainda sem data definida. Fale com a logística.</p>';
+  if(pend)h+=`<div class="msg pend">Você pediu para trocar ${pend.de?'de <b>'+esc(ddm(pend.de))+'</b> ':''}para <b>${esc(dlong(pend.para))}</b>. Aguardando a logística.${pend.motivo?'<br>“'+esc(pend.motivo)+'”':''}<br><button class="link" type="button" data-fgx="${pend.id}">Cancelar pedido</button></div>`;
+  else if(ult&&ult.respondido_em&&Date.now()-new Date(ult.respondido_em)<7*864e5)h+=`<div class="msg ${ult.status==='aprovado'?'ok':'bad'}">${ult.status==='aprovado'?'Troca aprovada: sua folga agora é '+esc(dlong(ult.para))+'.':'Pedido para '+esc(ddm(ult.para))+' recusado.'}${ult.resposta?'<br>“'+esc(ult.resposta)+'”':''}</div>`;
+  const podeTrocar=!m.dia||m.dia>=limK;
+  if(!podeTrocar)h+='<p class="meta">Faltam menos de 10 dias para a sua folga, então ela não pode mais ser trocada.</p>';
+  else{const sel=F.sel[m.ym];
+   h+=`<h2 style="margin-top:6px">${pend?'Pedir outro dia no lugar':'Quer outro dia?'}</h2><p class="meta">Escolha um dia de plantão seu, com pelo menos 10 dias de antecedência. Dias cinza não podem: já passaram do prazo ou atingiram o máximo de ${m.max_dia} folga(s).</p>
+    <div class="dgrid" role="group" aria-label="Dias de plantão de ${esc(mesN(m.ym))}">${(m.plantoes||[]).map(p=>{const k=String(p.dia).slice(0,10),eu=k===String(m.dia).slice(0,10),cheio=+p.ocupadas>=m.max_dia,cedo=k<limK;
+     const dis=eu||cheio||cedo;return `<button type="button" data-fgd="${k}" data-fgym="${m.ym}"${dis?' disabled':''} class="${eu?'atual':''}" aria-pressed="${sel===k}" aria-label="${esc(dlong(k))}${eu?' (sua folga atual)':cheio?' (lotado)':cedo?' (fora do prazo)':''}">${esc(ddm(k))}<small>${eu?'atual':cheio?'lotado':WD[pdk(k).getDay()]}</small></button>`}).join('')}</div>`;
+   if(sel)h+=`<label class="obs">Motivo (opcional)<textarea data-fgm="${m.ym}" maxlength="300" placeholder="Ex.: compromisso de família">${esc(F.mot[m.ym]||'')}</textarea></label>
+     <button class="btn sun" type="button" data-fgok="${m.ym}"${S.busy?' disabled':''}>${S.busy?'Enviando…':'Pedir folga em '+esc(dlong(sel))}</button>`}
+  h+='</div>'});
+ return h+'</main>'}
 function rotaHtml(t){
  if(S.rotas==null)return '<div class="card"><h2>Rota de hoje</h2><p class="carregando">Buscando sua rota no SimpliRoute…</p></div>';
  if(S.rotaErr)return `<div class="card"><h2>Rota de hoje</h2><p class="err">${esc(S.rotaErr)}</p><button class="btn line" type="button" data-a="rotarec">Tentar de novo</button></div>`;
@@ -243,10 +278,11 @@ function rotaHtml(t){
 function render(){
  const app=$('#app');let h='';
  app.classList.toggle('comnav',comNav());
- if(comNav()&&S.aba!=='hoje'){const foc=document.activeElement&&document.activeElement.id==='ctxt';app.innerHTML=(S.aba==='chat'?renderChat():S.aba==='resp'?renderResp():renderOcor())+nav();
+ if(comNav()&&S.aba!=='hoje'){const foc=document.activeElement&&document.activeElement.id==='ctxt';app.innerHTML=(S.aba==='chat'?renderChat():S.aba==='resp'?renderResp():S.aba==='folga'?renderFolga():renderOcor())+nav();
   const ct=$('#ctxt');if(ct){ct.oninput=()=>{S.chat.txt=ct.value};if(foc){ct.focus();ct.setSelectionRange(ct.value.length,ct.value.length)}}
   const ov=$('#ovalor');if(ov)ov.oninput=()=>{S.oc.valor=ov.value};const ot=$('#otexto');if(ot)ot.oninput=()=>{S.oc.texto=ot.value};const oa=$('#oavisar');if(oa)oa.onchange=()=>{S.oc.avisar=oa.checked};
-  document.querySelectorAll('[data-rsp]').forEach(i=>i.oninput=()=>{S.chat.ed[+i.dataset.rsp]=i.value});return}
+  document.querySelectorAll('[data-rsp]').forEach(i=>i.oninput=()=>{S.chat.ed[+i.dataset.rsp]=i.value});
+  document.querySelectorAll('[data-fgm]').forEach(t=>t.oninput=()=>{S.fg.mot[t.dataset.fgm]=t.value});return}
  if(S.etapa==='pin'){
   app.innerHTML=`${topo('Crie seu PIN pessoal')}<main><form class="card login" id="fpin" novalidate style="padding:16px">
    <p class="meta">É o seu primeiro acesso. Troque o PIN provisório por um que só você saiba.</p>${S.err?`<p class="err" role="alert">${esc(S.err)}</p>`:''}
@@ -328,9 +364,16 @@ async function acaoRota(acao,extra,okMsg){S.busy=true;render();const g=await peg
  try{const r=await api(acao,{...extra,...(g||{})});S.busy=false;if(!r.ok){toast(r.erro);render();return null}if(r.rotas)S.rotas=r.rotas;if(okMsg)toast(okMsg);render();return r}
  catch(x){S.busy=false;if(x.message!=='sessao')toast(x.message);render();return null}}
 document.addEventListener('click',async e=>{
+ const fg=e.target.closest('[data-fgd],[data-fgok],[data-fgx]');
+ if(fg){const d=fg.dataset,F=S.fg;
+  if(d.fgd){F.sel[d.fgym]=F.sel[d.fgym]===d.fgd?null:d.fgd;render();return}
+  if(d.fgok){const ym=d.fgok,k=F.sel[ym];if(!k)return;if(!(await confirma('Pedir folga em '+dlong(k)+'?','A logística vai analisar. Se aprovar, sua folga muda automaticamente na escala.','Enviar pedido')))return;
+   S.busy=true;render();try{const r=await rpc('mot_folga_pedir',{p_token:S.token,p_ym:ym,p_para:k,p_motivo:F.mot[ym]||''});S.busy=false;
+    if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');toast(r.erro);render();return}F.sel[ym]=null;F.mot[ym]='';toast('Pedido enviado à logística.');carregaFolga()}catch(x){S.busy=false;toast(x.message);render()}return}
+  if(d.fgx){if(!(await confirma('Cancelar o pedido?','Sua folga continua na data atual.','Cancelar pedido')))return;try{await rpc('mot_folga_cancelar',{p_token:S.token,p_id:+d.fgx});toast('Pedido cancelado.');carregaFolga()}catch(x){toast(x.message)}return}}
  const x=e.target.closest('[data-aba],[data-crota],[data-pronta],[data-otipo],[data-rup],[data-rdel],[data-rsug]');
  if(x){const d=x.dataset;
-  if(d.aba){S.aba=d.aba;S.err='';render();scrollTo(0,0);if(d.aba==='chat'){S.chat.n=-1;carregaChat()}if(d.aba==='ocor'){carregaOcor();if(S.chat.rotas==null)contaRotas()}return}
+  if(d.aba){S.aba=d.aba;S.err='';render();scrollTo(0,0);if(d.aba==='chat'){S.chat.n=-1;carregaChat()}if(d.aba==='ocor'){carregaOcor();if(S.chat.rotas==null)contaRotas()}if(d.aba==='folga')carregaFolga();return}
   if(d.crota){S.chat.rota=+d.crota;S.chat.n=-1;carregaChat();return}
   if(d.pronta!=null){enviaChat(S.chat.resp[+d.pronta],true);return}
   if(d.otipo){S.oc.tipo=d.otipo;S.oc.avisar=d.otipo==='Atraso';S.oc.err='';render();const t=$(d.otipo==='Abastecimento'?'#ovalor':'#otexto');if(t)t.focus();return}
