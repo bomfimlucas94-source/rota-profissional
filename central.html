@@ -37,6 +37,7 @@ header.top{background:var(--wine);color:#fff;border-bottom:5px solid var(--sun);
 .topin small{display:block;color:var(--peach);font-size:12px;font-weight:600}
 .topin .sp{flex:1}
 .topin .who{font-size:12.5px;color:var(--peach)}
+.embed .topin>div:first-child,.embed .topin .who,.embed .topin .out{display:none}.embed header.top{border-bottom-width:3px}.embed .topin{padding:8px 16px}
 .out{background:rgba(255,255,255,.14);color:#fff;border:0;border-radius:999px;font-size:12px;font-weight:700;padding:7px 12px}
 main{max-width:1200px;margin:0 auto;padding:14px 16px 40px;display:flex;flex-direction:column;gap:12px}
 .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
@@ -176,9 +177,14 @@ const LOGI=()=>S.perfil!=='adm_medico';
 const S={token:null,nome:'',perfil:'logistica',itens:null,err:'',busy:false,f:{st:'',esp:'',dia:''},open:{},draft:{},at:0,tab:'sol'};
 // Segurança: a sessão fica só nesta aba (sessionStorage). Fechou o navegador ou abriu o link em outra aba/pessoa → pede celular e PIN.
 const INATIVO_MIN=120;
+/* Central dentro do Painel de Escala (escala.solarcuidados.log.br): a sessão vem do painel, que também controla a inatividade */
+const PAINEL_ORIGEM='https://escala.solarcuidados.log.br';
+const EMBED=new URLSearchParams(location.search).has('embed')&&window.parent!==window;
+if(EMBED)document.documentElement.classList.add('embed');
+const avisaPainel=m=>{if(EMBED)try{parent.postMessage(m,PAINEL_ORIGEM)}catch(e){}};
 try{localStorage.removeItem('lg-token');localStorage.removeItem('lg-nome');S.token=sessionStorage.getItem('lg-token');S.nome=sessionStorage.getItem('lg-nome')||'';S.tab=localStorage.getItem('lg-tab')||'sol';S.perfil=sessionStorage.getItem('lg-perfil')||'logistica';
  const ult=+sessionStorage.getItem('lg-ult')||0;if(S.token&&Date.now()-ult>INATIVO_MIN*6e4){S.token=null;sessionStorage.removeItem('lg-token')}}catch(e){}
-const marcaUso=()=>{try{sessionStorage.setItem('lg-ult',String(Date.now()))}catch(e){}};marcaUso();
+let _ultAviso=0;const marcaUso=()=>{try{sessionStorage.setItem('lg-ult',String(Date.now()))}catch(e){}if(EMBED&&Date.now()-_ultAviso>15000){_ultAviso=Date.now();avisaPainel({tipo:'central-uso'})}};if(EMBED){S.token=null}marcaUso();
 /* qualquer uso (clique, toque, digitação, rolagem) conta como atividade */
 let _ultUso=0;['pointerdown','keydown','input','wheel','touchstart'].forEach(ev=>document.addEventListener(ev,()=>{const t=Date.now();if(t-_ultUso>15000){_ultUso=t;marcaUso()}},{passive:true,capture:true}));
 ['click','keydown','touchstart'].forEach(ev=>addEventListener(ev,marcaUso,{passive:true}));
@@ -190,7 +196,7 @@ const dm=k=>k.slice(8,10)+'/'+k.slice(5,7);
 const dExt=k=>{const s=new Date(k+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'long'});return s[0].toUpperCase()+s.slice(1)};
 const hm=t=>t?new Date(t).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
 const jan=r=>r.tipo==='horario_fixo'?(r.horario_de||'?')+' – '+(r.horario_ate||'?'):r.tipo==='nao_antes'?'a partir de '+(r.horario_de||'?'):'';
-function sair(msg){S.trocar=false;PIN_TMP='';try{if(S.token)rpc('eq_sair',{p_token:S.token}).catch(()=>{});sessionStorage.removeItem('lg-token');sessionStorage.removeItem('lg-nome');sessionStorage.removeItem('lg-perfil')}catch(e){}S.token=null;S.perfil='logistica';S.itens=null;S.err=msg||'';render()}
+function sair(msg){if(EMBED){S.token=null;S.itens=null;avisaPainel({tipo:'central-sair',msg:msg||''});render();return}S.trocar=false;PIN_TMP='';try{if(S.token)rpc('eq_sair',{p_token:S.token}).catch(()=>{});sessionStorage.removeItem('lg-token');sessionStorage.removeItem('lg-nome');sessionStorage.removeItem('lg-perfil')}catch(e){}S.token=null;S.perfil='logistica';S.itens=null;S.err=msg||'';render()}
 async function carregar(sil){if(!S.token||S.trocar)return;
  if(!LOGI()){try{const r=await rpc('eq_check',{p_token:S.token});if(!r.ok)return sair('Sua sessão expirou. Entre de novo.');S.nome=r.nome;S.perfil=r.perfil||'adm_medico';try{sessionStorage.setItem('lg-perfil',S.perfil)}catch(x){}if(LOGI())return carregar(sil);if(S.tab!=='fro'&&S.tab!=='evo')S.tab='fro';if(S.tab==='fro'&&!F.d)carregarFrota();if(S.tab==='evo'&&!V.d)carregarEvoC();render()}catch(e){}return}
  try{const r=await rpc('eq_solicitacoes',{p_token:S.token});if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');throw new Error(r.erro)}
@@ -449,6 +455,7 @@ function renderMot(){
  return h}
 function render(){
  const app=$('#app');
+ if(EMBED&&!S.token){app.innerHTML='<div class="empty" style="margin:40px auto;max-width:520px">Conectando ao painel…</div>';return}
  if(!S.token){app.innerHTML=`<section class="login"><div class="lbox"><div class="logo" aria-label="Solar"><span>S</span><i></i><span>L</span><span>A</span><span>R</span></div>
   <div><h1>Central de Solicitações</h1><p>Área da logística para responder os pedidos dos profissionais de saúde.</p></div>
   <form id="flog" novalidate>${S.err?`<p class="err" role="alert">${esc(S.err)}</p>`:''}<label>Celular cadastrado<input id="cel" type="tel" inputmode="tel" autocomplete="tel" placeholder="(21) 9 0000-0000"></label><label>PIN<input id="pin" type="password" inputmode="numeric" autocomplete="current-password" maxlength="6" placeholder="4 a 6 números"></label><button class="btn sun" type="submit"${S.busy?' disabled':''}>${S.busy?'Entrando…':'Entrar'}</button></form></div></section>`;return}
@@ -547,9 +554,14 @@ document.addEventListener('click',async e=>{const b=e.target.closest('button');i
   if(d.re){b.disabled=true;await responder(d.re,'pendente');toast('Solicitação reaberta.');return}
   if(d.all){b.disabled=true;const ids=d.all.split(',');for(const id of ids)await responder(id,'aprovada',S.draft[id],true);await carregar(true);toast(ids.length+' pedidos aprovados.');return}
  }catch(x){b.disabled=false;toast(x.message)}});
-setInterval(()=>{try{if(S.token&&Date.now()-(+sessionStorage.getItem('lg-ult')||0)>INATIVO_MIN*6e4){sair('Por segurança, a sessão foi encerrada após '+INATIVO_MIN+' minutos sem uso. Entre de novo.');return}}catch(e){}if(S.token&&!document.hidden&&!document.querySelector('[data-rs]:focus,select:focus')){carregar(true);if(LOGI()&&(S.tab==='mot'||Date.now()-M.at>120e3))carregarMot(true);if(S.tab==='env'&&E.sr!==null&&!E.busy)carregarEnv(false,true)}},30000);
-document.addEventListener('visibilitychange',()=>{if(document.hidden||!S.token)return;try{if(Date.now()-(+sessionStorage.getItem('lg-ult')||0)>INATIVO_MIN*6e4)return sair('Por segurança, a sessão foi encerrada após '+INATIVO_MIN+' minutos sem uso. Entre de novo.')}catch(e){}carregar(true)});
-render();if(S.token){carregar();if(LOGI())carregarMot(S.tab!=='mot');if(S.tab==='env')carregarEnv(true);if(S.tab==='rel')carregarRel();if(S.tab==='cad')carregarCad();if(S.tab==='evo')carregarEvoC();if(S.tab==='fro')carregarFrota()}
+setInterval(()=>{try{if(!EMBED&&S.token&&Date.now()-(+sessionStorage.getItem('lg-ult')||0)>INATIVO_MIN*6e4){sair('Por segurança, a sessão foi encerrada após '+INATIVO_MIN+' minutos sem uso. Entre de novo.');return}}catch(e){}if(S.token&&!document.hidden&&!document.querySelector('[data-rs]:focus,select:focus')){carregar(true);if(LOGI()&&(S.tab==='mot'||Date.now()-M.at>120e3))carregarMot(true);if(S.tab==='env'&&E.sr!==null&&!E.busy)carregarEnv(false,true)}},30000);
+document.addEventListener('visibilitychange',()=>{if(document.hidden||!S.token)return;try{if(!EMBED&&Date.now()-(+sessionStorage.getItem('lg-ult')||0)>INATIVO_MIN*6e4)return sair('Por segurança, a sessão foi encerrada após '+INATIVO_MIN+' minutos sem uso. Entre de novo.')}catch(e){}carregar(true)});
+function iniciarCarga(){if(!S.token)return;carregar();if(LOGI())carregarMot(S.tab!=='mot');if(S.tab==='env')carregarEnv(true);if(S.tab==='rel')carregarRel();if(S.tab==='cad')carregarCad();if(S.tab==='evo')carregarEvoC();if(S.tab==='fro')carregarFrota()}
+if(EMBED){addEventListener('message',e=>{if(e.origin!==PAINEL_ORIGEM||!e.data||e.data.tipo!=='central-login')return;const d=e.data;if(!/^[a-f0-9]{20,}$/.test(String(d.token||'')))return;
+  const novo=S.token!==d.token;S.token=d.token;S.nome=d.nome||'';S.perfil='logistica';S.trocar=false;try{sessionStorage.setItem('lg-token',S.token);sessionStorage.setItem('lg-nome',S.nome);sessionStorage.setItem('lg-perfil','logistica');sessionStorage.setItem('lg-ult',String(Date.now()))}catch(x){}
+  if(d.tab&&['sol','env','rel','fro','evo','mot','cad'].includes(d.tab)){S.tab=d.tab}if(novo){render();iniciarCarga()}else render()});
+ avisaPainel({tipo:'central-pronto'})}
+render();iniciarCarga();
 setInterval(()=>{if(S.token&&!S.trocar&&S.tab==='fro'&&!document.hidden&&Date.now()-F.at>55e3)carregarFrota(true)},15000);
 </script>
 </body>
