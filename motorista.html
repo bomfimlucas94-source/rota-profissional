@@ -63,7 +63,7 @@ dialog{border:0;border-radius:18px;padding:20px;max-width:420px;width:calc(100% 
 dialog::backdrop{background:rgba(43,10,31,.45)}
 dialog h3{margin:0 0 8px;font-size:18px}dialog p{margin:0 0 14px;font-size:14px;line-height:1.45}
 dialog .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--wine-d);color:#fff;padding:12px 16px;border-radius:12px;font-size:14px;z-index:9;max-width:90%}
+.toast{position:fixed;left:50%;bottom:92px;transform:translateX(-50%);background:var(--wine-d);color:#fff;padding:12px 16px;border-radius:12px;font-size:14px;z-index:9;max-width:90%}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 .carregando{color:var(--muted);font-size:14px;text-align:center;padding:24px 0}
 .fotobtn{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--wine);background:#fff;border:1px dashed var(--warm);border-radius:10px;min-height:44px;padding:0 12px;cursor:pointer}
@@ -89,6 +89,37 @@ dialog .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .mot label{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;padding:0 12px;min-height:46px;font-size:14.5px;cursor:pointer}
 .mot input{width:20px;height:20px;accent-color:var(--wine)}
 .ass{border:1px solid var(--warm);border-radius:12px;background:#fff;touch-action:none;width:100%;height:160px;display:block}
+.wrap.comnav{padding-bottom:76px}
+nav.nav{position:fixed;left:0;right:0;bottom:0;z-index:5;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom)}
+nav.nav div{display:grid;grid-template-columns:repeat(3,1fr);width:100%;max-width:520px}
+nav.nav button{background:none;border:0;min-height:62px;font-size:12px;font-weight:700;color:var(--muted);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;position:relative}
+nav.nav button svg{width:22px;height:22px}
+nav.nav button[aria-current=page]{color:var(--wine)}
+nav.nav b{position:absolute;top:6px;left:calc(50% + 6px);background:var(--bad);color:#fff;font-size:10.5px;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px}
+.bubs{display:flex;flex-direction:column;gap:8px}
+.bub{max-width:82%;padding:9px 12px;border-radius:14px;font-size:14.5px;line-height:1.4;background:#fff;border:1px solid var(--line);align-self:flex-start;white-space:pre-wrap;word-wrap:break-word}
+.bub.eu{align-self:flex-end;background:var(--wine);color:#fff;border-color:var(--wine)}
+.bub.cen{background:var(--pend-bg);border-color:#f0c98a}
+.bub small{display:block;font-size:11px;margin-top:3px;opacity:.75}
+.chatfoot{position:sticky;bottom:76px;background:var(--bg);padding:8px 16px 10px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.chips button{flex:none;border:1px solid var(--warm);background:#fff;border-radius:999px;font-size:13px;font-weight:700;color:var(--wine);min-height:40px;padding:0 12px;cursor:pointer;white-space:nowrap}
+.chips button.ed{color:var(--muted);border-style:dashed}
+.envia{display:flex;gap:8px}.envia input{flex:1;border:1px solid var(--warm);border-radius:12px;padding:10px 12px;font-size:16px;min-height:46px;background:#fff}
+.envia button{min-height:46px;border-radius:12px;border:0;background:var(--wine);color:#fff;font-weight:800;padding:0 16px;cursor:pointer}
+.envia button:disabled{background:var(--line);color:var(--muted)}
+.tipos{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.tipos button{min-height:52px;border-radius:12px;border:1px solid var(--warm);background:#fff;font-weight:700;font-size:14px;color:var(--ink);cursor:pointer}
+.tipos button[aria-pressed=true]{background:var(--wine);border-color:var(--wine);color:#fff}
+.campo{display:flex;flex-direction:column;gap:4px;font-size:12.5px;font-weight:600;color:var(--muted)}
+.campo input,.campo textarea{border:1px solid var(--warm);border-radius:10px;padding:12px;font-size:16px;color:var(--ink);min-height:46px;background:#fff;width:100%}
+.campo textarea{min-height:72px;resize:vertical}
+.ck{display:flex;align-items:center;gap:10px;font-size:14px;min-height:44px}.ck input{width:22px;height:22px;accent-color:var(--wine)}
+.oc{display:flex;flex-direction:column;gap:2px;padding:10px 0;border-top:1px solid var(--line);font-size:13.5px}.oc:first-of-type{border-top:0}
+.oc .h{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.rsp{display:flex;gap:6px;align-items:center}.rsp input{flex:1;border:1px solid var(--warm);border-radius:10px;padding:10px 12px;font-size:16px;min-height:46px}
+.rsp button{min-width:44px;min-height:44px;border:1px solid var(--line);background:#fff;border-radius:10px;font-size:16px;cursor:pointer;color:var(--wine)}
+.rsp button:disabled{opacity:.35}
 .link{background:none;border:0;color:var(--wine);font-weight:700;font-size:13px;padding:0;min-height:32px;cursor:pointer;text-decoration:underline}
 </style>
 </head>
@@ -97,7 +128,8 @@ dialog .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 <dialog id="dlg"><h3 id="dlgT"></h3><p id="dlgP"></p><div class="row"><button class="btn line" id="dlgN" type="button">Cancelar</button><button class="btn wine" id="dlgS" type="button">Confirmar</button></div></dialog>
 <script>
 const SB='https://sizbevhqreaccxrlimup.supabase.co',KEY='sb_publishable_sOPBmFvZMrGj3JvHzxIyYQ_4LsvUbSG';
-const S={token:null,nome:'',trocar:false,etapa:'carregando',turno:null,lista:null,carros:null,gps:null,busca:'',sec:0,resp:{},busy:false,err:'',rotas:null,motivos:[],rotaErr:'',vis:null,co:null};
+const S={token:null,nome:'',trocar:false,etapa:'carregando',turno:null,lista:null,carros:null,gps:null,busca:'',sec:0,resp:{},busy:false,err:'',rotas:null,motivos:[],rotaErr:'',vis:null,co:null,aba:'hoje',naoLidas:0,
+ chat:{rotas:null,rota:null,msgs:[],resp:[],txt:'',err:'',ed:null,n:-1},oc:{lista:null,tipo:'',texto:'',valor:'',foto:null,avisar:true,err:''}};
 try{S.token=localStorage.getItem('rm-token');S.nome=localStorage.getItem('rm-nome')||'';S.trocar=localStorage.getItem('rm-trocar')==='1'}catch(e){}
 let PIN_TMP='';
 const $=s=>document.querySelector(s);
@@ -106,7 +138,7 @@ const hm=t=>t?new Date(t).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-d
 const km=m=>m==null?'':m<1000?'a '+m+' m':'a '+(m/1000).toFixed(m<10000?1:0).replace('.',',')+' km';
 function toast(t){document.querySelectorAll('.toast').forEach(x=>x.remove());const d=document.createElement('div');d.className='toast';d.setAttribute('role','status');d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),Math.max(3200,t.length*70))}
 async function rpc(fn,args){const r=await fetch(SB+'/rest/v1/rpc/'+fn,{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify(args)});if(!r.ok)throw new Error('Falha de conexão. Tente de novo.');const t=await r.text();return t?JSON.parse(t):null}
-async function api(acao,extra){const r=await fetch(SB+'/functions/v1/motorista',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({token:S.token,acao,...(extra||{})})});
+async function api(acao,extra,fn){const r=await fetch(SB+'/functions/v1/'+(fn||'motorista'),{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({token:S.token,acao,...(extra||{})})});
  if(!r.ok)throw new Error('Falha de conexão ('+r.status+'). Tente de novo.');const j=await r.json();if(!j.ok&&j.erro==='sessao'){sair('Sua sessão expirou. Entre de novo.');throw new Error('sessao')}return j}
 function confirma(t,p,sim){return new Promise(ok=>{const d=$('#dlg');$('#dlgT').textContent=t;$('#dlgP').textContent=p;$('#dlgS').textContent=sim||'Confirmar';d.showModal();
  const fim=v=>{d.close();$('#dlgS').onclick=null;$('#dlgN').onclick=null;ok(v)};$('#dlgS').onclick=()=>fim(true);$('#dlgN').onclick=()=>fim(false)})}
@@ -137,10 +169,56 @@ async function carregaCarros(){S.carros=null;render();S.gps=await pegaGps();
 const passos=()=>{const e=S.etapa;const i=e==='carro'?0:e==='inspecao'?1:(e==='pronto'||e==='visita')?2:-1;
  return `<ol class="steps" aria-label="Etapas do início do plantão">${['1 · Carro','2 · Inspeção','3 · Rota'].map((t,k)=>`<li class="${k===i?'on':k<i?'ok':''}"${k===i?' aria-current="step"':''}><i></i>${t}</li>`).join('')}</ol>`};
 function topo(sub){const d=new Date().toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'});
- return `<header class="top"><div class="k"><span>Minha Rota · Motorista</span><button type="button" data-a="logout">Sair</button></div><h1>${esc(saud())}, ${esc((S.nome||'').split(' ')[0])}</h1><p>${esc(sub||d)}</p>${S.etapa==='pin'?'':passos()}</header>`}
+ return `<header class="top"><div class="k"><span>Minha Rota · Motorista</span><button type="button" data-a="logout">Sair</button></div><h1>${esc(saud())}, ${esc((S.nome||'').split(' ')[0])}</h1><p>${esc(sub||d)}</p>${S.etapa==='pin'||S.aba!=='hoje'?'':passos()}</header>`}
 const saud=()=>{const h=new Date().getHours();return h<12?'Bom dia':h<18?'Boa tarde':'Boa noite'};
 function itensSec(i){return (S.lista&&S.lista[i])?S.lista[i].itens:[]}
 function secCompleta(i){return itensSec(i).every(it=>{const r=S.resp[it.id];return r&&(r.ok||String(r.obs||'').trim())})}
+const IC={hoje:'<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',chat:'<path d="M4 5h16v11H8l-4 4z"/>',ocor:'<path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.5"/>'};
+function nav(){const it=[['hoje','Hoje'],['chat','Conversa'],['ocor','Ocorrências']];
+ return `<nav class="nav" aria-label="Seções"><div>${it.map(([k,t])=>`<button type="button" data-aba="${k}"${S.aba===k||(k==='chat'&&S.aba==='resp')?' aria-current="page"':''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[k]}</svg>${t}${k==='chat'&&S.naoLidas?`<b aria-label="${S.naoLidas} não lidas">${S.naoLidas}</b>`:''}</button>`).join('')}</div></nav>`}
+const comNav=()=>S.etapa==='carro'||S.etapa==='pronto';
+async function carregaChat(sil){const C=S.chat;
+ try{const r=await rpc('mot_chat',{p_token:S.token,p_rota:C.rota,p_ler:true});if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');C.err=r.erro;C.rotas=C.rotas||[];render();return}
+  const mudou=!sil||r.msgs.length!==C.n||r.rota!==C.rota;C.rotas=r.rotas;C.rota=r.rota;C.msgs=r.msgs;C.resp=r.respostas||[];C.n=r.msgs.length;C.err='';
+  S.naoLidas=(r.rotas||[]).filter(x=>x.id!==r.rota).reduce((a,x)=>a+(+x.nao_lidas||0),0);
+  if(S.aba==='chat'&&mudou){render();fimChat()}else if(S.aba!=='chat')render()}catch(e){if(!sil){C.err=e.message;C.rotas=C.rotas||[];render()}}}
+async function contaNaoLidas(){try{const r=await rpc('mot_chat',{p_token:S.token,p_ler:false});if(r&&r.ok){const nov=S.chat.rotas==null;S.chat.rotas=r.rotas;if(nov&&r.rotas.length&&S.aba==='hoje'&&S.etapa==='pronto')render();const n=(r.rotas||[]).reduce((a,x)=>a+(+x.nao_lidas||0),0);if(n!==S.naoLidas){S.naoLidas=n;const b=document.querySelector('nav.nav');if(b)b.outerHTML=nav()}}}catch(e){}}
+function fimChat(){const l=document.querySelector('.bub:last-child');if(l)l.scrollIntoView({block:'end'});const f=document.querySelector('.chatfoot');if(f)scrollBy(0,f.offsetHeight)}
+function renderChat(){const C=S.chat;let h=topo('Conversa com o profissional');h+='<main>';
+ if(C.rotas==null)return h+'<p class="carregando">Abrindo a conversa…</p></main>';
+ if(C.err)h+=`<p class="err" role="alert">${esc(C.err)}</p>`;
+ if(!C.rotas.length)return h+'<div class="card"><h2>Sem conversa hoje</h2><p class="meta">A conversa abre no dia da rota, quando a logística envia a rota ao profissional pelo Minha Rota. Se precisar falar agora, use Ocorrências para avisar a Central.</p></div></main>';
+ const ro=C.rotas.find(x=>x.id===C.rota)||C.rotas[0];
+ if(C.rotas.length>1)h+=`<div class="chips" role="group" aria-label="Escolher conversa">${C.rotas.map(x=>`<button type="button" data-crota="${x.id}"${x.id===ro.id?' style="background:var(--wine);color:#fff;border-color:var(--wine)"':''}>${esc(x.profissional.split(' ').slice(0,2).join(' '))}${+x.nao_lidas?' · '+x.nao_lidas:''}</button>`).join('')}</div>`;
+ h+=`<div class="card" style="gap:4px"><h2>${esc(ro.especialidade||'Profissional')}</h2><span style="font-size:18px;font-weight:800">${esc(ro.profissional)}</span><p class="meta">Rota de hoje${ro.prev_inicio?' · saída prevista '+esc(ro.prev_inicio):''} · a Central acompanha a conversa</p></div>`;
+ h+='<div class="bubs" aria-live="polite">';
+ if(!C.msgs.length)h+='<p class="meta" style="text-align:center">Nenhuma mensagem ainda. Use uma resposta pronta para avisar que está saindo.</p>';
+ C.msgs.forEach(m=>{const eu=m.de==='motorista';h+=`<div class="bub${eu?' eu':m.de==='central'?' cen':''}">${m.de==='central'?`<small style="margin:0 0 2px;font-weight:700">${esc(m.autor)}</small>`:''}${esc(m.texto)}<small>${hm(m.em)}${eu?(m.lida_med?' · lida':' · enviada'):m.de==='medico'?' · '+esc(String(m.autor).split(' ').slice(0,2).join(' ')):''}</small></div>`});
+ h+='</div></main>';
+ h+=`<div class="chatfoot"><div class="chips" role="group" aria-label="Respostas prontas">${C.resp.map((t,i)=>`<button type="button" data-pronta="${i}">${esc(t)}</button>`).join('')}<button type="button" class="ed" data-a="editresp">Editar</button></div>
+  <form class="envia" id="fchat"><label class="sr" for="ctxt">Mensagem</label><input id="ctxt" maxlength="500" autocomplete="off" placeholder="Mensagem" value="${esc(C.txt)}"><button type="submit"${S.busy?' disabled':''}>Enviar</button></form></div>`;
+ return h}
+const SUGEST=['Estou no endereço, pode descer?','Abastecendo, sigo em seguida','Saindo agora','Chego em 5 min','Trânsito, vou atrasar','Cheguei, estou na portaria'];
+function renderResp(){const L=S.chat.ed;let h=topo('Respostas prontas');h+='<main><div class="card"><h2>Minhas respostas prontas</h2><p class="meta">Viram botões de um toque na conversa. Escreva do seu jeito e use as setas para mudar a ordem. Até 6 respostas.</p>';
+ L.forEach((t,i)=>{h+=`<div class="rsp"><label class="sr" for="rsp${i}">Resposta ${i+1}</label><input id="rsp${i}" data-rsp="${i}" maxlength="80" value="${esc(t)}"><button type="button" data-rup="${i}" aria-label="Subir"${i?'':' disabled'}>↑</button><button type="button" data-rdel="${i}" aria-label="Apagar resposta ${i+1}">✕</button></div>`});
+ if(L.length<6)h+='<button class="btn line" type="button" data-a="radd">+ Adicionar resposta</button>';
+ const sg=SUGEST.filter(x=>!L.includes(x));if(sg.length&&L.length<6)h+=`<h2 style="margin-top:6px">Sugestões</h2><div class="chips" style="flex-wrap:wrap">${sg.map(x=>`<button type="button" data-rsug="${esc(x)}">+ ${esc(x)}</button>`).join('')}</div>`;
+ h+=`</div></main><div class="foot" style="bottom:76px"><div style="display:grid;grid-template-columns:1fr 2fr;gap:8px"><button class="btn line" type="button" data-a="rcancel">Cancelar</button><button class="btn sun" type="button" data-a="rsalvar"${S.busy?' disabled':''}>Salvar respostas</button></div></div>`;
+ return h}
+const TIPOS_OC=['Atraso','Pneu','Avaria','Abastecimento','Acidente','Outro'];
+async function carregaOcor(){try{const r=await rpc('mot_ocorrencias',{p_token:S.token});if(r.ok)S.oc.lista=r.ocorrencias;else if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.')}catch(e){S.oc.lista=S.oc.lista||[]}if(S.aba==='ocor')render()}
+function renderOcor(){const O=S.oc;let h=topo('Avise a Central na hora');h+='<main>';
+ if(O.err)h+=`<p class="err" role="alert">${esc(O.err)}</p>`;
+ h+=`<div class="card"><h2>O que aconteceu?</h2><div class="tipos" role="group" aria-label="Tipo da ocorrência">${TIPOS_OC.map(t=>`<button type="button" data-otipo="${t}" aria-pressed="${O.tipo===t}">${t}</button>`).join('')}</div>`;
+ if(O.tipo){const ab=O.tipo==='Abastecimento';const temRota=S.chat.rotas&&S.chat.rotas.length;
+  if(ab)h+=`<label class="campo">Valor (R$)<input id="ovalor" inputmode="decimal" placeholder="Ex.: 198,40" value="${esc(O.valor)}"></label>`;
+  h+=`<label class="campo">${ab?'Observação (opcional)':O.tipo==='Atraso'?'Motivo do atraso':'Conte o que aconteceu'}<textarea id="otexto" maxlength="500">${esc(O.texto)}</textarea></label>${fotoCampo('o',O.foto).replace('Tirar foto (opcional)',ab?'Foto do cupom (opcional)':'Tirar foto (opcional)')}`;
+  if(temRota)h+=`<label class="ck"><input type="checkbox" id="oavisar"${O.avisar?' checked':''}>Avisar também o profissional na conversa</label>`;
+  h+=`<button class="btn sun" type="button" data-a="oenviar"${S.busy?' disabled':''}>${S.busy?'Enviando…':'Enviar à Central'}</button>`}
+ h+='</div><div class="card"><h2>Enviadas hoje e ontem</h2>';
+ if(O.lista==null)h+='<p class="carregando">Carregando…</p>';else if(!O.lista.length)h+='<p class="meta">Nenhuma ocorrência.</p>';
+ else O.lista.forEach(o=>{h+=`<div class="oc"><div class="h"><b>${esc(o.tipo)}${o.valor!=null?' · R$ '+Number(o.valor).toFixed(2).replace('.',','):''}</b>${o.visto_em?'<span class="pill fim">Recebido</span>':'<span class="pill and">Aguardando</span>'}</div>${o.texto?`<span>${esc(o.texto)}</span>`:''}<span class="meta">${new Date(o.em).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(',',' ·')}${o.placa?' · '+esc(o.placa):''}${o.avisou_medico?' · profissional avisado':''}${o.visto_por?' · '+esc(o.visto_por.split(' ')[0])+' viu':''}</span>${o.foto?`<a href="${esc(o.foto)}" target="_blank" rel="noopener" class="meta">ver foto</a>`:''}</div>`});
+ return h+'</div></main>'}
 function rotaHtml(t){
  if(S.rotas==null)return '<div class="card"><h2>Rota de hoje</h2><p class="carregando">Buscando sua rota no SimpliRoute…</p></div>';
  if(S.rotaErr)return `<div class="card"><h2>Rota de hoje</h2><p class="err">${esc(S.rotaErr)}</p><button class="btn line" type="button" data-a="rotarec">Tentar de novo</button></div>`;
@@ -164,6 +242,11 @@ function rotaHtml(t){
 }
 function render(){
  const app=$('#app');let h='';
+ app.classList.toggle('comnav',comNav());
+ if(comNav()&&S.aba!=='hoje'){const foc=document.activeElement&&document.activeElement.id==='ctxt';app.innerHTML=(S.aba==='chat'?renderChat():S.aba==='resp'?renderResp():renderOcor())+nav();
+  const ct=$('#ctxt');if(ct){ct.oninput=()=>{S.chat.txt=ct.value};if(foc){ct.focus();ct.setSelectionRange(ct.value.length,ct.value.length)}}
+  const ov=$('#ovalor');if(ov)ov.oninput=()=>{S.oc.valor=ov.value};const ot=$('#otexto');if(ot)ot.oninput=()=>{S.oc.texto=ot.value};const oa=$('#oavisar');if(oa)oa.onchange=()=>{S.oc.avisar=oa.checked};
+  document.querySelectorAll('[data-rsp]').forEach(i=>i.oninput=()=>{S.chat.ed[+i.dataset.rsp]=i.value});return}
  if(S.etapa==='pin'){
   app.innerHTML=`${topo('Crie seu PIN pessoal')}<main><form class="card login" id="fpin" novalidate style="padding:16px">
    <p class="meta">É o seu primeiro acesso. Troque o PIN provisório por um que só você saiba.</p>${S.err?`<p class="err" role="alert">${esc(S.err)}</p>`:''}
@@ -186,7 +269,7 @@ function render(){
     h+=`<button type="button" class="carro" data-a="escolher" data-id="${esc(c.id)}"><span><b>${esc(c.placa)}</b><small>${esc(c.modelo||'')}${c.distancia_m!=null?' · '+km(c.distancia_m):''}</small></span>${c.sugerido?'<span class="tag ult">Último que você usou</span>':perto?'<span class="tag perto">Perto de você</span>':''}</button>`});
    if(!q&&S.carros.length>8)h+='<p class="meta" style="text-align:center">Não achou? Busque pela placa.</p>'}
   h+=`<button class="btn line" type="button" data-a="gps">Atualizar localização</button></main>`;
-  app.innerHTML=h;const b=$('#busca');if(b)b.oninput=()=>{S.busca=b.value;const p=b.selectionStart;render();const n=$('#busca');n.focus();n.setSelectionRange(p,p)};return}
+  app.innerHTML=h+nav();const b=$('#busca');if(b)b.oninput=()=>{S.busca=b.value;const p=b.selectionStart;render();const n=$('#busca');n.focus();n.setSelectionRange(p,p)};return}
  if(S.etapa==='inspecao'){
   const L=S.lista||[];const sec=L[S.sec];const tot=L.reduce((a,s)=>a+s.itens.length,0),feitos=Object.keys(S.resp).length;
   h=topo('Carro '+(S.turno?S.turno.placa:'')+' · inspeção obrigatória');h+='<main>';
@@ -213,9 +296,10 @@ function render(){
    <ul class="dl"><li><span class="chk">✓</span><span><b>Entrou no carro às ${hm(t.entrou_em)}</b> · registrado no Geotab pelo app</span></li>
    <li><span class="chk${def.length?' w':''}">${def.length?'!':'✓'}</span><span><b>Inspeção às ${hm(t.inspecao_em)}</b> · ${def.length?def.length+(def.length>1?' problemas registrados':' problema registrado'):'tudo OK'}</span></li></ul>
    ${def.length?`<ul class="dl">${def.map(d=>`<li><span class="chk ${d.critico?'r':'w'}">!</span><span><b>${esc(d.nome)}</b>${d.critico?' (crítico)':''} · ${esc(d.obs)}${d.foto?` · <a href="${esc(d.foto)}" target="_blank" rel="noopener">ver foto</a>`:''}</span></li>`).join('')}</ul><p class="meta">A logística e a manutenção veem esses problemas no Geotab.</p>`:''}</div>
+   ${(S.chat.rotas||[]).map(x=>`<div class="card" style="gap:6px"><h2>Profissional de hoje</h2><span style="font-size:18px;font-weight:800">${esc(x.profissional)}</span><p class="meta">${esc(x.especialidade||'')}${x.prev_inicio?' · saída prevista '+esc(x.prev_inicio):''}</p><button class="btn wine" type="button" data-aba="chat">Conversa${+x.nao_lidas?' · '+x.nao_lidas+(+x.nao_lidas>1?' novas':' nova'):''}</button></div>`).join('')}
    ${rotaHtml(t)}
    <button class="btn line" type="button" data-a="encerrar">Encerrar plantão e sair do carro</button></main>`;
-  app.innerHTML=h;return}
+  app.innerHTML=h+nav();return}
  if(S.etapa==='visita'){const v=S.vis,c=S.co;const falhou=c.status==='failed';
   const mot=S.motivos.filter(m=>!m.tipo||m.tipo==='failed');
   h=topo(v.titulo||'Visita '+v.ordem);h+=`<main><p class="meta">${esc(v.endereco)}</p>`;
@@ -239,12 +323,38 @@ function assinatura(cv){const r=cv.getBoundingClientRect(),k=devicePixelRatio||1
  cv.onpointermove=e=>{if(!d)return;g.lineTo(...p(e));g.stroke();S.co.assinou=true};
  cv.onpointerup=cv.onpointercancel=()=>{if(d&&S.co.assinou)S.co.assImg=cv.toDataURL('image/png');d=false}}
 document.addEventListener('change',async e=>{const i=e.target;if(!i.dataset||!i.dataset.foto||!i.files||!i.files[0])return;const k=i.dataset.foto;
- try{const f=await fotoComp(i.files[0]);if(k==='v'){S.co.foto=f}else{const id=k.slice(2);if(S.resp[id])S.resp[id].foto=f}render()}catch(x){toast(x.message)}});
+ try{const f=await fotoComp(i.files[0]);if(k==='v'){S.co.foto=f}else if(k==='o'){S.oc.foto=f}else{const id=k.slice(2);if(S.resp[id])S.resp[id].foto=f}render()}catch(x){toast(x.message)}});
 async function acaoRota(acao,extra,okMsg){S.busy=true;render();const g=await pegaGps();
  try{const r=await api(acao,{...extra,...(g||{})});S.busy=false;if(!r.ok){toast(r.erro);render();return null}if(r.rotas)S.rotas=r.rotas;if(okMsg)toast(okMsg);render();return r}
  catch(x){S.busy=false;if(x.message!=='sessao')toast(x.message);render();return null}}
 document.addEventListener('click',async e=>{
+ const x=e.target.closest('[data-aba],[data-crota],[data-pronta],[data-otipo],[data-rup],[data-rdel],[data-rsug]');
+ if(x){const d=x.dataset;
+  if(d.aba){S.aba=d.aba;S.err='';render();scrollTo(0,0);if(d.aba==='chat'){S.chat.n=-1;carregaChat()}if(d.aba==='ocor'){carregaOcor();if(S.chat.rotas==null)contaRotas()}return}
+  if(d.crota){S.chat.rota=+d.crota;S.chat.n=-1;carregaChat();return}
+  if(d.pronta!=null){enviaChat(S.chat.resp[+d.pronta],true);return}
+  if(d.otipo){S.oc.tipo=d.otipo;S.oc.avisar=d.otipo==='Atraso';S.oc.err='';render();const t=$(d.otipo==='Abastecimento'?'#ovalor':'#otexto');if(t)t.focus();return}
+  const L=S.chat.ed;
+  if(d.rup){const i=+d.rup;if(i>0){[L[i-1],L[i]]=[L[i],L[i-1]];render()}return}
+  if(d.rdel){L.splice(+d.rdel,1);render();return}
+  if(d.rsug){if(L.length<6){L.push(d.rsug);render()}return}
+ }
  const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a;
+ if(a==='editresp'){S.chat.ed=S.chat.resp.slice();S.aba='resp';render();scrollTo(0,0);return}
+ if(a==='radd'){S.chat.ed.push('');render();const l=document.querySelectorAll('[data-rsp]');if(l.length)l[l.length-1].focus();return}
+ if(a==='rcancel'){S.aba='chat';render();fimChat();return}
+ if(a==='rsalvar'){S.busy=true;render();try{const r=await rpc('mot_respostas_salvar',{p_token:S.token,p_lista:S.chat.ed});S.busy=false;if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');toast(r.erro);render();return}
+  S.chat.resp=r.respostas;S.aba='chat';toast('Respostas salvas.');render();fimChat()}catch(x){S.busy=false;toast(x.message);render()}return}
+ if(a==='oenviar'){const O=S.oc;O.err='';
+  if(O.tipo==='Abastecimento'&&!String(O.valor).trim()){O.err='Informe o valor do abastecimento.';render();return}
+  if(O.tipo!=='Abastecimento'&&!O.texto.trim()){O.err='Conte o que aconteceu.';render();return}
+  const temRota=S.chat.rotas&&S.chat.rotas.length;S.busy=true;render();
+  try{const r=await api('ocorrencia',{tipo:O.tipo,texto:O.texto,valor:O.valor||undefined,foto:O.foto||undefined,avisar:!!(temRota&&O.avisar)},'mot-ocorrencia');S.busy=false;
+   if(!r.ok){O.err=r.erro;render();return}
+   if(r.chat_id)avisaPush(r.chat_id);
+   toast('Ocorrência enviada à Central'+(r.avisou?' e ao profissional':'')+'.');if(O.foto&&r.foto===false)setTimeout(()=>toast('A foto não foi enviada.'),3300);
+   S.oc={lista:O.lista,tipo:'',texto:'',valor:'',foto:null,avisar:true,err:''};render();scrollTo(0,0);carregaOcor()}
+  catch(x){S.busy=false;if(x.message!=='sessao'){O.err=x.message;render()}}return}
  if(a==='logout'){if(S.turno&&!S.turno.saiu_em&&!(await confirma('Sair do app?','Você continua registrado no carro. Para sair do carro, use "Encerrar plantão".','Sair do app')))return;sair();return}
  if(a==='recarregar'){S.err='';iniciar();return}
  if(a==='gps'){carregaCarros();return}
@@ -255,7 +365,7 @@ document.addEventListener('click',async e=>{
   try{const r=await api('entrar',{device:c.id,...(S.gps||{})});S.busy=false;if(!r.ok){S.err=r.erro;render();return}
    S.turno=r.turno;S.lista=r.checklist;S.resp={};S.sec=0;S.etapa='inspecao';toast('Você entrou no carro '+c.placa+'.');render();scrollTo(0,0)}
   catch(x){S.busy=false;if(x.message!=='sessao'){S.err=x.message;render()}}return}
- if(a==='tirafoto'){const k=b.dataset.k;if(k==='v')S.co.foto=null;else if(S.resp[k.slice(2)])delete S.resp[k.slice(2)].foto;render();return}
+ if(a==='tirafoto'){const k=b.dataset.k;if(k==='o')S.oc.foto=null;else if(k==='v')S.co.foto=null;else if(S.resp[k.slice(2)])delete S.resp[k.slice(2)].foto;render();return}
  if(a==='rotarec'){S.rotas=null;render();carregaRota();return}
  if(a==='riniciar'){if(!(await confirma('Iniciar a rota?','O app avisa o SimpliRoute que você saiu para a rota.','Iniciar')))return;await acaoRota('rota_iniciar',{rota:b.dataset.r},'Rota iniciada. Boa rota!');return}
  if(a==='rfinalizar'){const r=(S.rotas||[]).find(x=>x.id===b.dataset.r);const falta=r?r.visitas.filter(v=>v.status!=='completed'&&v.status!=='failed').length:0;
@@ -285,7 +395,15 @@ document.addEventListener('click',async e=>{
   try{const r=await api('sair');S.busy=false;if(!r.ok){toast(r.erro);return}toast('Plantão encerrado. Bom descanso!');S.turno=null;S.lista=null;S.resp={};S.etapa='carro';render();carregaCarros()}
   catch(x){S.busy=false;if(x.message!=='sessao')toast(x.message)}return}
 });
+function avisaPush(id){fetch(SB+'/functions/v1/push-chat',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({token:S.token,msg:id})}).catch(()=>{})}
+async function contaRotas(){try{const r=await rpc('mot_chat',{p_token:S.token,p_ler:false});if(r&&r.ok){S.chat.rotas=r.rotas;if(S.aba==='ocor')render()}}catch(e){}}
+async function enviaChat(t,pronta){t=String(t||'').trim();if(!t||S.busy||!S.chat.rota)return;S.busy=true;
+ try{const r=await rpc('mot_chat_enviar',{p_token:S.token,p_rota:S.chat.rota,p_texto:t,p_pronta:!!pronta});S.busy=false;
+  if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');toast(r.erro);render();return}
+  if(!pronta)S.chat.txt='';S.chat.msgs=r.msgs;S.chat.n=r.msgs.length;render();fimChat();avisaPush(r.id);if(!pronta){const i=$('#ctxt');if(i)i.focus()}}
+ catch(x){S.busy=false;toast(x.message);render()}}
 document.addEventListener('submit',async e=>{e.preventDefault();
+ if(e.target.id==='fchat'){enviaChat(S.chat.txt,false);return}
  if(e.target.id==='fpin'){const pa=PIN_TMP||($('#pa')?$('#pa').value:''),pn=$('#pn').value,pn2=$('#pn2').value;
   if(!pa||!pn){S.err='Preencha os campos.';render();return}if(pn!==pn2){S.err='Os dois PINs novos não são iguais.';render();return}
   S.busy=true;S.err='';render();
@@ -296,6 +414,14 @@ document.addEventListener('submit',async e=>{e.preventDefault();
 try{PIN_TMP=sessionStorage.getItem('rm-pin-tmp')||'';sessionStorage.removeItem('rm-pin-tmp')}catch(e){}
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 iniciar();
+// todo dia às 22:00 o app desconecta o motorista (o servidor também encerra as sessões e tira do carro no Geotab)
+const ABERTO_EM=new Date();
+function corte22(){const c=new Date();c.setHours(22,0,0,0);return c}
+setInterval(()=>{if(!S.token)return;const c=corte22();if(new Date()>=c&&ABERTO_EM<c){S.token=null;try{localStorage.removeItem('rm-token');localStorage.removeItem('rm-trocar')}catch(e){}location.href='index.html#msg='+encodeURIComponent('O app desconecta todos os motoristas às 22:00. Se ainda estiver em serviço, entre de novo.')}},30000);
+let tick=0;setInterval(()=>{if(!S.token||document.hidden||!comNav())return;tick++;
+ if(S.aba==='chat'){if(!S.busy)carregaChat(true)}
+ else if(tick%3===0)contaNaoLidas()},10000);
+setTimeout(()=>{if(S.token&&comNav())contaNaoLidas()},2500);
 </script>
 </body>
 </html>

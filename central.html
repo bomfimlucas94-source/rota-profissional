@@ -154,6 +154,15 @@ table.rel td.at{font-weight:800;color:#b4232b}table.rel tr.ex td{background:var(
 .pinbox{flex-basis:100%;background:var(--ok-bg);color:#12432a;border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.5;display:flex;flex-wrap:wrap;gap:8px;align-items:center}.pinbox b.pin{font-size:20px;letter-spacing:.2em;color:var(--ink)}
 .mdef{margin:4px 0 0;padding-left:18px;font-size:12px}.mdef li{margin:2px 0}.mdef .cr{color:var(--bad);font-weight:700}
 tr.crit td{background:#fdf1f2}
+.convs{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
+.conv{border:1px solid var(--line);border-radius:12px;display:flex;flex-direction:column;overflow:hidden;background:#fff}
+.conv .ch{padding:10px 12px;background:var(--off);font-size:13px;display:flex;flex-direction:column;gap:2px}.conv .ch small{color:var(--muted)}
+.conv .cm{padding:10px 12px;display:flex;flex-direction:column;gap:6px;max-height:300px;overflow:auto}
+.conv .bb{max-width:85%;padding:7px 10px;border-radius:12px;font-size:13px;line-height:1.35;background:#f3eef0;align-self:flex-start;white-space:pre-wrap}
+.conv .bb.mot{background:#efeae4}.conv .bb.med{background:#f1dceb}.conv .bb.cen{background:var(--pend-bg);align-self:flex-end}
+.conv .bb small{display:block;font-size:10.5px;color:var(--muted);margin-top:2px}
+.conv form{display:flex;gap:6px;padding:8px 10px;border-top:1px solid var(--line)}.conv form input{flex:1;font-size:13.5px;padding:7px 9px;border:1px solid var(--line);border-radius:8px;min-height:36px}
+.oct td .bd{margin-left:0}
 .crow .cbox input{font-size:14px;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:#fff;min-height:36px}
 </style>
 </head>
@@ -379,6 +388,8 @@ function renderCad(){
  return h}
 const cadAchar=k=>{const tipo=k.startsWith('prof')?'prof':k.startsWith('motorista')?'motorista':'equipe',id=+k.replace(/^\D+/,'');const L=tipo==='prof'?C.d.profissionais:tipo==='motorista'?C.d.motoristas:C.d.equipe;return {tipo,id,p:L.find(x=>x.id===id)}};
 document.addEventListener('submit',async e=>{const f=e.target;
+ if(f.dataset.cvenv){e.preventDefault();const id=+f.dataset.cvenv,t=(M.draft[id]||'').trim();if(!t)return;const bt=f.querySelector('button');bt.disabled=true;
+  try{const r=await motRpc('eq_chat_enviar',{p_rota:id,p_texto:t});delete M.draft[id];if(r.id)fetch(SB+'/functions/v1/push-chat',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({token:S.token,msg:r.id})}).catch(()=>{});if(document.activeElement)document.activeElement.blur();await carregarMot(true);toast('Mensagem enviada.')}catch(x){bt.disabled=false;if(x.message!=='sessao')toast(x.message)}return}
  if(f.dataset.msave){e.preventDefault();const nv=f.dataset.msave==='novo',id=nv?null:+f.dataset.msave,m=nv?{ativo:false}:M.d.motoristas.find(x=>x.id===id),d=new FormData(f);const bt=f.querySelector('button[type=submit]');bt.disabled=true;
   const sr=String(d.get('sr')||'').replace(/\D/g,'');
   try{await motRpc('eq_mot_salvar',{p_id:id,p_nome:d.get('nome'),p_celular:d.get('cel')||null,p_geotab:String(d.get('gt')||'').trim()||null,p_sr:sr?+sr:null,p_ativo:nv?false:m.ativo});M.ed=null;toast(nv?'Motorista cadastrado. Agora clique em Liberar acesso.':'Cadastro atualizado.');await carregarMot(true)}catch(x){bt.disabled=false;if(x.message!=='sessao')toast(x.message)}return}
@@ -390,10 +401,12 @@ document.addEventListener('submit',async e=>{const f=e.target;
  if(f.dataset.cpinok){e.preventDefault();const {tipo,id,p}=cadAchar(f.dataset.cpinok),d=new FormData(f);try{await cadRpc('eq_cad_pin',{p_tipo:tipo,p_id:id,p_pin:d.get('pin')},'PIN de '+p.nome+' redefinido. Ele vai criar um PIN próprio ao entrar.')}catch(x){toast(x.message)}return}
 });
 /* ===== Motoristas (app Minha Rota · Motorista) ===== */
-const M={d:null,busy:false,err:'',ed:null,pin:null,q:'',at:0};
+const M={d:null,busy:false,err:'',ed:null,pin:null,q:'',at:0,oc:null,abertas:0,cv:null,draft:{}};
 async function carregarMot(sil){if(!S.token||!LOGI())return;if(!sil&&!M.d){M.busy=true;render()}
- try{const r=await rpc('eq_mot_lista',{p_token:S.token});if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');throw new Error(r.erro)}M.d=r;M.err='';M.at=Date.now()}catch(e){M.err=e.message}
- M.busy=false;if(!(S.tab==='mot'&&document.activeElement&&document.activeElement.closest&&document.activeElement.closest('.cbox,.cform')))render()}
+ try{const [r,o,c]=await Promise.all([rpc('eq_mot_lista',{p_token:S.token}),rpc('eq_mot_ocorrencias',{p_token:S.token}),rpc('eq_chats',{p_token:S.token})]);if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');throw new Error(r.erro)}
+  M.d=r;if(o&&o.ok){M.oc=o.ocorrencias;M.abertas=+o.abertas||0}if(c&&c.ok)M.cv=c.conversas;M.err='';M.at=Date.now()}catch(e){M.err=e.message}
+ M.busy=false;if(!(S.tab==='mot'&&document.activeElement&&document.activeElement.closest&&document.activeElement.closest('.cbox,.cform,.conv form')))render();else{const t=document.querySelector('[data-tab=mot]');if(t)t.innerHTML=motTabTxt()}}
+const motTabTxt=()=>{const n=(M.d&&+M.d.alertas||0)+M.abertas;return 'Motoristas'+(n?`<b>${n}</b>`:'')};
 async function motRpc(fn,args){const r=await rpc(fn,{p_token:S.token,...args});if(!r.ok){if(r.erro==='sessao'){sair('Sua sessão expirou. Entre de novo.');throw new Error('sessao')}throw new Error(r.erro||'Não foi possível salvar.')}return r}
 const brDTc=t=>t?new Date(t).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(',',''):'';
 function renderMot(){
@@ -411,6 +424,13 @@ function renderMot(){
  h+=`<section class="cad"><h3>Plantões de hoje<span>${tH.length}</span>${M.d.alertas?`<span class="bd recusada">${M.d.alertas} ${M.d.alertas>1?'itens críticos':'item crítico'} sem ciência</span>`:''}</h3>
   <p class="sub">Quem entrou no carro pelo app, a inspeção feita e os problemas apontados (também ficam no Geotab). Plantão aberto é encerrado sozinho após 14 h.</p>
   ${tH.length?tab(tH):'<p class="sub">Nenhum motorista entrou pelo app hoje.</p>'}${tA.length?`<details><summary class="dica" style="cursor:pointer">Últimos 7 dias (${tA.length})</summary>${tab(tA)}</details>`:''}</section>`;
+ const O=M.oc||[],oH=O.filter(o=>!o.visto_em||new Date(o.em).toLocaleDateString('sv-SE',{timeZone:'America/Sao_Paulo'})===hoje);
+ h+=`<section class="cad"><h3>Ocorrências dos motoristas<span>${oH.length}</span>${M.abertas?`<span class="bd recusada">${M.abertas} sem resposta</span>`:''}</h3>
+  <p class="sub">Atraso, pneu, avaria, abastecimento, acidente… enviados pelo app. Clique em <b>Recebido</b> para o motorista ver que a Central já sabe.</p>
+  ${oH.length?`<div class="tw"><table class="rel oct" style="min-width:760px"><thead><tr><th>Quando</th><th>Motorista</th><th>Tipo</th><th>O que houve</th><th>Situação</th></tr></thead><tbody>${oH.map(o=>`<tr class="${o.visto_em?'':'crit'}"><td class="n">${brDTc(o.em)}</td><td>${esc(o.nome)}${o.placa?`<br><small><code>${esc(o.placa)}</code></small>`:''}</td><td class="n"><b>${esc(o.tipo)}</b>${o.valor!=null?'<br>R$ '+Number(o.valor).toFixed(2).replace('.',','):''}</td><td>${esc(o.texto||'')}${o.foto?`${o.texto?' · ':''}<a href="${esc(o.foto)}" target="_blank" rel="noopener">foto</a>`:''}${o.avisou_medico?`<br><small>avisou ${esc(o.profissional||'o profissional')} na conversa</small>`:''}</td><td class="n">${o.visto_em?`<small>Recebido por ${esc(String(o.visto_por||'').split(' ')[0])} às ${brDTc(o.visto_em).slice(-5)}</small>`:`<button class="btn wine sm" type="button" data-ocvisto="${o.id}">Recebido</button>`}</td></tr>`).join('')}</tbody></table></div>`:'<p class="sub">Nenhuma ocorrência hoje.</p>'}</section>`;
+ const CV=M.cv||[];
+ h+=`<section class="cad"><h3>Conversas de hoje<span>${CV.length}</span></h3><p class="sub">Conversas entre motorista e profissional na rota do dia. A Central pode responder: a mensagem aparece para os dois.</p>
+  ${CV.length?`<div class="convs">${CV.map(c=>`<div class="conv"><div class="ch"><b>${esc(c.profissional)}</b><small>${esc(c.motorista||'')}${c.placa?' · '+esc(c.placa):''} · ${c.n} ${c.n===1?'mensagem':'mensagens'}</small></div><div class="cm">${(c.msgs||[]).map(m=>`<div class="bb ${m.de==='motorista'?'mot':m.de==='medico'?'med':'cen'}">${esc(m.texto)}<small>${esc(m.de==='central'?m.autor:String(m.autor).split(' ').slice(0,2).join(' '))} · ${brDTc(m.em).slice(-5)}</small></div>`).join('')}</div><form data-cvenv="${c.id}"><input maxlength="500" placeholder="Responder como Central" value="${esc(M.draft[c.id]||'')}" data-cvd="${c.id}" aria-label="Responder na conversa de ${esc(c.profissional)}"><button class="btn wine sm" type="submit">Enviar</button></form></div>`).join('')}</div>`:'<p class="sub">Nenhuma conversa hoje.</p>'}</section>`;
  const q=M.q.toLowerCase();const LL=L.filter(m=>!q||m.nome.toLowerCase().includes(q)||String(m.celular||'').includes(q.replace(/\D/g,'')||'§'));
  h+=`<section class="cad"><h3>Acesso dos motoristas<span>${L.filter(m=>m.ativo).length} com acesso de ${L.length}</span></h3>
   <p class="sub">O motorista entra no mesmo link do Minha Rota, com o celular e o PIN. Para liberar: <b>Editar</b> → informe o celular → <b>Liberar acesso</b>. O app gera um PIN provisório para você enviar; no primeiro acesso ele cria o PIN próprio.</p>
@@ -439,12 +459,12 @@ function render(){
  const esps=[...new Set(all.map(r=>r.especialidade).filter(Boolean))].sort(),dias=[...new Set(all.map(r=>r.data_rota))].sort();
  const L=all.filter(r=>(!S.f.st||r.status===S.f.st)&&(!S.f.esp||r.especialidade===S.f.esp)&&(!S.f.dia||r.data_rota===S.f.dia));
  const npend=cnt('pendente');
- let h=`<header class="top"><div class="topin"><div><h2>Central de Solicitações</h2><small>${LOGI()?'Logística':'Administrativo Médico'} · Solar Cuidados</small></div>${LOGI()?`<nav class="tabs" aria-label="Seções"><button type="button" data-tab="sol" class="${S.tab==='sol'?'on':''}">Solicitações${npend?`<b>${npend}</b>`:''}</button><button type="button" data-tab="env" class="${S.tab==='env'?'on':''}">Envio de rotas</button><button type="button" data-tab="rel" class="${S.tab==='rel'?'on':''}">Relatório</button><button type="button" data-tab="fro" class="${S.tab==='fro'?'on':''}">Frota ao vivo</button><button type="button" data-tab="evo" class="${S.tab==='evo'?'on':''}">Evoluções</button><button type="button" data-tab="mot" class="${S.tab==='mot'?'on':''}">Motoristas${M.d&&M.d.alertas?`<b>${M.d.alertas}</b>`:''}</button><button type="button" data-tab="cad" class="${S.tab==='cad'?'on':''}">Cadastros</button></nav>`:`<nav class="tabs" aria-label="Seções"><button type="button" data-tab="fro" class="${S.tab==='fro'?'on':''}">Frota ao vivo</button><button type="button" data-tab="evo" class="${S.tab==='evo'?'on':''}">Evoluções</button></nav>`}<span class="sp"></span><span class="who">${esc(S.nome)}</span><button class="out" type="button" data-a="sair">Sair</button></div></header><main>`;
+ let h=`<header class="top"><div class="topin"><div><h2>Central de Solicitações</h2><small>${LOGI()?'Logística':'Administrativo Médico'} · Solar Cuidados</small></div>${LOGI()?`<nav class="tabs" aria-label="Seções"><button type="button" data-tab="sol" class="${S.tab==='sol'?'on':''}">Solicitações${npend?`<b>${npend}</b>`:''}</button><button type="button" data-tab="env" class="${S.tab==='env'?'on':''}">Envio de rotas</button><button type="button" data-tab="rel" class="${S.tab==='rel'?'on':''}">Relatório</button><button type="button" data-tab="fro" class="${S.tab==='fro'?'on':''}">Frota ao vivo</button><button type="button" data-tab="evo" class="${S.tab==='evo'?'on':''}">Evoluções</button><button type="button" data-tab="mot" class="${S.tab==='mot'?'on':''}">${motTabTxt()}</button><button type="button" data-tab="cad" class="${S.tab==='cad'?'on':''}">Cadastros</button></nav>`:`<nav class="tabs" aria-label="Seções"><button type="button" data-tab="fro" class="${S.tab==='fro'?'on':''}">Frota ao vivo</button><button type="button" data-tab="evo" class="${S.tab==='evo'?'on':''}">Evoluções</button></nav>`}<span class="sp"></span><span class="who">${esc(S.nome)}</span><button class="out" type="button" data-a="sair">Sair</button></div></header><main>`;
  if(!LOGI()&&S.tab!=='fro'&&S.tab!=='evo')S.tab='fro';
  if(S.tab==='env'){app.innerHTML=h+renderEnv()+'</main>';return}
  if(S.tab==='rel'){app.innerHTML=h+renderRel()+'</main>';return}
  if(S.tab==='cad'){app.innerHTML=h+renderCad()+'</main>';return}
- if(S.tab==='mot'){app.innerHTML=h+renderMot()+'</main>';const q=$('#mq');if(q)q.oninput=()=>{M.q=q.value;const p=q.selectionStart;render();const n=$('#mq');n.focus();n.setSelectionRange(p,p)};return}
+ if(S.tab==='mot'){app.innerHTML=h+renderMot()+'</main>';document.querySelectorAll('.conv .cm').forEach(x=>x.scrollTop=x.scrollHeight);document.querySelectorAll('[data-cvd]').forEach(i=>i.oninput=()=>{M.draft[i.dataset.cvd]=i.value});const q=$('#mq');if(q)q.oninput=()=>{M.q=q.value;const p=q.selectionStart;render();const n=$('#mq');n.focus();n.setSelectionRange(p,p)};return}
  if(S.tab==='evo'){app.innerHTML=h+renderEvoC()+'</main>';return}
  if(S.tab==='fro'){app.innerHTML=h+renderFrota()+'</main>';desenhaFrota();return}
  h+=`<div class="bar"><div class="chips" role="group" aria-label="Filtrar por situação">${['pendente','aprovada','recusada','aplicada'].map(st=>`<button type="button" data-st="${st}" class="${S.f.st===st?'on':''}">${STN[st].replace(' no SimpliRoute','')}<b>${cnt(st)}</b></button>`).join('')}<button type="button" data-st="" class="${!S.f.st?'on':''}">Todas<b>${all.length}</b></button></div>
@@ -496,6 +516,7 @@ document.addEventListener('click',async e=>{const b=e.target.closest('button');i
   if(d.med){M.ed=M.ed===+d.med?null:+d.med;M.pin=null;render();const i=document.querySelector(`[data-msave="${d.med}"] input[name=cel]`);if(i)i.focus();return}
   if(d.mx!==undefined){M.ed=null;M.pin=null;render();return}
   if(d.mcopy){try{await navigator.clipboard.writeText(d.mcopy);toast('Mensagem copiada.')}catch(x){toast('Não consegui copiar. Anote o PIN.')}return}
+  if(d.ocvisto){b.disabled=true;await motRpc('eq_ocor_visto',{p_id:+d.ocvisto});toast('Marcada como recebida.');await carregarMot(true);return}
   if(d.mvisto){b.disabled=true;await motRpc('eq_mot_visto',{p_turno:+d.mvisto});toast('Marcado como ciente.');await carregarMot(true);return}
   if(d.mon||d.mpin){const id=+(d.mon||d.mpin),m=M.d.motoristas.find(x=>x.id===id);if(!m)return;
    if(d.mpin&&!confirm('Gerar um novo PIN para '+m.nome+'? O PIN atual deixa de valer e ele sai do app.'))return;b.disabled=true;

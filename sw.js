@@ -29,7 +29,7 @@ self.addEventListener('notificationclick', e => {
   e.notification.close();
   const alvo = new URL((e.notification.data && e.notification.data.url) || './', self.registration.scope).href;
   e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(ws => {
-    for (const w of ws) { if (w.url.startsWith(self.registration.scope)) { w.postMessage({ tipo: 'rota-nova' }); return w.focus(); } }
+    for (const w of ws) { if (w.url.startsWith(self.registration.scope)) { w.postMessage({ tipo: 'rota-nova', url: alvo }); return w.focus(); } }
     return self.clients.openWindow(alvo);
   }));
 });

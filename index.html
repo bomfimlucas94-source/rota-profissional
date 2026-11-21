@@ -129,6 +129,25 @@ ol.pac{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap
 .pi b{font-size:14px}.pi span{font-size:12px;color:var(--muted)}
 .chip{align-self:flex-start;margin-top:4px;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px}
 .chip.pend{background:var(--pend-bg);color:var(--pend)}.chip.ok{background:var(--ok-bg);color:var(--ok)}.chip.no{background:var(--bad-bg);color:var(--bad)}
+.chatb{display:flex;align-items:center;gap:12px;padding:12px 14px;width:100%;background:#fff;border:1px solid var(--line);border-radius:16px;text-align:left;font:inherit;color:var(--ink);cursor:pointer;min-height:60px}
+.chatb .ci{width:40px;height:40px;border-radius:50%;background:var(--wine);color:#fff;display:flex;align-items:center;justify-content:center;flex:none;font-size:18px}
+.chatb span.t{flex:1}.chatb b{display:block;font-size:14.5px}.chatb small{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
+.chatb .nb2{background:#b4232b;color:#fff;font-size:12px;font-weight:800;min-width:22px;height:22px;border-radius:11px;display:flex;align-items:center;justify-content:center;padding:0 6px}
+.chatb.novo{border:2px solid var(--wine)}
+.bubs{display:flex;flex-direction:column;gap:8px}
+.bub{max-width:82%;padding:9px 12px;border-radius:14px;font-size:14.5px;line-height:1.4;background:#fff;border:1px solid var(--line);align-self:flex-start;white-space:pre-wrap;word-wrap:break-word}
+.bub.eu{align-self:flex-end;background:var(--wine);color:#fff;border-color:var(--wine)}
+.bub.cen{background:var(--pend-bg);border-color:#f0c98a}
+.bub small{display:block;font-size:11px;margin-top:3px;opacity:.75}
+.chatfoot{position:sticky;bottom:0;margin:0 -16px calc(-90px - env(safe-area-inset-bottom));padding:8px 16px calc(66px + env(safe-area-inset-bottom));background:var(--bg,#f7f5f1);border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.chips button{flex:none;border:1px solid var(--line);background:#fff;border-radius:999px;font-size:13px;font-weight:700;color:var(--wine);min-height:40px;padding:0 12px;white-space:nowrap}
+.chips button.ed{color:var(--muted);border-style:dashed}
+.envia{display:flex;gap:8px}.envia input{flex:1;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:16px;min-height:46px;background:#fff}
+.envia button{min-height:46px;border-radius:12px;border:0;background:var(--wine);color:#fff;font-weight:800;padding:0 16px}
+.rsp{display:flex;gap:6px;align-items:center}.rsp input{flex:1;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:16px;min-height:46px}
+.rsp button{min-width:44px;min-height:44px;border:1px solid var(--line);background:#fff;border-radius:10px;font-size:16px;color:var(--wine)}
+.rsp button:disabled{opacity:.35}
 .back{align-self:flex-start;border:0;background:none;color:var(--wine);font-size:14px;font-weight:700;padding:6px 0;min-height:44px}
 fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
 legend{font-size:14px;font-weight:800;margin-bottom:8px;padding:0}
@@ -228,7 +247,7 @@ function bannerPush(){if(S.leitura||pushFechado||!('Notification' in window&&'se
  if(ehIOS&&!instalado()&&!('PushManager' in window))return `<div class="inst"><div><b>Receba aviso quando sua rota chegar</b>No iPhone, primeiro instale o app: toque em Compartilhar › <b style="display:inline">Adicionar à Tela de Início</b> e abra por lá.</div><button class="ix" type="button" data-a="pushx" aria-label="Fechar aviso">×</button></div>`;
  if(!pushSuporta()||Notification.permission!=='default')return'';
  return `<div class="inst"><div><b>🔔 Ativar notificações</b>Saiba na hora quando a logística enviar ou mudar a sua rota.</div><button class="ib" type="button" data-a="pushon">Ativar</button><button class="ix" type="button" data-a="pushx" aria-label="Agora não">×</button></div>`}
-if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.tipo==='rota-nova'&&S.token)carregar()});
+if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.tipo==='rota-nova'&&S.token){if(e.data.url&&/#chat=/.test(e.data.url))carregar(true).then(()=>abreChatHash(e.data.url));else carregar()}});
 
 function bannerInst(){if(instalado()||instFechado)return'';
  if(INST)return`<div class="inst"><img src="https://sizbevhqreaccxrlimup.supabase.co/storage/v1/object/public/app-icones/icon-192.png" alt=""><div><b>Instale o Minha Rota</b>Abre em tela cheia, direto do ícone no celular.</div><button class="ib" type="button" data-a="instalar">Instalar</button><button class="ix" type="button" data-a="instx" aria-label="Fechar aviso">×</button></div>`;
@@ -317,6 +336,38 @@ async function desenhaMapa(ro){const el=document.getElementById('mapa');if(!el)r
  const ll=pts.map(p=>[+p.lat,+p.lng]);L.polyline(ll,{color:'#5f0040',weight:3,opacity:.7,dashArray:'6 6'}).addTo(m);
  pts.forEach(p=>L.marker([+p.lat,+p.lng],{icon:L.divIcon({className:'',html:'<div class="mk">'+esc(p.ordem)+'</div>',iconSize:[26,26],iconAnchor:[13,13]}),title:p.ordem+'. '+p.nome}).addTo(m));
  m.fitBounds(L.latLngBounds(ll).pad(.15),{maxZoom:15})}
+/* ===== Conversa com o motorista (só no dia da rota; a Central acompanha) ===== */
+const CH={d:null,rota:null,txt:'',busy:false,ed:null,res:{},n:-1};
+async function carregaResumo(){if(!S.token||S.trocar)return;try{const r=await rpc('app_chat_resumo',{p_token:S.token});if(r&&r.ok){const a=JSON.stringify(CH.res);CH.res={};(r.rotas||[]).forEach(x=>CH.res[x.id]=x);if(a!==JSON.stringify(CH.res)&&S.tela==='rota')render()}}catch(e){}}
+async function carregaChat(sil){const ro=rotaAtual();if(!ro)return;
+ try{const r=await rpc('app_chat',{p_token:S.token,p_rota:ro.id});if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');if(!sil)toast(r.erro);return}
+  const mud=!sil||CH.rota!==ro.id||r.msgs.length!==CH.n;CH.d=r;CH.rota=ro.id;CH.n=r.msgs.length;if(CH.res[ro.id])CH.res[ro.id].nao_lidas=0;
+  if(S.tela==='chat'&&mud){render();fimChat()}}catch(e){if(!sil)toast(e.message)}}
+function fimChat(){const l=document.querySelector('.bub:last-child');if(l)l.scrollIntoView({block:'end'});scrollBy(0,400)}
+function chatBotao(ro){const x=CH.res[ro.id]||{},n=+x.nao_lidas||0;
+ return `<button class="chatb${n?' novo':''}" type="button" data-a="chat"><span class="ci" aria-hidden="true">💬</span><span class="t"><b>${n?(n===1?'Nova mensagem':n+' mensagens novas'):'Conversar com o motorista'}</b><small>${x.msgs?'Abrir a conversa de hoje':'Combine o ponto de encontro. A logística acompanha.'}</small></span>${n?`<span class="nb2">${n}</span>`:'<span aria-hidden="true">›</span>'}</button>`}
+function chatTela(ro){const d=CH.d&&CH.rota===ro.id?CH.d:null;let h=`<button class="back" type="button" data-a="rota">‹ Voltar para a rota</button>`;
+ if(!d)return h+'<p class="empty">Abrindo a conversa…</p>';
+ h+=`<div class="card" style="padding:14px;display:flex;flex-direction:column;gap:4px"><b style="font-size:17px">${esc(d.motorista||'Motorista')}${d.placa?' · '+esc(d.placa):''}</b><small style="color:var(--muted);font-size:12.5px">${d.motorista_app?'Conversa da rota de hoje · a logística acompanha':'O motorista ainda não usa o Minha Rota. A logística lê e responde por aqui.'}</small></div>`;
+ h+='<div class="bubs" aria-live="polite">';
+ if(!d.msgs.length)h+='<p class="empty" style="padding:16px">Nenhuma mensagem ainda.</p>';
+ d.msgs.forEach(m=>{const eu=m.de==='medico';h+=`<div class="bub${eu?' eu':m.de==='central'?' cen':''}">${m.de==='central'?`<small style="margin:0 0 2px;font-weight:700">${esc(m.autor)}</small>`:''}${esc(m.texto)}<small>${hm(m.em)}${eu?(m.lida_mot?' · lida':' · enviada'):m.de==='motorista'?' · '+esc(String(m.autor).split(' ')[0]):''}</small></div>`});
+ h+='</div>';
+ if(!d.aberta)return h+'<p class="note pend">A conversa fica aberta só no dia da rota.</p>';
+ if(S.leitura)return h;
+ h+=`<div class="chatfoot"><div class="chips" role="group" aria-label="Respostas prontas">${(d.respostas||[]).map((t,i)=>`<button type="button" data-pronta="${i}">${esc(t)}</button>`).join('')}<button type="button" class="ed" data-a="chatresp">Editar</button></div>
+  <form class="envia" id="fchat"><label for="ctxt" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Mensagem</label><input id="ctxt" maxlength="500" autocomplete="off" placeholder="Mensagem" value="${esc(CH.txt)}"><button type="submit"${CH.busy?' disabled':''}>Enviar</button></form></div>`;
+ return h}
+const SUG_MED=['Estou descendo','Pode me aguardar 5 minutos?','Obrigado!','Estou na portaria','Vou atrasar uns minutos'];
+function respTela(){const L=CH.ed;let h=`<button class="back" type="button" data-a="chatvolta">‹ Voltar para a conversa</button><div class="card" style="padding:14px;display:flex;flex-direction:column;gap:10px"><b>Minhas respostas prontas</b><small style="color:var(--muted)">Viram botões de um toque na conversa. Use as setas para mudar a ordem. Até 6.</small>`;
+ L.forEach((t,i)=>{h+=`<div class="rsp"><input data-rsp="${i}" maxlength="80" value="${esc(t)}" aria-label="Resposta ${i+1}"><button type="button" data-rup="${i}" aria-label="Subir"${i?'':' disabled'}>↑</button><button type="button" data-rdel="${i}" aria-label="Apagar resposta ${i+1}">✕</button></div>`});
+ if(L.length<6)h+='<button class="btn line" type="button" data-a="radd">+ Adicionar resposta</button>';
+ const sg=SUG_MED.filter(x=>!L.includes(x));if(sg.length&&L.length<6)h+=`<div class="chips" style="flex-wrap:wrap">${sg.map(x=>`<button type="button" data-rsug="${esc(x)}">+ ${esc(x)}</button>`).join('')}</div>`;
+ return h+`<button class="btn sun" type="button" data-a="rsalvar"${CH.busy?' disabled':''}>Salvar respostas</button></div>`}
+async function enviaChat(t,pronta){t=String(t||'').trim();const ro=rotaAtual();if(!t||CH.busy||!ro)return;CH.busy=true;
+ try{const r=await rpc('app_chat_enviar',{p_token:S.token,p_rota:ro.id,p_texto:t,p_pronta:!!pronta});CH.busy=false;
+  if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');toast(r.erro);render();return}
+  if(!pronta)CH.txt='';CH.d.msgs=r.msgs;CH.n=r.msgs.length;render();fimChat()}catch(x){CH.busy=false;toast(x.message);render()}}
 function render(){
   const app=$('#app');
   if(!S.token){
@@ -344,7 +395,7 @@ function render(){
   const ro=rotaAtual();
   const nPend=ro?ro.pedidos.filter(p=>p.status==='pendente').length:0;
   let h=`<header class="top"><div class="r1"><span class="hi">Olá, ${esc(S.nome)}</span><button class="out" type="button" data-a="sair">Sair</button></div>
-   <h2>${S.tela==='pedido'?'Necessidade do paciente':S.tela==='pedidos'?'Meus pedidos':S.tela==='evo'?'Evoluções':'Minha rota'}</h2>
+   <h2>${S.tela==='chat'||S.tela==='chatresp'?'Conversa com o motorista':S.tela==='pedido'?'Necessidade do paciente':S.tela==='pedidos'?'Meus pedidos':S.tela==='evo'?'Evoluções':'Minha rota'}</h2>
    ${ro&&S.tela!=='evo'?`<div class="sub">${esc(dExt(ro.data))} · ${/^carro\b/i.test(ro.placa||'')?'':'Carro '}${esc(ro.placa)}${ro.motorista?' · Motorista '+esc(ro.motorista):''}</div>`:''}</header>`;
   if(S.rotas.length>1&&S.tela!=='pedido'&&S.tela!=='evo')h+=`<div class="days" role="tablist" aria-label="Dias">${S.rotas.map(x=>{const on=String(x.id)===String(S.dia),dup=S.rotas.filter(y=>y.data===x.data).length>1;return `<button type="button" role="tab" data-dia="${x.id}" class="${on?'on':''}" aria-selected="${on}">${esc(dExt(x.data).split(',')[0].slice(0,3))} ${x.data.slice(8,10)}/${x.data.slice(5,7)}${dup?' · '+esc(x.placa||''):''}</button>`}).join('')}</div>`;
   h+='<main>'+(S.leitura?`<div class="verb" role="status"><span>👁 Você está vendo o app como <b>${esc(S.nome||'o médico')}</b>. Só leitura: nada é enviado e a rota não é marcada como vista.</span><button type="button" data-a="sair">Encerrar</button></div>`:bannerInst()+(S.tela==='rota'?bannerPush():''));if(S.tela==='rota'||S.tela==='pedidos')h+=evoHtml();
@@ -357,6 +408,7 @@ function render(){
     else if(!ro.motorista&&ro.data>=hoje()&&!embarcado(ro.id))h+=`<div class="card trk"><div class="trkh"><b>Seu motorista</b><span>Ainda não definido</span></div><div class="trki"><small>Assim que a logística definir o motorista no SimpliRoute, o nome dele aparece aqui${ro.data===hoje()?' e você acompanha o carro chegando':''}.</small></div></div>`;
     else if(ro.motorista&&ro.data===hoje())h+=`<div class="card trk"><div class="trkh"><b>Seu motorista hoje</b><span>${esc(ro.motorista)}</span></div><div class="trki"><small>${ro.sr_inicio?'Saiu às '+esc(hm(ro.sr_inicio))+'. Boa rota!':'Você já está no carro. Boa rota!'}</small></div></div>`;
     else if(ro.motorista&&ro.data>hoje())h+=`<div class="card trk"><div class="trkh"><b>Seu motorista</b><span>${esc(ro.motorista)}</span></div><div class="trki"><small>O acompanhamento do carro aparece aqui no dia da rota (${esc(ro.data.slice(8,10)+'/'+ro.data.slice(5,7))}), com a distância até você e a previsão de chegada.</small></div></div>`;
+    if(ro.data===hoje()&&ro.motorista)h+=chatBotao(ro);
     const gm=gmaps(ro);
     h+=`<div class="card">${temGeo(ro)?'<div class="mapa" id="mapa" role="img" aria-label="Mapa com os pacientes na ordem da rota"></div>':ro.print?`<button class="print" type="button" data-a="zoom" aria-label="Ampliar o print da rota"><img src="${esc(ro.print)}" alt="Print da rota de ${esc(dExt(ro.data))}"></button>`:'<div class="noprint">Print da rota ainda não enviado</div>'}
       <div class="cardf"><span>${ro.pacientes.length} ${ro.pacientes.length===1?'paciente':'pacientes'}</span>${gm?`<a href="${esc(gm)}" target="_blank" rel="noopener">Abrir trajeto no Google Maps ›</a>`:ro.print?'<button type="button" data-a="zoom">Ampliar print</button>':''}</div></div>
@@ -366,6 +418,8 @@ function render(){
       <button class="btn line nec" type="button" data-pac="${esc(p.ordem)}" aria-label="Indicar necessidade do paciente ${esc(p.nome)}">Indicar necessidade do paciente</button></li>`});
     h+='</ol>';
     if(!ro.confirmado_em)h+=`<button class="btn wine" type="button" data-a="confirmar"${S.busy?' disabled':''}>Rota OK, sem mais mudanças</button>`;
+  }else if(S.tela==='chat'){h+=chatTela(ro)
+  }else if(S.tela==='chatresp'){h+=respTela()
   }else if(S.tela==='pedido'){
     const p=ro.pacientes.find(x=>String(x.ordem)===String(S.sel));
     h+=`<button class="back" type="button" data-a="rota">‹ Voltar para a rota</button>
@@ -384,16 +438,20 @@ function render(){
        ${q.status!=='pendente'?`<div class="resp ${st[1]}"><b>${st[1]==='ok'?'OK da logística':'Resposta da logística'}</b>${q.resposta?`<span>${esc(q.resposta)}</span>`:''}</div>`:''}</article>`});
     h+=`<button class="btn line" type="button" data-a="atualizar" style="align-self:center">Atualizar</button>`;
   }
-  h+=`<p class="lgpd">Dados de pacientes são sigilosos (LGPD). Não compartilhe prints desta tela.</p></main>`;
-  h+=`<nav class="tabs" aria-label="Navegação"><div><button type="button" data-a="rota" class="${S.tela==='rota'||S.tela==='pedido'?'on':''}">Minha rota</button><button type="button" data-a="pedidos" class="${S.tela==='pedidos'?'on':''}">Meus pedidos${nPend?' ('+nPend+')':''}</button><button type="button" data-a="evotab" class="${S.tela==='evo'?'on':''}">Evoluções${S.evo&&S.evo.l.length?'<b class="nb">'+S.evo.l.length+'</b>':''}</button></div></nav>`;
+  if(S.tela!=='chat'&&S.tela!=='chatresp')h+=`<p class="lgpd">Dados de pacientes são sigilosos (LGPD). Não compartilhe prints desta tela.</p>`;h+='</main>';
+  h+=`<nav class="tabs" aria-label="Navegação"><div><button type="button" data-a="rota" class="${['rota','pedido','chat','chatresp'].includes(S.tela)?'on':''}">Minha rota</button><button type="button" data-a="pedidos" class="${S.tela==='pedidos'?'on':''}">Meus pedidos${nPend?' ('+nPend+')':''}</button><button type="button" data-a="evotab" class="${S.tela==='evo'?'on':''}">Evoluções${S.evo&&S.evo.l.length?'<b class="nb">'+S.evo.l.length+'</b>':''}</button></div></nav>`;
   if(S.zoom&&ro&&ro.print)h+=`<div class="zoom" role="dialog" aria-modal="true" aria-label="Print da rota"><div><img src="${esc(ro.print)}" alt="Print da rota ampliado"></div><button type="button" data-a="fechar">Fechar</button></div>`;
+  const foc=document.activeElement&&document.activeElement.id==='ctxt';
   app.innerHTML=h;
+  const ct=$('#ctxt');if(ct){ct.oninput=()=>{CH.txt=ct.value};if(foc){ct.focus();ct.setSelectionRange(ct.value.length,ct.value.length)}}
+  document.querySelectorAll('[data-rsp]').forEach(i=>i.oninput=()=>{CH.ed[+i.dataset.rsp]=i.value});
   if(ro&&S.tela==='rota'&&temGeo(ro))desenhaMapa(ro);
   if(ro&&S.tela==='rota'&&trkAtivo(ro)){if(T.rota!==ro.id){T.rota=ro.id;T.d=null;T.err=''}if(Date.now()-T.at>15000)trkCarrega(ro);else trkMapa(ro)}
 }
 document.addEventListener('submit',async e=>{
   e.preventDefault();
   if(S.leitura){toast('Modo visualização: ações do médico estão desativadas.');return}
+  if(e.target.id==='fchat'){enviaChat(CH.txt,false);return}
   if(e.target.id==='flogin'){
     const cel=$('#cel').value,pin=$('#pin').value;if(!cel||!pin){S.err='Preencha o celular e o PIN.';render();return}
     S.busy=true;S.err='';render();
@@ -429,12 +487,22 @@ document.addEventListener('submit',async e=>{
 });
 document.addEventListener('click',async e=>{
   const b=e.target.closest('button');if(!b)return;
-  if(b.dataset.dia){S.dia=b.dataset.dia;render();return}
+  if(b.dataset.dia){S.dia=b.dataset.dia;if(S.tela==='chat'||S.tela==='chatresp')S.tela='rota';render();return}
   if(S.leitura&&(b.dataset.pac||['confirmar','embarquei','instalar'].includes(b.dataset.a))){toast('Modo visualização: ações do médico estão desativadas.');return}
   if(b.dataset.pac){S.sel=b.dataset.pac;S.tipo='horario_fixo';S.tela='pedido';render();window.scrollTo(0,0);return}
+  if(b.dataset.pronta!=null){enviaChat(CH.d.respostas[+b.dataset.pronta],true);return}
+  if(b.dataset.rup){const i=+b.dataset.rup;if(i>0){[CH.ed[i-1],CH.ed[i]]=[CH.ed[i],CH.ed[i-1]];render()}return}
+  if(b.dataset.rdel){CH.ed.splice(+b.dataset.rdel,1);render();return}
+  if(b.dataset.rsug){if(CH.ed.length<6){CH.ed.push(b.dataset.rsug);render()}return}
   if(b.dataset.tipo){const mot=$('#mot')?$('#mot').value:'';S.tipo=b.dataset.tipo;render();if($('#mot'))$('#mot').value=mot;return}
   const a=b.dataset.a;if(!a)return;
   if(a==='sair'){sair();return}
+  if(a==='chat'){S.tela='chat';CH.n=-1;render();window.scrollTo(0,0);carregaChat();return}
+  if(a==='chatresp'){CH.ed=(CH.d.respostas||[]).slice();S.tela='chatresp';render();window.scrollTo(0,0);return}
+  if(a==='chatvolta'){S.tela='chat';render();fimChat();return}
+  if(a==='radd'){CH.ed.push('');render();const l=document.querySelectorAll('[data-rsp]');if(l.length)l[l.length-1].focus();return}
+  if(a==='rsalvar'){CH.busy=true;render();try{const r=await rpc('app_respostas_salvar',{p_token:S.token,p_lista:CH.ed});CH.busy=false;if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');toast(r.erro);render();return}
+    CH.d.respostas=r.respostas;S.tela='chat';toast('Respostas salvas.');render();fimChat()}catch(x){CH.busy=false;toast(x.message);render()}return}
   if(a==='embarquei'){const ro=rotaAtual();if(ro){try{localStorage.setItem('rp-emb-'+ro.id,'1')}catch(x){}}render();toast('Boa rota!');return}
   if(a==='instalar'&&INST){INST.prompt();const c=await INST.userChoice.catch(()=>null);INST=null;render();return}
   if(a==='evo'){S.evoAberto=!S.evoAberto;render();return}
@@ -453,9 +521,11 @@ document.addEventListener('click',async e=>{
     catch(x){S.busy=false;render();toast(x.message)}}
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&S.zoom){S.zoom=false;render()}});
-setInterval(()=>{if(S.token&&!document.hidden&&S.tela!=='pedido')carregar(true)},60000);
+setInterval(()=>{if(S.token&&!document.hidden&&S.tela!=='pedido'&&S.tela!=='chat'&&S.tela!=='chatresp')carregar(true)},60000);
+setInterval(()=>{if(!S.token||S.trocar||document.hidden)return;if(S.tela==='chat'&&!CH.busy)carregaChat(true);else if(S.tela!=='chatresp')carregaResumo()},12000);
+function abreChatHash(h){const m=String(h||'').match(/#chat=(\d+)/);if(!m||!S.token)return false;S.dia=m[1];S.tela='chat';CH.n=-1;try{history.replaceState(null,'',location.pathname+location.search)}catch(x){}render();carregaChat();return true}
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.token&&S.tela!=='pedido')carregar(true)});
-render();if(S.token)carregar();
+render();if(S.token){carregar().then(()=>{abreChatHash(location.hash);carregaResumo()})}
 </script>
 </body>
 </html>
