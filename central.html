@@ -151,6 +151,9 @@ table.rel td.at{font-weight:800;color:#b4232b}table.rel tr.ex td{background:var(
 .crow .act{display:flex;gap:6px;flex-wrap:wrap}
 .crow .cbox{flex-basis:100%;display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;background:var(--off);border-radius:10px;padding:8px 10px}
 .crow .cbox label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700;color:var(--muted)}
+.pinbox{flex-basis:100%;background:var(--ok-bg);color:#12432a;border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.5;display:flex;flex-wrap:wrap;gap:8px;align-items:center}.pinbox b.pin{font-size:20px;letter-spacing:.2em;color:var(--ink)}
+.mdef{margin:4px 0 0;padding-left:18px;font-size:12px}.mdef li{margin:2px 0}.mdef .cr{color:var(--bad);font-weight:700}
+tr.crit td{background:#fdf1f2}
 .crow .cbox input{font-size:14px;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:#fff;min-height:36px}
 </style>
 </head>
@@ -376,6 +379,9 @@ function renderCad(){
  return h}
 const cadAchar=k=>{const tipo=k.startsWith('prof')?'prof':k.startsWith('motorista')?'motorista':'equipe',id=+k.replace(/^\D+/,'');const L=tipo==='prof'?C.d.profissionais:tipo==='motorista'?C.d.motoristas:C.d.equipe;return {tipo,id,p:L.find(x=>x.id===id)}};
 document.addEventListener('submit',async e=>{const f=e.target;
+ if(f.dataset.msave){e.preventDefault();const nv=f.dataset.msave==='novo',id=nv?null:+f.dataset.msave,m=nv?{ativo:false}:M.d.motoristas.find(x=>x.id===id),d=new FormData(f);const bt=f.querySelector('button[type=submit]');bt.disabled=true;
+  const sr=String(d.get('sr')||'').replace(/\D/g,'');
+  try{await motRpc('eq_mot_salvar',{p_id:id,p_nome:d.get('nome'),p_celular:d.get('cel')||null,p_geotab:String(d.get('gt')||'').trim()||null,p_sr:sr?+sr:null,p_ativo:nv?false:m.ativo});M.ed=null;toast(nv?'Motorista cadastrado. Agora clique em Liberar acesso.':'Cadastro atualizado.');await carregarMot(true)}catch(x){bt.disabled=false;if(x.message!=='sessao')toast(x.message)}return}
  if(f.id==='cnovo-mot'){e.preventDefault();const d=new FormData(f);const bt=f.querySelector('button');bt.disabled=true;
   try{await cadRpc('eq_cad_salvar',{p_tipo:'motorista',p_id:null,p_nome:d.get('nome'),p_celular:d.get('cel'),p_especialidade:null,p_pin:null},d.get('nome')+' cadastrado.')}catch(x){bt.disabled=false;toast(x.message)}return}
  if(f.id==='cnovo-prof'||f.id==='cnovo-equipe'){e.preventDefault();const tipo=f.id==='cnovo-prof'?'prof':'equipe',d=new FormData(f);const bt=f.querySelector('button');bt.disabled=true;
@@ -383,6 +389,44 @@ document.addEventListener('submit',async e=>{const f=e.target;
  if(f.dataset.csave){e.preventDefault();const {tipo,id,p}=cadAchar(f.dataset.csave),d=new FormData(f);try{await cadRpc('eq_cad_salvar',{p_tipo:tipo,p_id:id,p_nome:d.get('nome'),p_celular:d.get('cel'),p_especialidade:p.especialidade||null,p_pin:null,p_perfil:d.get('perfil')||null},'Cadastro atualizado.')}catch(x){toast(x.message)}return}
  if(f.dataset.cpinok){e.preventDefault();const {tipo,id,p}=cadAchar(f.dataset.cpinok),d=new FormData(f);try{await cadRpc('eq_cad_pin',{p_tipo:tipo,p_id:id,p_pin:d.get('pin')},'PIN de '+p.nome+' redefinido. Ele vai criar um PIN próprio ao entrar.')}catch(x){toast(x.message)}return}
 });
+/* ===== Motoristas (app Minha Rota · Motorista) ===== */
+const M={d:null,busy:false,err:'',ed:null,pin:null,q:'',at:0};
+async function carregarMot(sil){if(!S.token||!LOGI())return;if(!sil&&!M.d){M.busy=true;render()}
+ try{const r=await rpc('eq_mot_lista',{p_token:S.token});if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');throw new Error(r.erro)}M.d=r;M.err='';M.at=Date.now()}catch(e){M.err=e.message}
+ M.busy=false;if(!(S.tab==='mot'&&document.activeElement&&document.activeElement.closest&&document.activeElement.closest('.cbox,.cform')))render()}
+async function motRpc(fn,args){const r=await rpc(fn,{p_token:S.token,...args});if(!r.ok){if(r.erro==='sessao'){sair('Sua sessão expirou. Entre de novo.');throw new Error('sessao')}throw new Error(r.erro||'Não foi possível salvar.')}return r}
+const brDTc=t=>t?new Date(t).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(',',''):'';
+function renderMot(){
+ let h='';if(M.err)h+=`<p class="err" role="alert">${esc(M.err)}</p>`;
+ if(!M.d)return h+`<div class="empty">${M.busy?'Carregando motoristas…':'Abrindo…'}</div>`;
+ const L=M.d.motoristas||[],T=M.d.turnos||[];const hoje=hojeSP();
+ const tH=T.filter(t=>new Date(t.entrou_em).toLocaleDateString('sv-SE',{timeZone:'America/Sao_Paulo'})===hoje||!t.saiu_em);
+ const tA=T.filter(t=>!tH.includes(t));
+ const linha=t=>{const def=t.defeitos||[];const cv=t.critico&&!t.visto_em;
+  return `<tr class="${cv?'crit':''}"><td>${esc(t.nome)}</td><td class="n"><code>${esc(t.placa)}</code>${t.verif&&t.verif.longe?'<br><small title="Pelo Geotab o carro estava longe do celular do motorista na hora de entrar">⚠ longe do carro</small>':''}</td><td class="n">${brDTc(t.entrou_em)}</td>
+   <td>${t.inspecao_em?`${brDTc(t.inspecao_em).slice(-5)} · ${def.length?`<b>${def.length} ${def.length>1?'problemas':'problema'}</b>`:'tudo OK'}${def.length?`<ul class="mdef">${def.map(d=>`<li${d.critico?' class="cr"':''}>${esc(d.nome)}${d.critico?' (crítico)':''}: ${esc(d.obs)}${d.foto?` · <a href="${esc(d.foto)}" target="_blank" rel="noopener">foto</a>`:''}</li>`).join('')}</ul>`:''}`:'<span class="bd pendente">Sem inspeção</span>'}</td>
+   <td class="n">${t.saiu_em?brDTc(t.saiu_em).slice(-5)+(t.auto_encerrado?'<br><small>encerrado automático</small>':''):'<span class="bd aprovada">No carro</span>'}</td>
+   <td>${t.critico?(t.visto_em?'<small>Ciente</small>':`<button class="btn wine sm" type="button" data-mvisto="${t.id}">Ciente</button>`):''}</td></tr>`};
+ const tab=l=>`<div class="tw"><table class="rel" style="min-width:820px"><thead><tr><th>Motorista</th><th>Carro</th><th>Entrou</th><th>Inspeção</th><th>Saiu</th><th>Item crítico</th></tr></thead><tbody>${l.map(linha).join('')}</tbody></table></div>`;
+ h+=`<section class="cad"><h3>Plantões de hoje<span>${tH.length}</span>${M.d.alertas?`<span class="bd recusada">${M.d.alertas} ${M.d.alertas>1?'itens críticos':'item crítico'} sem ciência</span>`:''}</h3>
+  <p class="sub">Quem entrou no carro pelo app, a inspeção feita e os problemas apontados (também ficam no Geotab). Plantão aberto é encerrado sozinho após 14 h.</p>
+  ${tH.length?tab(tH):'<p class="sub">Nenhum motorista entrou pelo app hoje.</p>'}${tA.length?`<details><summary class="dica" style="cursor:pointer">Últimos 7 dias (${tA.length})</summary>${tab(tA)}</details>`:''}</section>`;
+ const q=M.q.toLowerCase();const LL=L.filter(m=>!q||m.nome.toLowerCase().includes(q)||String(m.celular||'').includes(q.replace(/\D/g,'')||'§'));
+ h+=`<section class="cad"><h3>Acesso dos motoristas<span>${L.filter(m=>m.ativo).length} com acesso de ${L.length}</span></h3>
+  <p class="sub">O motorista entra no mesmo link do Minha Rota, com o celular e o PIN. Para liberar: <b>Editar</b> → informe o celular → <b>Liberar acesso</b>. O app gera um PIN provisório para você enviar; no primeiro acesso ele cria o PIN próprio.</p>
+  <div class="cform"><label>Buscar<input class="w" id="mq" value="${esc(M.q)}" placeholder="Nome ou celular" autocomplete="off"></label><span class="sp" style="flex:1"></span><button class="btn ghost sm" type="button" data-mnovo="1">+ Novo motorista</button></div>
+  ${M.ed==='novo'?`<form class="cform" data-msave="novo"><label>Nome<input class="w" name="nome" maxlength="80" required></label><label>Celular<input name="cel" inputmode="tel" placeholder="(21) 9 0000-0000"></label><label>ID Geotab<input class="p" name="gt" placeholder="b4xx"></label><label>ID SimpliRoute<input class="p" name="sr" inputmode="numeric"></label><button class="btn wine sm" type="submit">Salvar</button><button class="btn ghost sm" type="button" data-mx>Cancelar</button></form>`:''}
+  <div class="clist">${LL.map(m=>{const t=m.turno;
+   let r=`<div class="crow"><b>${esc(m.nome)}</b>${m.celular?`<span class="cel">${esc(fmtCel(m.celular))}</span>`:'<span class="cel">sem celular</span>'}
+    ${m.ativo?(m.trocar_pin?'<span class="bd pendente" title="Ainda não criou o PIN próprio">PIN provisório</span>':'<span class="bd aprovada">Com acesso</span>'):'<span class="bd">Sem acesso</span>'}
+    ${!m.geotab_id?'<span class="bd recusada" title="Sem ID do Geotab o app não registra o motorista no carro">sem Geotab</span>':''}${!m.sr_id?'<span class="bd recusada" title="Sem ID do SimpliRoute o app não mostra a rota">sem SimpliRoute</span>':''}
+    ${t&&!t.saiu_em?`<span class="bd aplicada">No ${esc(t.placa)}</span>`:''}${m.ultimo_login?`<span class="cel" style="font-size:12px">último acesso ${brDTc(m.ultimo_login)}</span>`:''}<span class="sp"></span>
+    <span class="act"><button class="btn ghost sm" type="button" data-med="${m.id}">Editar</button>${m.ativo?`<button class="btn ghost sm" type="button" data-mpin="${m.id}">Novo PIN</button><button class="btn ghost sm" type="button" data-moff="${m.id}">Tirar acesso</button>`:`<button class="btn wine sm" type="button" data-mon="${m.id}"${m.celular?'':' disabled title="Informe o celular em Editar"'}>Liberar acesso</button>`}</span>`;
+   if(M.ed===m.id)r+=`<form class="cbox" data-msave="${m.id}"><label>Nome<input name="nome" value="${esc(m.nome)}" maxlength="80" required></label><label>Celular<input name="cel" value="${esc(fmtCel(m.celular||''))}" inputmode="tel" placeholder="(21) 9 0000-0000"></label><label>ID Geotab<input name="gt" value="${esc(m.geotab_id||'')}" style="width:90px"></label><label>ID SimpliRoute<input name="sr" value="${esc(m.sr_id||'')}" inputmode="numeric" style="width:100px"></label><button class="btn wine sm" type="submit">Salvar</button><button class="btn ghost sm" type="button" data-mx>Cancelar</button></form>`;
+   if(M.pin&&M.pin.id===m.id){const txt=`Minha Rota · Motorista\nLink: ${new URL('./',location.href).href.replace(/\/central\/?$/,'/')}\nCelular: ${fmtCel(m.celular)}\nPIN provisório: ${M.pin.pin}\nNo primeiro acesso o app pede para você criar seu PIN.`;
+    r+=`<div class="pinbox" role="status"><span>PIN provisório de ${esc(m.nome.split(' ')[0])}: <b class="pin">${esc(M.pin.pin)}</b></span><span class="sp" style="flex:1"></span><button class="btn ghost sm" type="button" data-mcopy="${esc(txt)}">Copiar mensagem</button><button class="btn ghost sm" type="button" data-mx>Fechar</button><span class="dica" style="flex-basis:100%">Envie para o celular dele. Este PIN só aparece agora.</span></div>`}
+   return r+'</div>'}).join('')||'<p class="sub">Ninguém encontrado.</p>'}</div></section>`;
+ return h}
 function render(){
  const app=$('#app');
  if(!S.token){app.innerHTML=`<section class="login"><div class="lbox"><div class="logo" aria-label="Solar"><span>S</span><i></i><span>L</span><span>A</span><span>R</span></div>
@@ -395,11 +439,12 @@ function render(){
  const esps=[...new Set(all.map(r=>r.especialidade).filter(Boolean))].sort(),dias=[...new Set(all.map(r=>r.data_rota))].sort();
  const L=all.filter(r=>(!S.f.st||r.status===S.f.st)&&(!S.f.esp||r.especialidade===S.f.esp)&&(!S.f.dia||r.data_rota===S.f.dia));
  const npend=cnt('pendente');
- let h=`<header class="top"><div class="topin"><div><h2>Central de Solicitações</h2><small>${LOGI()?'Logística':'Administrativo Médico'} · Solar Cuidados</small></div>${LOGI()?`<nav class="tabs" aria-label="Seções"><button type="button" data-tab="sol" class="${S.tab==='sol'?'on':''}">Solicitações${npend?`<b>${npend}</b>`:''}</button><button type="button" data-tab="env" class="${S.tab==='env'?'on':''}">Envio de rotas</button><button type="button" data-tab="rel" class="${S.tab==='rel'?'on':''}">Relatório</button><button type="button" data-tab="fro" class="${S.tab==='fro'?'on':''}">Frota ao vivo</button><button type="button" data-tab="evo" class="${S.tab==='evo'?'on':''}">Evoluções</button><button type="button" data-tab="cad" class="${S.tab==='cad'?'on':''}">Cadastros</button></nav>`:`<nav class="tabs" aria-label="Seções"><button type="button" data-tab="fro" class="${S.tab==='fro'?'on':''}">Frota ao vivo</button><button type="button" data-tab="evo" class="${S.tab==='evo'?'on':''}">Evoluções</button></nav>`}<span class="sp"></span><span class="who">${esc(S.nome)}</span><button class="out" type="button" data-a="sair">Sair</button></div></header><main>`;
+ let h=`<header class="top"><div class="topin"><div><h2>Central de Solicitações</h2><small>${LOGI()?'Logística':'Administrativo Médico'} · Solar Cuidados</small></div>${LOGI()?`<nav class="tabs" aria-label="Seções"><button type="button" data-tab="sol" class="${S.tab==='sol'?'on':''}">Solicitações${npend?`<b>${npend}</b>`:''}</button><button type="button" data-tab="env" class="${S.tab==='env'?'on':''}">Envio de rotas</button><button type="button" data-tab="rel" class="${S.tab==='rel'?'on':''}">Relatório</button><button type="button" data-tab="fro" class="${S.tab==='fro'?'on':''}">Frota ao vivo</button><button type="button" data-tab="evo" class="${S.tab==='evo'?'on':''}">Evoluções</button><button type="button" data-tab="mot" class="${S.tab==='mot'?'on':''}">Motoristas${M.d&&M.d.alertas?`<b>${M.d.alertas}</b>`:''}</button><button type="button" data-tab="cad" class="${S.tab==='cad'?'on':''}">Cadastros</button></nav>`:`<nav class="tabs" aria-label="Seções"><button type="button" data-tab="fro" class="${S.tab==='fro'?'on':''}">Frota ao vivo</button><button type="button" data-tab="evo" class="${S.tab==='evo'?'on':''}">Evoluções</button></nav>`}<span class="sp"></span><span class="who">${esc(S.nome)}</span><button class="out" type="button" data-a="sair">Sair</button></div></header><main>`;
  if(!LOGI()&&S.tab!=='fro'&&S.tab!=='evo')S.tab='fro';
  if(S.tab==='env'){app.innerHTML=h+renderEnv()+'</main>';return}
  if(S.tab==='rel'){app.innerHTML=h+renderRel()+'</main>';return}
  if(S.tab==='cad'){app.innerHTML=h+renderCad()+'</main>';return}
+ if(S.tab==='mot'){app.innerHTML=h+renderMot()+'</main>';const q=$('#mq');if(q)q.oninput=()=>{M.q=q.value;const p=q.selectionStart;render();const n=$('#mq');n.focus();n.setSelectionRange(p,p)};return}
  if(S.tab==='evo'){app.innerHTML=h+renderEvoC()+'</main>';return}
  if(S.tab==='fro'){app.innerHTML=h+renderFrota()+'</main>';desenhaFrota();return}
  h+=`<div class="bar"><div class="chips" role="group" aria-label="Filtrar por situação">${['pendente','aprovada','recusada','aplicada'].map(st=>`<button type="button" data-st="${st}" class="${S.f.st===st?'on':''}">${STN[st].replace(' no SimpliRoute','')}<b>${cnt(st)}</b></button>`).join('')}<button type="button" data-st="" class="${!S.f.st?'on':''}">Todas<b>${all.length}</b></button></div>
@@ -442,11 +487,22 @@ document.addEventListener('click',async e=>{const b=e.target.closest('button');i
  try{
   if(d.a==='sair'){sair();return}
   if(d.a==='atualizar'){await carregar();toast('Atualizado.');return}
-  if(d.tab){if(!LOGI()&&d.tab!=='fro'&&d.tab!=='evo')return;S.tab=d.tab;try{localStorage.setItem('lg-tab',d.tab)}catch(x){}render();if(d.tab==='env'&&E.sr===null)carregarEnv(true);if(d.tab==='rel'&&R.itens===null)carregarRel();if(d.tab==='cad')carregarCad(C.d!==null);if(d.tab==='evo'&&V.d===null)carregarEvoC();if(d.tab==='fro')carregarFrota(F.d!==null);return}
+  if(d.tab){if(!LOGI()&&d.tab!=='fro'&&d.tab!=='evo')return;S.tab=d.tab;try{localStorage.setItem('lg-tab',d.tab)}catch(x){}render();if(d.tab==='env'&&E.sr===null)carregarEnv(true);if(d.tab==='rel'&&R.itens===null)carregarRel();if(d.tab==='cad')carregarCad(C.d!==null);if(d.tab==='mot')carregarMot(M.d!==null);if(d.tab==='evo'&&V.d===null)carregarEvoC();if(d.tab==='fro')carregarFrota(F.d!==null);return}
   if(d.ced){C.ed=C.ed===d.ced?null:d.ced;C.pin=null;render();const i=document.querySelector(`[data-csave="${d.ced}"] input`);if(i)i.focus();return}
   if(d.cpin){C.pin=C.pin===d.cpin?null:d.cpin;C.ed=null;render();const i=document.querySelector(`[data-cpinok="${d.cpin}"] input`);if(i){i.focus();i.select()}return}
   if(d.cx!==undefined){C.ed=null;C.pin=null;render();return}
   if(d.cat){const {tipo,id,p}=cadAchar(d.cat);b.disabled=true;await cadRpc('eq_cad_ativo',{p_tipo:tipo,p_id:id,p_ativo:!p.ativo},p.nome+(p.ativo?' desativado. As sessões dele foram encerradas.':' reativado.'));return}
+  if(d.mnovo){M.ed=M.ed==='novo'?null:'novo';M.pin=null;render();const i=document.querySelector('[data-msave=novo] input');if(i)i.focus();return}
+  if(d.med){M.ed=M.ed===+d.med?null:+d.med;M.pin=null;render();const i=document.querySelector(`[data-msave="${d.med}"] input[name=cel]`);if(i)i.focus();return}
+  if(d.mx!==undefined){M.ed=null;M.pin=null;render();return}
+  if(d.mcopy){try{await navigator.clipboard.writeText(d.mcopy);toast('Mensagem copiada.')}catch(x){toast('Não consegui copiar. Anote o PIN.')}return}
+  if(d.mvisto){b.disabled=true;await motRpc('eq_mot_visto',{p_turno:+d.mvisto});toast('Marcado como ciente.');await carregarMot(true);return}
+  if(d.mon||d.mpin){const id=+(d.mon||d.mpin),m=M.d.motoristas.find(x=>x.id===id);if(!m)return;
+   if(d.mpin&&!confirm('Gerar um novo PIN para '+m.nome+'? O PIN atual deixa de valer e ele sai do app.'))return;b.disabled=true;
+   if(d.mon)await motRpc('eq_mot_salvar',{p_id:id,p_nome:m.nome,p_celular:m.celular,p_geotab:m.geotab_id,p_sr:m.sr_id,p_ativo:true});
+   const r=await motRpc('eq_mot_pin',{p_id:id});M.ed=null;M.pin={id,pin:r.pin};await carregarMot(true);toast(d.mon?'Acesso liberado.':'Novo PIN gerado.');return}
+  if(d.moff){const id=+d.moff,m=M.d.motoristas.find(x=>x.id===id);if(!m||!confirm('Tirar o acesso de '+m.nome+' ao app?'))return;b.disabled=true;
+   await motRpc('eq_mot_salvar',{p_id:id,p_nome:m.nome,p_celular:m.celular,p_geotab:m.geotab_id,p_sr:m.sr_id,p_ativo:false});M.pin=null;await carregarMot(true);toast('Acesso removido. '+m.nome.split(' ')[0]+' saiu do app.');return}
   if(d.a==='rger'){await carregarRel();return}
   if(d.a==='vrec'){await carregarEvoC();return}
   if(d.ver){const w=window.open('about:blank','_blank');try{const r=await rpc('eq_ver_como',{p_token:S.token,p_prof:+d.ver});if(!r.ok){if(w)w.close();if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');return toast(r.erro)}
@@ -470,9 +526,9 @@ document.addEventListener('click',async e=>{const b=e.target.closest('button');i
   if(d.re){b.disabled=true;await responder(d.re,'pendente');toast('Solicitação reaberta.');return}
   if(d.all){b.disabled=true;const ids=d.all.split(',');for(const id of ids)await responder(id,'aprovada',S.draft[id],true);await carregar(true);toast(ids.length+' pedidos aprovados.');return}
  }catch(x){b.disabled=false;toast(x.message)}});
-setInterval(()=>{try{if(S.token&&Date.now()-(+sessionStorage.getItem('lg-ult')||0)>INATIVO_MIN*6e4){sair('Por segurança, a sessão foi encerrada após '+INATIVO_MIN+' minutos sem uso. Entre de novo.');return}}catch(e){}if(S.token&&!document.hidden&&!document.querySelector('[data-rs]:focus,select:focus')){carregar(true);if(S.tab==='env'&&E.sr!==null&&!E.busy)carregarEnv(false,true)}},30000);
+setInterval(()=>{try{if(S.token&&Date.now()-(+sessionStorage.getItem('lg-ult')||0)>INATIVO_MIN*6e4){sair('Por segurança, a sessão foi encerrada após '+INATIVO_MIN+' minutos sem uso. Entre de novo.');return}}catch(e){}if(S.token&&!document.hidden&&!document.querySelector('[data-rs]:focus,select:focus')){carregar(true);if(LOGI()&&(S.tab==='mot'||Date.now()-M.at>120e3))carregarMot(true);if(S.tab==='env'&&E.sr!==null&&!E.busy)carregarEnv(false,true)}},30000);
 document.addEventListener('visibilitychange',()=>{if(document.hidden||!S.token)return;try{if(Date.now()-(+sessionStorage.getItem('lg-ult')||0)>INATIVO_MIN*6e4)return sair('Por segurança, a sessão foi encerrada após '+INATIVO_MIN+' minutos sem uso. Entre de novo.')}catch(e){}carregar(true)});
-render();if(S.token){carregar();if(S.tab==='env')carregarEnv(true);if(S.tab==='rel')carregarRel();if(S.tab==='cad')carregarCad();if(S.tab==='evo')carregarEvoC();if(S.tab==='fro')carregarFrota()}
+render();if(S.token){carregar();if(LOGI())carregarMot(S.tab!=='mot');if(S.tab==='env')carregarEnv(true);if(S.tab==='rel')carregarRel();if(S.tab==='cad')carregarCad();if(S.tab==='evo')carregarEvoC();if(S.tab==='fro')carregarFrota()}
 setInterval(()=>{if(S.token&&!S.trocar&&S.tab==='fro'&&!document.hidden&&Date.now()-F.at>55e3)carregarFrota(true)},15000);
 </script>
 </body>

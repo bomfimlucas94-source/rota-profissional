@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#5f0040">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon_1.png">
+<title>Minha Rota · Motorista</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--wine:#5f0040;--wine-d:#3a0026;--sun:#fbb040;--peach:#f2d1a0;--warm:#d7d2cb;--bg:#f7f5f1;--ink:#2b0a1f;--muted:#6d5d64;--line:#e4ddd6;--ok:#1d6b3a;--ok-bg:#dff3e5;--pend:#7a4300;--pend-bg:#fff0d6;--bad:#8f1d2b;--bad-bg:#fbe2e5}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Montserrat,Arial,sans-serif;-webkit-text-size-adjust:100%}
+button,input,textarea{font:inherit}
+.wrap{max-width:520px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+header.top{background:var(--wine);color:#fff;padding:18px 18px 20px;padding-top:max(18px,env(safe-area-inset-top))}
+.top .k{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--sun);display:flex;justify-content:space-between;align-items:center}
+.top .k button{background:rgba(255,255,255,.14);color:#fff;border:0;border-radius:999px;font-size:12px;font-weight:700;padding:6px 12px;min-height:32px;cursor:pointer}
+.top h1{margin:8px 0 2px;font-size:22px;font-weight:800}
+.top p{margin:0;color:var(--peach);font-size:13.5px}
+.steps{list-style:none;margin:12px 0 0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.steps li{display:flex;flex-direction:column;gap:5px;font-size:11.5px;font-weight:600;color:var(--peach)}
+.steps li i{height:5px;border-radius:3px;background:rgba(255,255,255,.25)}
+.steps li.on{color:#fff;font-weight:800}.steps li.on i{background:var(--sun)}
+.steps li.ok i{background:var(--sun);opacity:.6}
+main{flex:1;padding:16px;display:flex;flex-direction:column;gap:12px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.card h2{margin:0;font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:52px;border-radius:14px;border:0;font-size:16px;font-weight:800;cursor:pointer;text-decoration:none}
+.btn.sun{background:var(--sun);color:var(--wine-d)}.btn.wine{background:var(--wine);color:#fff}
+.btn.line{background:#fff;color:var(--wine);border:1px solid var(--warm);font-size:14px;min-height:46px}
+.btn:disabled{background:var(--line);color:var(--muted);cursor:default}
+.msg{border-radius:12px;padding:12px;font-size:13.5px;line-height:1.45}
+.msg.ok{background:var(--ok-bg);color:#12432a}.msg.pend{background:var(--pend-bg);color:#4a2a00;border:1px solid #f0c98a}.msg.bad{background:var(--bad-bg);color:#6d1420;border:1px solid #f0b8bf}
+.err{background:var(--bad-bg);color:#6d1420;border-radius:10px;padding:10px 12px;font-size:13.5px;margin:0}
+.carro{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;min-height:64px;cursor:pointer;color:var(--ink)}
+.carro b{font-size:17px;letter-spacing:.04em}.carro small{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
+.carro .tag{margin-left:auto;font-size:11px;font-weight:700;padding:4px 8px;border-radius:999px;white-space:nowrap}
+.tag.perto{background:var(--ok-bg);color:var(--ok)}.tag.ult{background:var(--pend-bg);color:var(--pend)}.tag.longe{background:#efeae4;color:var(--muted)}
+.busca{display:flex;flex-direction:column;gap:6px;font-size:12.5px;font-weight:600;color:var(--muted)}
+.busca input,.obs textarea{border:1px solid var(--warm);border-radius:10px;padding:12px;font-size:16px;color:var(--ink);min-height:46px;background:#fff;width:100%}
+.item{background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 8px 8px 12px;display:flex;flex-direction:column;gap:8px}
+.item.prob{border:2px solid var(--bad)}
+.item .l{display:flex;align-items:center;gap:8px}
+.item .n{flex:1;font-size:14.5px;font-weight:700}.item .n small{display:block;font-size:11px;color:var(--bad);font-weight:700}
+.sel{font-size:13px;font-weight:700;min-height:44px;padding:0 12px;border-radius:10px;border:1px solid var(--warm);background:#fff;color:var(--ink);cursor:pointer}
+.sel.okon{background:var(--ok);border-color:var(--ok);color:#fff}.sel.probon{background:var(--bad);border-color:var(--bad);color:#fff}
+.obs{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:600;color:var(--muted)}
+.obs textarea{min-height:64px;resize:vertical;font-size:15px}
+.sec{font-size:18px;font-weight:800;margin:2px 0 0}
+.meta{font-size:12.5px;color:var(--muted);margin:0}
+.foot{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--line);padding:10px 16px max(16px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:8px}
+.login{padding:32px 20px;display:flex;flex-direction:column;gap:16px}
+.login label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:var(--muted)}
+.login input{border:1px solid var(--warm);border-radius:10px;padding:12px;font-size:16px;min-height:48px}
+.dl{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none}
+.dl li{font-size:13.5px;display:flex;gap:8px}
+.chk{width:22px;height:22px;border-radius:50%;background:var(--ok);color:#fff;display:inline-flex;align-items:center;justify-content:center;flex:none;font-size:12px;font-weight:800}
+.chk.w{background:var(--pend)}.chk.r{background:var(--bad)}
+dialog{border:0;border-radius:18px;padding:20px;max-width:420px;width:calc(100% - 32px)}
+dialog::backdrop{background:rgba(43,10,31,.45)}
+dialog h3{margin:0 0 8px;font-size:18px}dialog p{margin:0 0 14px;font-size:14px;line-height:1.45}
+dialog .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--wine-d);color:#fff;padding:12px 16px;border-radius:12px;font-size:14px;z-index:9;max-width:90%}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.carregando{color:var(--muted);font-size:14px;text-align:center;padding:24px 0}
+.fotobtn{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--wine);background:#fff;border:1px dashed var(--warm);border-radius:10px;min-height:44px;padding:0 12px;cursor:pointer}
+.fotobtn input{position:absolute;opacity:0;width:1px;height:1px}
+.thumb{display:flex;align-items:center;gap:10px}.thumb img{width:72px;height:72px;object-fit:cover;border-radius:10px;border:1px solid var(--line)}
+.thumb button{background:none;border:0;color:var(--bad);font-weight:700;font-size:13px;min-height:44px;cursor:pointer}
+.rota{display:flex;flex-direction:column;gap:8px}
+.rhead{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.pill{font-size:11px;font-weight:700;padding:4px 8px;border-radius:999px;white-space:nowrap;background:#efeae4;color:var(--muted)}
+.pill.and{background:var(--pend-bg);color:var(--pend)}.pill.fim{background:var(--ok-bg);color:var(--ok)}.pill.bad{background:var(--bad-bg);color:var(--bad)}
+.vis{border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.vis.atual{border:2px solid var(--wine)}
+.vis .l{display:flex;gap:10px;align-items:flex-start}
+.vis .o{width:26px;height:26px;border-radius:50%;background:#efeae4;color:var(--wine);font-size:12.5px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:none}
+.vis .o.ok{background:var(--ok);color:#fff}.vis .o.bad{background:var(--bad);color:#fff}
+.vis .t{flex:1;min-width:0}.vis .t b{display:block;font-size:14.5px}.vis .t small{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
+.vis .acts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.vis .acts .btn{min-height:44px;font-size:14px}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.seg button{min-height:52px;border-radius:12px;border:1px solid var(--warm);background:#fff;font-weight:800;font-size:15px;color:var(--ink);cursor:pointer}
+.seg button[aria-pressed=true].c{background:var(--ok);border-color:var(--ok);color:#fff}.seg button[aria-pressed=true].f{background:var(--bad);border-color:var(--bad);color:#fff}
+.mot{display:flex;flex-direction:column;gap:6px}
+.mot label{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;padding:0 12px;min-height:46px;font-size:14.5px;cursor:pointer}
+.mot input{width:20px;height:20px;accent-color:var(--wine)}
+.ass{border:1px solid var(--warm);border-radius:12px;background:#fff;touch-action:none;width:100%;height:160px;display:block}
+.link{background:none;border:0;color:var(--wine);font-weight:700;font-size:13px;padding:0;min-height:32px;cursor:pointer;text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<dialog id="dlg"><h3 id="dlgT"></h3><p id="dlgP"></p><div class="row"><button class="btn line" id="dlgN" type="button">Cancelar</button><button class="btn wine" id="dlgS" type="button">Confirmar</button></div></dialog>
+<script>
+const SB='https://sizbevhqreaccxrlimup.supabase.co',KEY='sb_publishable_sOPBmFvZMrGj3JvHzxIyYQ_4LsvUbSG';
+const S={token:null,nome:'',trocar:false,etapa:'carregando',turno:null,lista:null,carros:null,gps:null,busca:'',sec:0,resp:{},busy:false,err:'',rotas:null,motivos:[],rotaErr:'',vis:null,co:null};
+try{S.token=localStorage.getItem('rm-token');S.nome=localStorage.getItem('rm-nome')||'';S.trocar=localStorage.getItem('rm-trocar')==='1'}catch(e){}
+let PIN_TMP='';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const hm=t=>t?new Date(t).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'';
+const km=m=>m==null?'':m<1000?'a '+m+' m':'a '+(m/1000).toFixed(m<10000?1:0).replace('.',',')+' km';
+function toast(t){document.querySelectorAll('.toast').forEach(x=>x.remove());const d=document.createElement('div');d.className='toast';d.setAttribute('role','status');d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),Math.max(3200,t.length*70))}
+async function rpc(fn,args){const r=await fetch(SB+'/rest/v1/rpc/'+fn,{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify(args)});if(!r.ok)throw new Error('Falha de conexão. Tente de novo.');const t=await r.text();return t?JSON.parse(t):null}
+async function api(acao,extra){const r=await fetch(SB+'/functions/v1/motorista',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({token:S.token,acao,...(extra||{})})});
+ if(!r.ok)throw new Error('Falha de conexão ('+r.status+'). Tente de novo.');const j=await r.json();if(!j.ok&&j.erro==='sessao'){sair('Sua sessão expirou. Entre de novo.');throw new Error('sessao')}return j}
+function confirma(t,p,sim){return new Promise(ok=>{const d=$('#dlg');$('#dlgT').textContent=t;$('#dlgP').textContent=p;$('#dlgS').textContent=sim||'Confirmar';d.showModal();
+ const fim=v=>{d.close();$('#dlgS').onclick=null;$('#dlgN').onclick=null;ok(v)};$('#dlgS').onclick=()=>fim(true);$('#dlgN').onclick=()=>fim(false)})}
+function sair(msg){try{if(S.token)rpc('mot_sair',{p_token:S.token}).catch(()=>{});localStorage.removeItem('rm-token');localStorage.removeItem('rm-trocar')}catch(e){}
+ S.token=null;S.turno=null;S.err=msg||'';location.href='index.html'+(msg?'#msg='+encodeURIComponent(msg):'')}
+function pegaGps(){return new Promise(ok=>{if(!navigator.geolocation)return ok(null);let fim=false;const t=setTimeout(()=>{if(!fim){fim=true;ok(null)}},9000);
+ navigator.geolocation.getCurrentPosition(p=>{if(!fim){fim=true;clearTimeout(t);ok({lat:p.coords.latitude,lng:p.coords.longitude})}},()=>{if(!fim){fim=true;clearTimeout(t);ok(null)}},{enableHighAccuracy:true,timeout:8000,maximumAge:60000})})}
+function fotoComp(file){return new Promise((ok,no)=>{const u=URL.createObjectURL(file);const im=new Image();
+ im.onload=()=>{const m=1280,k=Math.min(1,m/Math.max(im.width,im.height));const c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);
+  c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);ok(c.toDataURL('image/jpeg',0.72))};
+ im.onerror=()=>{URL.revokeObjectURL(u);no(new Error('Não consegui ler a foto.'))};im.src=u})}
+const fotoCampo=(chave,foto)=>foto?`<div class="thumb"><img src="${foto}" alt="Foto anexada"><button type="button" data-a="tirafoto" data-k="${esc(chave)}">Remover foto</button></div>`
+ :`<label class="fotobtn"><input type="file" accept="image/*" capture="environment" data-foto="${esc(chave)}">📷 Tirar foto (opcional)</label>`;
+async function carregaRota(){S.rotaErr='';try{const r=await api('rota');if(!r.ok){S.rotaErr=r.erro;S.rotas=[]}else{S.rotas=r.rotas||[];S.motivos=r.motivos||[]}}
+ catch(e){if(e.message==='sessao')return;S.rotaErr=e.message;S.rotas=[]}if(S.etapa==='pronto')render()}
+const visStatus=v=>v.status==='completed'?'ok':v.status==='failed'?'bad':'';
+async function iniciar(){
+ if(!S.token){location.href='index.html';return}
+ if(S.trocar){S.etapa='pin';render();return}
+ S.etapa='carregando';render();
+ try{const r=await api('estado');S.nome=r.nome;S.turno=r.turno;S.lista=r.checklist;
+  if(!S.turno){S.etapa='carro';render();carregaCarros()}
+  else if(!S.turno.inspecao_id){S.etapa='inspecao';S.sec=0;render()}
+  else{S.etapa='pronto';render();carregaRota()}
+ }catch(e){if(e.message!=='sessao'){S.err=e.message;S.etapa='erro';render()}}}
+async function carregaCarros(){S.carros=null;render();S.gps=await pegaGps();
+ try{const r=await api('carros',S.gps||{});S.carros=r.carros||[];S.err=''}catch(e){if(e.message==='sessao')return;S.err=e.message;S.carros=[]}render()}
+const passos=()=>{const e=S.etapa;const i=e==='carro'?0:e==='inspecao'?1:(e==='pronto'||e==='visita')?2:-1;
+ return `<ol class="steps" aria-label="Etapas do início do plantão">${['1 · Carro','2 · Inspeção','3 · Rota'].map((t,k)=>`<li class="${k===i?'on':k<i?'ok':''}"${k===i?' aria-current="step"':''}><i></i>${t}</li>`).join('')}</ol>`};
+function topo(sub){const d=new Date().toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'});
+ return `<header class="top"><div class="k"><span>Minha Rota · Motorista</span><button type="button" data-a="logout">Sair</button></div><h1>${esc(saud())}, ${esc((S.nome||'').split(' ')[0])}</h1><p>${esc(sub||d)}</p>${S.etapa==='pin'?'':passos()}</header>`}
+const saud=()=>{const h=new Date().getHours();return h<12?'Bom dia':h<18?'Boa tarde':'Boa noite'};
+function itensSec(i){return (S.lista&&S.lista[i])?S.lista[i].itens:[]}
+function secCompleta(i){return itensSec(i).every(it=>{const r=S.resp[it.id];return r&&(r.ok||String(r.obs||'').trim())})}
+function rotaHtml(t){
+ if(S.rotas==null)return '<div class="card"><h2>Rota de hoje</h2><p class="carregando">Buscando sua rota no SimpliRoute…</p></div>';
+ if(S.rotaErr)return `<div class="card"><h2>Rota de hoje</h2><p class="err">${esc(S.rotaErr)}</p><button class="btn line" type="button" data-a="rotarec">Tentar de novo</button></div>`;
+ if(!S.rotas.length)return '<div class="card"><h2>Rota de hoje</h2><p class="meta">Nenhuma rota sua no SimpliRoute hoje. Se deveria ter, avise a logística.</p><button class="btn line" type="button" data-a="rotarec">Atualizar</button></div>';
+ return S.rotas.map((r,ri)=>{const vs=r.visitas||[];const feitas=vs.filter(v=>v.status==='completed'||v.status==='failed').length;
+  const st=r.status==='started'?'and':r.status==='finished'?'fim':'';
+  const stT=r.status==='started'?'Em andamento'+(r.inicio?' · desde '+String(r.inicio).slice(0,5):''):r.status==='finished'?'Finalizada':'Não iniciada';
+  const prox=r.status==='started'?vs.find(v=>v.status!=='completed'&&v.status!=='failed'):null;
+  let h=`<div class="card rota"><div class="rhead"><h2>Rota${S.rotas.length>1?' '+(ri+1):''} · ${feitas} de ${vs.length} visitas</h2><span class="pill ${st}">${esc(stT)}</span></div>`;
+  if(r.prev_inicio&&r.status!=='finished')h+=`<p class="meta">Previsto: ${esc(r.prev_inicio)}${r.prev_fim?' às '+esc(r.prev_fim):''}</p>`;
+  if(r.status!=='started'&&r.status!=='finished')h+=t.critico?'<p class="msg bad" style="margin:0">Resolva o item crítico com a logística antes de iniciar.</p>':`<button class="btn sun" type="button" data-a="riniciar" data-r="${esc(r.id)}"${S.busy?' disabled':''}>Iniciar rota</button>`;
+  vs.forEach(v=>{const k=visStatus(v),at=prox&&prox.id===v.id;
+   h+=`<div class="vis${at?' atual':''}"><div class="l"><span class="o ${k}">${k==='ok'?'✓':k==='bad'?'✕':v.ordem}</span><span class="t"><b>${esc(v.titulo||'Visita '+v.ordem)}</b><small>${esc(v.endereco)}</small>
+    <small>${v.checkout?(k==='ok'?'Realizada':'Não realizada')+' às '+hm(v.checkout):v.checkin?'Chegou às '+hm(v.checkin):[v.prev?'Previsão '+v.prev:'',v.janela?'janela '+v.janela:''].filter(Boolean).join(' · ')}</small></span></div>`;
+   if(r.status==='started'&&!k){
+    const nav=v.lat!=null?`https://www.google.com/maps/dir/?api=1&destination=${v.lat},${v.lng}`:'https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(v.endereco);
+    h+=`<div class="acts"><a class="btn line" href="${esc(nav)}" target="_blank" rel="noopener">Navegar</a>${v.checkin?`<button class="btn wine" type="button" data-a="fvisita" data-v="${esc(v.id)}">Finalizar visita</button>`:`<button class="btn wine" type="button" data-a="checkin" data-v="${esc(v.id)}"${S.busy?' disabled':''}>Cheguei</button>`}</div>`}
+   h+='</div>'});
+  if(r.status==='started')h+=`<button class="btn ${feitas===vs.length?'sun':'line'}" type="button" data-a="rfinalizar" data-r="${esc(r.id)}"${S.busy?' disabled':''}>Finalizar rota</button>`;
+  return h+'</div>'}).join('')+'<button class="link" type="button" data-a="rotarec" style="align-self:center">Atualizar rota</button>';
+}
+function render(){
+ const app=$('#app');let h='';
+ if(S.etapa==='pin'){
+  app.innerHTML=`${topo('Crie seu PIN pessoal')}<main><form class="card login" id="fpin" novalidate style="padding:16px">
+   <p class="meta">É o seu primeiro acesso. Troque o PIN provisório por um que só você saiba.</p>${S.err?`<p class="err" role="alert">${esc(S.err)}</p>`:''}
+   ${PIN_TMP?'':`<label>PIN provisório<input id="pa" type="password" inputmode="numeric" maxlength="6" autocomplete="current-password"></label>`}
+   <label>Novo PIN (4 a 6 números)<input id="pn" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password"></label>
+   <label>Repita o novo PIN<input id="pn2" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password"></label>
+   <button class="btn sun" type="submit"${S.busy?' disabled':''}>${S.busy?'Salvando…':'Salvar PIN'}</button></form></main>`;return}
+ if(S.etapa==='carregando'){app.innerHTML=topo()+'<main><p class="carregando">Carregando…</p></main>';return}
+ if(S.etapa==='erro'){app.innerHTML=topo()+`<main><p class="err" role="alert">${esc(S.err)}</p><button class="btn wine" type="button" data-a="recarregar">Tentar de novo</button></main>`;return}
+ if(S.etapa==='carro'){
+  h=topo();h+='<main>';
+  if(S.err)h+=`<p class="err" role="alert">${esc(S.err)}</p>`;
+  h+=`<div class="card"><h2>Em qual carro você está?</h2><p class="meta">${S.gps?'Mostramos primeiro o último carro que você usou e os mais perto de você.':'Não conseguimos sua localização. Permita o acesso à localização para ver os carros perto de você.'}</p>
+   <label class="busca">Buscar pela placa<input id="busca" type="search" autocomplete="off" placeholder="Ex.: UAB1B83" value="${esc(S.busca)}"></label></div>`;
+  if(!S.carros)h+='<p class="carregando">Procurando carros…</p>';
+  else{const q=S.busca.replace(/[^a-z0-9]/gi,'').toUpperCase();
+   const l=S.carros.filter(c=>!q||c.placa.replace(/[^a-z0-9]/gi,'').toUpperCase().includes(q)).slice(0,q?30:8);
+   if(!l.length)h+='<p class="meta" style="text-align:center">Nenhum carro com essa placa.</p>';
+   l.forEach(c=>{const perto=c.distancia_m!=null&&c.distancia_m<=300;
+    h+=`<button type="button" class="carro" data-a="escolher" data-id="${esc(c.id)}"><span><b>${esc(c.placa)}</b><small>${esc(c.modelo||'')}${c.distancia_m!=null?' · '+km(c.distancia_m):''}</small></span>${c.sugerido?'<span class="tag ult">Último que você usou</span>':perto?'<span class="tag perto">Perto de você</span>':''}</button>`});
+   if(!q&&S.carros.length>8)h+='<p class="meta" style="text-align:center">Não achou? Busque pela placa.</p>'}
+  h+=`<button class="btn line" type="button" data-a="gps">Atualizar localização</button></main>`;
+  app.innerHTML=h;const b=$('#busca');if(b)b.oninput=()=>{S.busca=b.value;const p=b.selectionStart;render();const n=$('#busca');n.focus();n.setSelectionRange(p,p)};return}
+ if(S.etapa==='inspecao'){
+  const L=S.lista||[];const sec=L[S.sec];const tot=L.reduce((a,s)=>a+s.itens.length,0),feitos=Object.keys(S.resp).length;
+  h=topo('Carro '+(S.turno?S.turno.placa:'')+' · inspeção obrigatória');h+='<main>';
+  if(S.turno&&S.turno.verif&&S.turno.verif.longe)h+=`<div class="msg pend">O Geotab mostra este carro longe de você (${esc(km(S.turno.verif.distancia_m))}). Se não for o carro certo, avise a logística.</div>`;
+  if(!sec){h+='<p class="carregando">Carregando a lista de inspeção…</p></main>';app.innerHTML=h;return}
+  h+=`<div><p class="meta">Seção ${S.sec+1} de ${L.length} · ${feitos} de ${tot} itens respondidos</p><h2 class="sec">${esc(sec.nome.replace(/^\d+\.\s*/,''))}</h2></div>`;
+  if(S.err)h+=`<p class="err" role="alert">${esc(S.err)}</p>`;
+  sec.itens.forEach(it=>{const r=S.resp[it.id];const pr=r&&r.ok===false;
+   h+=`<div class="item${pr?' prob':''}"><div class="l"><span class="n">${esc(it.nome)}${it.critico?'<small>Item crítico</small>':''}</span>
+    <button type="button" class="sel${r&&r.ok?' okon':''}" data-a="ok" data-id="${esc(it.id)}" aria-pressed="${r&&r.ok?'true':'false'}" aria-label="${esc(it.nome)}: OK">OK</button>
+    <button type="button" class="sel${pr?' probon':''}" data-a="prob" data-id="${esc(it.id)}" aria-pressed="${pr?'true':'false'}" aria-label="${esc(it.nome)}: com problema">Problema</button></div>
+    ${pr?`<label class="obs">O que está acontecendo?<textarea data-obs="${esc(it.id)}" maxlength="500" placeholder="Descreva o problema">${esc(r.obs||'')}</textarea></label>${fotoCampo('i:'+it.id,r.foto)}`:''}</div>`});
+  h+='</main>';
+  const ok=secCompleta(S.sec),ult=S.sec===L.length-1,falta=sec.itens.filter(it=>!S.resp[it.id]).length;
+  h+=`<div class="foot">${!ok?`<p class="meta" style="text-align:center">${falta?'Faltam '+falta+' itens nesta seção':'Descreva os problemas marcados'}</p>`:''}
+   <div style="display:grid;grid-template-columns:${S.sec?'1fr 2fr':'1fr'};gap:8px">${S.sec?'<button class="btn line" type="button" data-a="voltar">Voltar</button>':''}
+   <button class="btn sun" type="button" data-a="${ult?'enviar':'proxima'}"${!ok||S.busy?' disabled':''}>${S.busy?'Enviando…':ult?'Enviar inspeção':'Próxima seção'}</button></div></div>`;
+  app.innerHTML=h;
+  document.querySelectorAll('[data-obs]').forEach(t=>t.oninput=()=>{S.resp[t.dataset.obs].obs=t.value;const b=document.querySelector('.foot .btn.sun');if(b)b.disabled=!secCompleta(S.sec)||S.busy});return}
+ if(S.etapa==='pronto'){const t=S.turno||{};const def=t.defeitos||[];
+  h=topo('Plantão iniciado às '+hm(t.entrou_em));h+='<main>';
+  if(t.critico)h+=`<div class="msg bad" role="alert"><b>Item crítico com problema.</b> Não saia com o carro antes de falar com a logística.</div>`;
+  h+=`<div class="card"><h2>Seu carro</h2><span style="font-size:24px;font-weight:800;letter-spacing:.04em">${esc(t.placa||'')}</span>
+   <ul class="dl"><li><span class="chk">✓</span><span><b>Entrou no carro às ${hm(t.entrou_em)}</b> · registrado no Geotab pelo app</span></li>
+   <li><span class="chk${def.length?' w':''}">${def.length?'!':'✓'}</span><span><b>Inspeção às ${hm(t.inspecao_em)}</b> · ${def.length?def.length+(def.length>1?' problemas registrados':' problema registrado'):'tudo OK'}</span></li></ul>
+   ${def.length?`<ul class="dl">${def.map(d=>`<li><span class="chk ${d.critico?'r':'w'}">!</span><span><b>${esc(d.nome)}</b>${d.critico?' (crítico)':''} · ${esc(d.obs)}${d.foto?` · <a href="${esc(d.foto)}" target="_blank" rel="noopener">ver foto</a>`:''}</span></li>`).join('')}</ul><p class="meta">A logística e a manutenção veem esses problemas no Geotab.</p>`:''}</div>
+   ${rotaHtml(t)}
+   <button class="btn line" type="button" data-a="encerrar">Encerrar plantão e sair do carro</button></main>`;
+  app.innerHTML=h;return}
+ if(S.etapa==='visita'){const v=S.vis,c=S.co;const falhou=c.status==='failed';
+  const mot=S.motivos.filter(m=>!m.tipo||m.tipo==='failed');
+  h=topo(v.titulo||'Visita '+v.ordem);h+=`<main><p class="meta">${esc(v.endereco)}</p>`;
+  if(S.err)h+=`<p class="err" role="alert">${esc(S.err)}</p>`;
+  h+=`<div class="card"><h2>Como foi a visita?</h2><div class="seg" role="group" aria-label="Resultado da visita"><button type="button" class="c" data-a="cost" data-s="completed" aria-pressed="${c.status==='completed'}">Realizada</button><button type="button" class="f" data-a="cost" data-s="failed" aria-pressed="${falhou}">Não realizada</button></div></div>`;
+  if(falhou)h+=`<fieldset class="card" style="margin:0"><legend class="sr">Motivo</legend><h2>Motivo</h2><div class="mot">${mot.map(m=>`<label><input type="radio" name="mot" value="${esc(m.id)}"${c.motivo===m.id?' checked':''}>${esc(m.nome)}</label>`).join('')}</div></fieldset>`;
+  h+=`<div class="card"><label class="obs">Comentário${falhou&&c.motivo&&/outro/i.test((mot.find(m=>m.id===c.motivo)||{}).nome||'')?' (conte o que houve)':' (opcional)'}<textarea id="coment" maxlength="400" placeholder="Algo que a logística precise saber">${esc(c.comentario)}</textarea></label>${fotoCampo('v',c.foto)}</div>`;
+  if(!falhou&&c.status)h+=`<div class="card"><h2>Assinatura (opcional)</h2><canvas class="ass" id="ass" aria-label="Espaço para assinatura do paciente ou responsável"></canvas><button class="link" type="button" data-a="limpass" style="align-self:flex-start">Limpar assinatura</button></div>`;
+  h+='</main>';
+  const pode=c.status&&(!falhou||c.motivo);
+  h+=`<div class="foot"><div style="display:grid;grid-template-columns:1fr 2fr;gap:8px"><button class="btn line" type="button" data-a="vvoltar">Voltar</button><button class="btn sun" type="button" data-a="venviar"${!pode||S.busy?' disabled':''}>${S.busy?'Enviando…':'Enviar'}</button></div></div>`;
+  app.innerHTML=h;
+  const tx=$('#coment');if(tx)tx.oninput=()=>{c.comentario=tx.value};
+  document.querySelectorAll('input[name=mot]').forEach(i=>i.onchange=()=>{c.motivo=i.value;S.err='';render()});
+  const cv=$('#ass');if(cv)assinatura(cv);return}
+}
+function assinatura(cv){const r=cv.getBoundingClientRect(),k=devicePixelRatio||1;cv.width=r.width*k;cv.height=r.height*k;const g=cv.getContext('2d');g.scale(k,k);g.lineWidth=2.2;g.lineCap='round';g.strokeStyle='#2b0a1f';
+ if(S.co.assImg){const im=new Image();im.onload=()=>g.drawImage(im,0,0,r.width,r.height);im.src=S.co.assImg}
+ let d=false;const p=e=>{const b=cv.getBoundingClientRect();return[e.clientX-b.left,e.clientY-b.top]};
+ cv.onpointerdown=e=>{d=true;cv.setPointerCapture(e.pointerId);g.beginPath();g.moveTo(...p(e))};
+ cv.onpointermove=e=>{if(!d)return;g.lineTo(...p(e));g.stroke();S.co.assinou=true};
+ cv.onpointerup=cv.onpointercancel=()=>{if(d&&S.co.assinou)S.co.assImg=cv.toDataURL('image/png');d=false}}
+document.addEventListener('change',async e=>{const i=e.target;if(!i.dataset||!i.dataset.foto||!i.files||!i.files[0])return;const k=i.dataset.foto;
+ try{const f=await fotoComp(i.files[0]);if(k==='v'){S.co.foto=f}else{const id=k.slice(2);if(S.resp[id])S.resp[id].foto=f}render()}catch(x){toast(x.message)}});
+async function acaoRota(acao,extra,okMsg){S.busy=true;render();const g=await pegaGps();
+ try{const r=await api(acao,{...extra,...(g||{})});S.busy=false;if(!r.ok){toast(r.erro);render();return null}if(r.rotas)S.rotas=r.rotas;if(okMsg)toast(okMsg);render();return r}
+ catch(x){S.busy=false;if(x.message!=='sessao')toast(x.message);render();return null}}
+document.addEventListener('click',async e=>{
+ const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a;
+ if(a==='logout'){if(S.turno&&!S.turno.saiu_em&&!(await confirma('Sair do app?','Você continua registrado no carro. Para sair do carro, use "Encerrar plantão".','Sair do app')))return;sair();return}
+ if(a==='recarregar'){S.err='';iniciar();return}
+ if(a==='gps'){carregaCarros();return}
+ if(a==='escolher'){const c=(S.carros||[]).find(x=>x.id===b.dataset.id);if(!c)return;
+  const longe=c.distancia_m!=null&&c.distancia_m>500;
+  if(!(await confirma('Entrar no '+c.placa+'?',longe?'Pelo Geotab, este carro está '+km(c.distancia_m)+' de você. Confirme só se tiver certeza de que é o carro certo.':'O app vai registrar você neste carro no Geotab. Você não precisa abrir o MyGeotab Drive.','Entrar no carro')))return;
+  S.busy=true;S.err='';render();
+  try{const r=await api('entrar',{device:c.id,...(S.gps||{})});S.busy=false;if(!r.ok){S.err=r.erro;render();return}
+   S.turno=r.turno;S.lista=r.checklist;S.resp={};S.sec=0;S.etapa='inspecao';toast('Você entrou no carro '+c.placa+'.');render();scrollTo(0,0)}
+  catch(x){S.busy=false;if(x.message!=='sessao'){S.err=x.message;render()}}return}
+ if(a==='tirafoto'){const k=b.dataset.k;if(k==='v')S.co.foto=null;else if(S.resp[k.slice(2)])delete S.resp[k.slice(2)].foto;render();return}
+ if(a==='rotarec'){S.rotas=null;render();carregaRota();return}
+ if(a==='riniciar'){if(!(await confirma('Iniciar a rota?','O app avisa o SimpliRoute que você saiu para a rota.','Iniciar')))return;await acaoRota('rota_iniciar',{rota:b.dataset.r},'Rota iniciada. Boa rota!');return}
+ if(a==='rfinalizar'){const r=(S.rotas||[]).find(x=>x.id===b.dataset.r);const falta=r?r.visitas.filter(v=>v.status!=='completed'&&v.status!=='failed').length:0;
+  if(!(await confirma('Finalizar a rota?',falta?'Ainda há '+falta+(falta>1?' visitas abertas':' visita aberta')+'. Finalize mesmo assim só se a logística tiver combinado.':'Todas as visitas foram finalizadas.','Finalizar rota')))return;await acaoRota('rota_finalizar',{rota:b.dataset.r},'Rota finalizada.');return}
+ if(a==='checkin'){await acaoRota('checkin',{visita:b.dataset.v},'Chegada registrada.');return}
+ if(a==='fvisita'){const v=(S.rotas||[]).flatMap(r=>r.visitas).find(x=>String(x.id)===b.dataset.v);if(!v)return;S.vis=v;S.co={status:'',motivo:'',comentario:'',foto:null,assImg:null,assinou:false};S.err='';S.etapa='visita';render();scrollTo(0,0);return}
+ if(a==='cost'){S.co.status=b.dataset.s;if(S.co.status!=='failed')S.co.motivo='';S.err='';render();return}
+ if(a==='limpass'){S.co.assImg=null;S.co.assinou=false;render();return}
+ if(a==='vvoltar'){S.etapa='pronto';S.vis=null;S.err='';render();return}
+ if(a==='venviar'){const c=S.co;if(!c.status||(c.status==='failed'&&!c.motivo))return;
+  const mo=S.motivos.find(m=>m.id===c.motivo);if(c.status==='failed'&&mo&&/outro/i.test(mo.nome)&&!c.comentario.trim()){S.err='Conte no comentário o que houve.';render();return}
+  const r=await acaoRota('checkout',{visita:S.vis.id,status:c.status,motivo:c.motivo||undefined,comentario:c.comentario,foto:c.foto||undefined,assinatura:c.status==='completed'&&c.assImg?c.assImg:undefined});
+  if(r){toast(c.status==='completed'?'Visita finalizada.':'Visita registrada como não realizada.');if(c.foto&&r.foto===false)toast('A foto não foi enviada. Avise a logística se ela for importante.');S.etapa='pronto';S.vis=null;S.co=null;render();scrollTo(0,0)}return}
+ if(a==='ok'){S.resp[b.dataset.id]={ok:true};S.err='';render();return}
+ if(a==='prob'){S.resp[b.dataset.id]={ok:false,obs:(S.resp[b.dataset.id]&&S.resp[b.dataset.id].obs)||''};render();const t=document.querySelector(`[data-obs="${CSS.escape(b.dataset.id)}"]`);if(t)t.focus();return}
+ if(a==='proxima'){if(!secCompleta(S.sec))return;S.sec++;render();scrollTo(0,0);return}
+ if(a==='voltar'){S.sec=Math.max(0,S.sec-1);render();scrollTo(0,0);return}
+ if(a==='enviar'){if(!S.lista.every((s,i)=>secCompleta(i)))return;
+  const np=Object.values(S.resp).filter(r=>r.ok===false).length;
+  if(!(await confirma('Enviar inspeção?',np?'Você marcou '+np+(np>1?' problemas':' problema')+'. A logística e a manutenção vão ver no Geotab.':'Todos os itens OK.','Enviar')))return;
+  S.busy=true;S.err='';render();
+  try{const r=await api('inspecao',{respostas:S.resp});S.busy=false;if(!r.ok){S.err=r.erro;render();return}
+   S.turno=r.turno;S.etapa='pronto';toast('Inspeção registrada no Geotab.');if(r.fotos_falharam&&r.fotos_falharam.length)setTimeout(()=>toast('Não consegui enviar a foto de: '+r.fotos_falharam.join(', ')+'. O problema foi registrado mesmo assim.'),3400);render();scrollTo(0,0);carregaRota()}
+  catch(x){S.busy=false;if(x.message!=='sessao'){S.err=x.message;render()}}return}
+ if(a==='encerrar'){const ab=(S.rotas||[]).some(r=>r.status==='started');if(!(await confirma('Encerrar o plantão?',(ab?'Sua rota ainda está em andamento no SimpliRoute. ':'')+'O app tira você do carro '+(S.turno?S.turno.placa:'')+' no Geotab.','Encerrar')))return;
+  S.busy=true;render();
+  try{const r=await api('sair');S.busy=false;if(!r.ok){toast(r.erro);return}toast('Plantão encerrado. Bom descanso!');S.turno=null;S.lista=null;S.resp={};S.etapa='carro';render();carregaCarros()}
+  catch(x){S.busy=false;if(x.message!=='sessao')toast(x.message)}return}
+});
+document.addEventListener('submit',async e=>{e.preventDefault();
+ if(e.target.id==='fpin'){const pa=PIN_TMP||($('#pa')?$('#pa').value:''),pn=$('#pn').value,pn2=$('#pn2').value;
+  if(!pa||!pn){S.err='Preencha os campos.';render();return}if(pn!==pn2){S.err='Os dois PINs novos não são iguais.';render();return}
+  S.busy=true;S.err='';render();
+  try{const r=await rpc('mot_trocar_pin',{p_token:S.token,p_atual:pa,p_novo:pn});S.busy=false;
+   if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo com o PIN provisório.');S.err=r.erro;render();return}
+   S.trocar=false;PIN_TMP='';try{localStorage.removeItem('rm-trocar')}catch(x){}toast('PIN criado. Use ele nas próximas vezes.');iniciar()}
+  catch(x){S.err=x.message;S.busy=false;render()}}});
+try{PIN_TMP=sessionStorage.getItem('rm-pin-tmp')||'';sessionStorage.removeItem('rm-pin-tmp')}catch(e){}
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+iniciar();
+</script>
+</body>
+</html>

@@ -170,6 +170,9 @@ try{S.token=localStorage.getItem('rp-token');S.nome=localStorage.getItem('rp-nom
 try{const m=location.hash.match(/^#ver=([0-9a-f]{20,})$/);if(m){sessionStorage.setItem('rp-ver',m[1]);history.replaceState(null,'',location.pathname+location.search)}
  const v=sessionStorage.getItem('rp-ver');if(v){S.token=v;S.leitura=true;S.trocar=false;S.nome=''}}catch(e){}
 let PIN_TMP='';
+/* motorista logado: a área dele fica em motorista.html */
+try{const m=location.hash.match(/^#msg=(.+)$/);if(m){S.err=decodeURIComponent(m[1]);history.replaceState(null,'',location.pathname+location.search)}
+ if(!S.token&&!S.leitura&&localStorage.getItem('rm-token'))location.replace('motorista.html')}catch(e){}
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 async function rpc(fn,args){
@@ -396,6 +399,7 @@ document.addEventListener('submit',async e=>{
     S.busy=true;S.err='';render();
     try{const r=await rpc('app_login',{p_celular:cel,p_pin:pin});
       if(!r.ok){S.err=r.erro;S.busy=false;render();$('#cel').value=cel;return}
+      if(r.tipo==='motorista'){try{localStorage.setItem('rm-token',r.token);localStorage.setItem('rm-nome',r.nome);if(r.trocar_pin){localStorage.setItem('rm-trocar','1');sessionStorage.setItem('rm-pin-tmp',pin)}else localStorage.removeItem('rm-trocar')}catch(x){}location.href='motorista.html';return}
       S.token=r.token;S.nome=r.nome;S.trocar=!!r.trocar_pin;try{localStorage.setItem('rp-token',r.token);localStorage.setItem('rp-nome',r.nome);if(S.trocar)localStorage.setItem('rp-trocar','1');else localStorage.removeItem('rp-trocar')}catch(x){}
       S.busy=false;S.tela='rota';if(S.trocar){PIN_TMP=pin;render();return}await carregar();
     }catch(x){S.err=x.message;S.busy=false;render()}
