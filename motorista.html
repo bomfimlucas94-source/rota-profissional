@@ -424,7 +424,7 @@ document.addEventListener('click',async e=>{
  if(a==='rotarec'){S.rotas=null;render();carregaRota();return}
  if(a==='riniciar'){if(!(await confirma('Iniciar a rota?','O app avisa o SimpliRoute que você saiu para a rota.','Iniciar')))return;await acaoRota('rota_iniciar',{rota:b.dataset.r},'Rota iniciada. Boa rota!');return}
  if(a==='rfinalizar'){const r=(S.rotas||[]).find(x=>x.id===b.dataset.r);const falta=r?r.visitas.filter(v=>v.status!=='completed'&&v.status!=='failed').length:0;
-  if(!(await confirma('Finalizar a rota?',falta?'Ainda há '+falta+(falta>1?' visitas abertas':' visita aberta')+'. Finalize mesmo assim só se a logística tiver combinado.':'Todas as visitas foram finalizadas.','Finalizar rota')))return;await acaoRota('rota_finalizar',{rota:b.dataset.r},'Rota finalizada.');return}
+  if(!(await confirma('Finalizar a rota?',falta?'Ainda há '+falta+(falta>1?' visitas abertas':' visita aberta')+'. Finalize mesmo assim só se a Logística tiver combinado. Só é possível finalizar com o carro na base.':'Todas as visitas foram finalizadas. Só é possível finalizar com o carro de volta na base.','Finalizar rota')))return;await acaoRota('rota_finalizar',{rota:b.dataset.r},'Rota finalizada.');return}
  if(a==='checkin'){await acaoRota('checkin',{visita:b.dataset.v},'Chegada registrada.');return}
  if(a==='fvisita'){const v=(S.rotas||[]).flatMap(r=>r.visitas).find(x=>String(x.id)===b.dataset.v);if(!v)return;S.vis=v;S.co={status:'',motivo:'',comentario:'',foto:null,assImg:null,assinou:false};S.err='';S.etapa='visita';render();scrollTo(0,0);return}
  if(a==='cost'){S.co.status=b.dataset.s;if(S.co.status!=='failed')S.co.motivo='';S.err='';render();return}
