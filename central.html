@@ -409,12 +409,43 @@ document.addEventListener('submit',async e=>{const f=e.target;
 /* ===== Motoristas (app Minha Rota · Motorista) ===== */
 const M={d:null,busy:false,err:'',ed:null,pin:null,q:'',at:0,oc:null,abertas:0,cv:null,draft:{}};
 async function carregarMot(sil){if(!S.token||!LOGI())return;if(!sil&&!M.d){M.busy=true;render()}
- try{const [r,o,c]=await Promise.all([rpc('eq_mot_lista',{p_token:S.token}),rpc('eq_mot_ocorrencias',{p_token:S.token}),rpc('eq_chats',{p_token:S.token})]);if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');throw new Error(r.erro)}
+ try{const [r,o,c,tk]=await Promise.all([rpc('eq_mot_lista',{p_token:S.token}),rpc('eq_mot_ocorrencias',{p_token:S.token}),rpc('eq_chats',{p_token:S.token}),rpc('eq_ticket_saldos',{p_token:S.token}).catch(()=>null)]);if(tk&&tk.ok)M.tk=tk;if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');throw new Error(r.erro)}
   M.d=r;if(o&&o.ok){M.oc=o.ocorrencias;M.abertas=+o.abertas||0}if(c&&c.ok)M.cv=c.conversas;M.err='';M.at=Date.now()}catch(e){M.err=e.message}
  M.busy=false;if(!(S.tab==='mot'&&document.activeElement&&document.activeElement.closest&&document.activeElement.closest('.cbox,.cform,.conv form')))render();else{const t=document.querySelector('[data-tab=mot]');if(t)t.innerHTML=motTabTxt()}}
 const motTabTxt=()=>{const n=(M.d&&+M.d.alertas||0)+M.abertas;return 'Motoristas'+(n?`<b>${n}</b>`:'')};
 async function motRpc(fn,args){const r=await rpc(fn,{p_token:S.token,...args});if(!r.ok){if(r.erro==='sessao'){sair('Sua sessão expirou. Entre de novo.');throw new Error('sessao')}throw new Error(r.erro||'Não foi possível salvar.')}return r}
 const brDTc=t=>t?new Date(t).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(',',''):'';
+const brl=v=>v==null?'':'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const TK_MIN=100;
+function renderTicket(){const tk=M.tk||{},C=tk.cartoes||[],im=tk.importacao;
+ const sit=c=>c.status!=='A'?'<span class="bd recusada">Bloqueado</span>':(+c.saldo<TK_MIN?'<span class="bd pendente">Saldo baixo</span>':'<span class="bd aprovada">OK</span>');
+ const alerta=C.filter(c=>c.status!=='A'||+c.saldo<TK_MIN),ok=C.filter(c=>!alerta.includes(c));
+ const tab=l=>`<div class="tw"><table class="rel" style="min-width:640px"><thead><tr><th>Placa</th><th>Modelo</th><th>Cartão</th><th>Limite</th><th>Utilizado</th><th>Saldo</th><th>Situação</th></tr></thead><tbody>${l.map(c=>`<tr class="${c.status!=='A'||+c.saldo<TK_MIN?'crit':''}"><td class="n"><code>${esc(c.placa)}</code></td><td>${esc(c.modelo||'')}</td><td class="n">${c.final?'final '+esc(c.final):''}</td><td class="n">${brl(c.limite)}</td><td class="n">${brl(c.utilizado)}${+c.reservado?`<br><small>reservado ${brl(c.reservado)}</small>`:''}</td><td class="n"><b>${brl(c.saldo)}</b></td><td class="n">${sit(c)}</td></tr>`).join('')}</tbody></table></div>`;
+ return `<section class="cad"><h3>Saldo dos cartões Ticket Log<span>${C.length} ${C.length===1?'cartão':'cartões'}</span>${alerta.length?`<span class="bd recusada">${alerta.length} com saldo baixo ou bloqueado</span>`:''}</h3>
+  <p class="sub">No portal da Ticket Log, exporte o <b>Extrato Simplificado</b> e importe aqui, de preferência todo dia de manhã. O motorista vê no app o saldo do cartão do carro em que entrou e recebe alerta quando o saldo está abaixo de ${brl(TK_MIN)}.</p>
+  <div class="cform" style="align-items:center"><button class="btn wine sm" type="button" data-tkimp="1"${M.tkBusy?' disabled':''}>${M.tkBusy?'Importando…':'Importar Extrato Simplificado'}</button><input type="file" id="tkfile" accept=".xls,.htm,.html" hidden><span class="cel" style="font-size:13px;align-self:center">${im?`Última importação: ${brDTc(im.em)} por ${esc(String(im.por||'').split(' ')[0])}`:'Nenhuma importação ainda.'}</span></div>
+  ${alerta.length?tab(alerta):''}${ok.length?(alerta.length?`<details><summary class="dica" style="cursor:pointer">Cartões com saldo OK (${ok.length})</summary>${tab(ok)}</details>`:tab(ok)):''}</section>`}
+function lerExtratoTicket(txt){const doc=new DOMParser().parseFromString(txt,'text/html');const rows=[],pend=[];for(const tr of doc.querySelectorAll('tr')){const r=[];let c=0;const take=()=>{while(pend[c]&&pend[c].n>0){r[c]=pend[c].v;pend[c].n--;c++}};
+  for(const td of tr.children){take();const v=td.textContent.replace(/\u00a0/g,' ').trim(),cs=+td.getAttribute('colspan')||1,rs=+td.getAttribute('rowspan')||1;for(let k=0;k<cs;k++){r[c]=v;if(rs>1)pend[c]={v,n:rs-1};c++}}take();rows.push(r.map(x=>x==null?'':x))}
+ const norm=x=>x.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+ let hi=-1;for(let i=0;i<rows.length;i++){const r=rows[i].map(norm);if(r.includes('placa')&&r.includes('saldo')){hi=i;break}}
+ if(hi<0)throw new Error('Não encontrei as colunas Placa e Saldo. Use o arquivo "Extrato Simplificado" exportado do portal da Ticket Log.');
+ const H=rows[hi].map(norm),col=n=>H.findIndex(h=>h===n||h.startsWith(n));
+ const iC=col('cartao'),iP=col('placa'),iM=col('modelo'),iR=col('valor reservado'),iL=col('limite atual'),iU=col('compras'),iS=col('saldo');
+ const num=v=>{v=String(v||'').replace(/[^\d,.-]/g,'');if(!v)return null;return +v.replace(/\./g,'').replace(',','.')};
+ const out=[];for(const r of rows.slice(hi+1)){const pl=(r[iP]||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(!/^[A-Z]{3}\d[A-Z0-9]\d{2}$/.test(pl))continue;if(iM>=0&&/coringa/i.test(r[iM]||''))continue;
+  const cart=r[iC]||'';const st=(cart.match(/\(([A-Z])\)/)||[])[1]||'A';const dig=cart.replace(/\D/g,'');
+  out.push({placa:pl,cartao_final:dig.slice(-4),status:st,modelo:iM>=0?r[iM]:null,reservado:iR>=0?num(r[iR]):null,limite:iL>=0?num(r[iL]):null,utilizado:iU>=0?num(r[iU]):null,saldo:num(r[iS])})}
+ if(!out.length)throw new Error('O arquivo não tem nenhum cartão com placa.');return out}
+document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('[data-tkimp]')){const f=document.getElementById('tkfile');if(f){f.value='';f.click()}}});
+document.addEventListener('change',async e=>{if(e.target.id!=='tkfile')return;const f=e.target.files&&e.target.files[0];if(!f)return;
+ M.tkBusy=true;render();
+ try{const buf=await f.arrayBuffer();let txt=new TextDecoder('utf-8').decode(buf);if(txt.includes('�'))txt=new TextDecoder('windows-1252').decode(buf);
+  if(!/<t[rd][\s>]/i.test(txt))throw new Error('Formato não reconhecido. Envie o arquivo do jeito que o portal da Ticket Log baixou (ExtratoSimplificado.xls), sem abrir e salvar no Excel.');
+  const L=lerExtratoTicket(txt);const r=await motRpc('eq_ticket_importar',{p_linhas:L});
+  toast(`${r.cartoes} cartões atualizados${r.baixos?` · ${r.baixos} com saldo baixo`:''}${r.bloqueados?` · ${r.bloqueados} bloqueados`:''}.`);
+  const tk=await rpc('eq_ticket_saldos',{p_token:S.token});if(tk&&tk.ok)M.tk=tk}catch(x){if(x.message!=='sessao')toast(x.message)}
+ M.tkBusy=false;render()});
 function renderMot(){
  let h='';if(M.err)h+=`<p class="err" role="alert">${esc(M.err)}</p>`;
  if(!M.d)return h+`<div class="empty">${M.busy?'Carregando motoristas…':'Abrindo…'}</div>`;
@@ -434,6 +465,7 @@ function renderMot(){
  h+=`<section class="cad"><h3>Ocorrências dos motoristas<span>${oH.length}</span>${M.abertas?`<span class="bd recusada">${M.abertas} sem resposta</span>`:''}</h3>
   <p class="sub">Atraso, pneu, avaria, abastecimento, acidente… enviados pelo app. Clique em <b>Recebido</b> para o motorista ver que a Central já sabe.</p>
   ${oH.length?`<div class="tw"><table class="rel oct" style="min-width:760px"><thead><tr><th>Quando</th><th>Motorista</th><th>Tipo</th><th>O que houve</th><th>Situação</th></tr></thead><tbody>${oH.map(o=>`<tr class="${o.visto_em?'':'crit'}"><td class="n">${brDTc(o.em)}</td><td>${esc(o.nome)}${o.placa?`<br><small><code>${esc(o.placa)}</code></small>`:''}</td><td class="n"><b>${esc(o.tipo)}</b>${o.valor!=null?'<br>R$ '+Number(o.valor).toFixed(2).replace('.',','):''}</td><td>${esc(o.texto||'')}${o.foto?`${o.texto?' · ':''}<a href="${esc(o.foto)}" target="_blank" rel="noopener">foto</a>`:''}${o.avisou_medico?`<br><small>avisou ${esc(o.profissional||'o profissional')} na conversa</small>`:''}</td><td class="n">${o.visto_em?`<small>Recebido por ${esc(String(o.visto_por||'').split(' ')[0])} às ${brDTc(o.visto_em).slice(-5)}</small>`:`<button class="btn wine sm" type="button" data-ocvisto="${o.id}">Recebido</button>`}</td></tr>`).join('')}</tbody></table></div>`:'<p class="sub">Nenhuma ocorrência hoje.</p>'}</section>`;
+ h+=renderTicket();
  const CV=M.cv||[];
  h+=`<section class="cad"><h3>Conversas de hoje<span>${CV.length}</span></h3><p class="sub">Conversas entre motorista e profissional na rota do dia. A Central pode responder: a mensagem aparece para os dois.</p>
   ${CV.length?`<div class="convs">${CV.map(c=>`<div class="conv"><div class="ch"><b>${esc(c.profissional)}</b><small>${esc(c.motorista||'')}${c.placa?' · '+esc(c.placa):''} · ${c.n} ${c.n===1?'mensagem':'mensagens'}</small></div><div class="cm">${(c.msgs||[]).map(m=>`<div class="bb ${m.de==='motorista'?'mot':m.de==='medico'?'med':'cen'}">${esc(m.texto)}<small>${esc(m.de==='central'?m.autor:String(m.autor).split(' ').slice(0,2).join(' '))} · ${brDTc(m.em).slice(-5)}</small></div>`).join('')}</div><form data-cvenv="${c.id}"><input maxlength="500" placeholder="Responder como Central" value="${esc(M.draft[c.id]||'')}" data-cvd="${c.id}" aria-label="Responder na conversa de ${esc(c.profissional)}"><button class="btn wine sm" type="submit">Enviar</button></form></div>`).join('')}</div>`:'<p class="sub">Nenhuma conversa hoje.</p>'}</section>`;
