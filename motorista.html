@@ -32,6 +32,7 @@ main{flex:1;padding:16px;display:flex;flex-direction:column;gap:12px}
 .btn.sun{background:var(--sun);color:var(--wine-d)}.btn.wine{background:var(--wine);color:#fff}
 .btn.line{background:#fff;color:var(--wine);border:1px solid var(--warm);font-size:14px;min-height:46px}
 .btn:disabled{background:var(--line);color:var(--muted);cursor:default}
+.cp{display:flex;gap:8px;align-items:center}.cp code{flex:1;min-width:0;overflow-wrap:anywhere;background:#f4efe9;border-radius:10px;padding:10px;font-size:13px}.cp button{min-height:40px;padding:0 14px;border-radius:10px;border:1px solid var(--line);background:#fff;font-weight:800;color:var(--wine)}
 .msg{border-radius:12px;padding:12px;font-size:13.5px;line-height:1.45}
 .msg.ok{background:var(--ok-bg);color:#12432a}.msg.pend{background:var(--pend-bg);color:#4a2a00;border:1px solid #f0c98a}.msg.bad{background:var(--bad-bg);color:#6d1420;border:1px solid #f0b8bf}
 .err{background:var(--bad-bg);color:#6d1420;border-radius:10px;padding:10px 12px;font-size:13.5px;margin:0}
@@ -171,28 +172,51 @@ function tkHtml(){const k=S.tk;if(!k||!k.cartao)return'';
   <p class="meta">Saldo do cartão do ${esc(k.placa)}${k.final?' · final '+esc(k.final):''} · atualizado ${quando}${hj?'':' (pode estar desatualizado)'}</p>
   ${bloq?`<div class="msg bad" role="alert"><b>Cartão bloqueado.</b> Fale com a Logística antes de abastecer.</div>`:k.baixo?`<div class="msg pend" role="alert"><b>Saldo baixo</b> (abaixo de ${brl(k.minimo||100)}). Avise a Logística antes de precisar abastecer.</div>`:''}
   ${+k.reservado?`<p class="meta">Há ${brl(k.reservado)} reservado de uma compra em andamento.</p>`:''}</div>`}
+// ===== Terceirizado: carro próprio, sem Geotab; localização pelo celular (app Traccar Client) =====
+const TERC=()=>S.tipo==='terceiro';
+const GPS_URL='https://sizbevhqreaccxrlimup.supabase.co/functions/v1/gps';
+S.g={codigo:'',ultima_em:null,ultima_fonte:null,at:0};
+async function carregaGps(){try{const r=await rpc('mot_gps',{p_token:S.token});if(r&&r.ok){S.g={...r,at:Date.now()};if(S.etapa==='carro'||S.etapa==='pronto')render()}}catch(e){}}
+function gpsCard(){const g=S.g,u=g.ultima_em?new Date(g.ultima_em):null,min=u?Math.round((Date.now()-u)/6e4):null;
+ const ativo=u&&g.ultima_fonte==='traccar'&&min<=10;
+ const st=ativo?`<div class="msg ok"><b>Localização ativa.</b> Última posição às ${u.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}. Pode usar o Waze ou o Google Maps normalmente.</div>`
+  :S.turno?`<div class="msg pend"><b>O profissional ainda não está vendo você no mapa.</b> Abra o app <b>Traccar Client</b> e ligue o envio da localização.${u?` Última posição recebida às ${u.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}${g.ultima_fonte==='app'?' (só pelo Minha Rota)':''}.`:''}</div>`
+  :`<p class="meta">Durante o plantão, o profissional de saúde acompanha seu carro chegando pela localização do celular (app <b>Traccar Client</b>). Fora do plantão, nada é guardado.</p>`;
+ return `<div class="card"><h2>Localização para o profissional</h2>${st}<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button class="btn line" type="button" data-aba="gps" style="min-height:44px;font-size:14px">Como configurar</button><button class="btn line" type="button" data-a="gpsver" style="min-height:44px;font-size:14px">Verificar agora</button></div></div>`}
+function renderGps(){const g=S.g;let h=topo('Localização pelo celular');h+=`<main>
+ <div class="card"><h2>Por que precisa</h2><p class="meta" style="font-size:14px">O Minha Rota sozinho para de mandar a localização quando você abre o Waze ou o Google Maps. O app <b>Traccar Client</b> manda a posição em segundo plano, e o profissional vê seu carro chegando. Só é usado durante o plantão.</p></div>
+ <div class="card"><h2>1 · Instale o Traccar Client</h2><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><a class="btn wine" style="min-height:44px;font-size:14px" href="https://play.google.com/store/apps/details?id=org.traccar.client" target="_blank" rel="noopener">Android</a><a class="btn wine" style="min-height:44px;font-size:14px" href="https://apps.apple.com/br/app/traccar-client/id843156974" target="_blank" rel="noopener">iPhone</a></div></div>
+ <div class="card"><h2>2 · Preencha no app</h2>
+  <p class="meta" style="font-size:14px"><b>Identificador do dispositivo</b> (Device identifier):</p><div class="cp"><code>${esc(g.codigo||'carregando…')}</code><button type="button" data-a="copia" data-copia="${esc(g.codigo||'')}">Copiar</button></div>
+  <p class="meta" style="font-size:14px"><b>URL do servidor</b> (Server URL):</p><div class="cp"><code>${esc(GPS_URL)}</code><button type="button" data-a="copia" data-copia="${esc(GPS_URL)}">Copiar</button></div>
+  <p class="meta" style="font-size:14px">Se aparecerem: <b>Precisão</b> alta · <b>Intervalo</b> 30 segundos · <b>Distância</b> 50 metros.</p></div>
+ <div class="card"><h2>3 · Libere a localização</h2><p class="meta" style="font-size:14px">Quando o celular perguntar, escolha <b>Permitir o tempo todo</b> (ou <b>Sempre</b>, no iPhone).<br>No Android: Configurações → Apps → Traccar Client → Bateria → <b>Sem restrições</b>. Sem isso o celular desliga o envio.</p></div>
+ <div class="card"><h2>4 · Ligue o envio</h2><p class="meta" style="font-size:14px">No Traccar Client, ligue o serviço (botão <b>Iniciar</b> / Start). Pode deixar ligado: fora do plantão a posição é descartada.</p><button class="btn sun" type="button" data-a="gpsver">Verificar se está chegando</button></div>
+ <button class="btn line" type="button" data-aba="hoje">Voltar</button></main>`;return h}
+setInterval(async()=>{if(!S.token||!TERC()||!S.turno||document.hidden)return;const g=await pegaGps();if(g)api('posicao',g).catch(()=>{});carregaGps()},90000);
 const visStatus=v=>v.status==='completed'?'ok':v.status==='failed'?'bad':'';
 async function iniciar(){
  if(!S.token){location.href='index.html';return}
  if(S.trocar){S.etapa='pin';render();return}
  S.etapa='carregando';render();
- try{const r=await api('estado');S.nome=r.nome;S.turno=r.turno;S.lista=r.checklist;
-  if(!S.turno){S.etapa='carro';render();carregaCarros()}
+ try{const r=await api('estado');S.nome=r.nome;S.turno=r.turno;S.lista=r.checklist;S.tipo=r.tipo||'solar';S.placaP=r.placa||'';S.empresa=r.empresa||'';
+  if(TERC())carregaGps();
+  if(!S.turno){S.etapa='carro';render();if(!TERC())carregaCarros()}
   else if(!S.turno.inspecao_id){S.etapa='inspecao';S.sec=0;render()}
-  else{S.etapa='pronto';render();carregaRota();carregaTicket()}
+  else{S.etapa='pronto';render();carregaRota();if(!TERC())carregaTicket()}
  }catch(e){if(e.message!=='sessao'){S.err=e.message;S.etapa='erro';render()}}}
 async function carregaCarros(){S.carros=null;render();S.gps=await pegaGps();
  try{const r=await api('carros',S.gps||{});S.carros=r.carros||[];S.err=''}catch(e){if(e.message==='sessao')return;S.err=e.message;S.carros=[]}render()}
-const passos=()=>{const e=S.etapa;const i=e==='carro'?0:e==='inspecao'?1:(e==='pronto'||e==='visita')?2:-1;
- return `<ol class="steps" aria-label="Etapas do início do plantão">${['1 · Carro','2 · Inspeção','3 · Rota'].map((t,k)=>`<li class="${k===i?'on':k<i?'ok':''}"${k===i?' aria-current="step"':''}><i></i>${t}</li>`).join('')}</ol>`};
+const passos=()=>{const e=S.etapa;const T3=TERC();const i=e==='carro'?0:e==='inspecao'?1:(e==='pronto'||e==='visita')?(T3?1:2):-1;
+ return `<ol class="steps" aria-label="Etapas do início do plantão">${(T3?['1 · Plantão','2 · Rota']:['1 · Carro','2 · Inspeção','3 · Rota']).map((t,k)=>`<li class="${k===i?'on':k<i?'ok':''}"${k===i?' aria-current="step"':''}><i></i>${t}</li>`).join('')}</ol>`};
 function topo(sub){const d=new Date().toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'});
  return `<header class="top"><div class="k"><span>Minha Rota · Motorista</span><button type="button" data-a="logout">Sair</button></div><h1>${esc(saud())}, ${esc((S.nome||'').split(' ')[0])}</h1><p>${esc(sub||d)}</p>${S.etapa==='pin'||S.aba!=='hoje'?'':passos()}</header>`}
 const saud=()=>{const h=new Date().getHours();return h<12?'Bom dia':h<18?'Boa tarde':'Boa noite'};
 function itensSec(i){return (S.lista&&S.lista[i])?S.lista[i].itens:[]}
 function secCompleta(i){return itensSec(i).every(it=>{const r=S.resp[it.id];return r&&(r.ok||String(r.obs||'').trim())})}
 const IC={folga:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',hoje:'<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',chat:'<path d="M4 5h16v11H8l-4 4z"/>',ocor:'<path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.5"/>'};
-function nav(){const it=[['hoje','Hoje'],['chat','Conversa'],['ocor','Ocorrências'],['folga','Folga']];
- return `<nav class="nav" aria-label="Seções"><div>${it.map(([k,t])=>`<button type="button" data-aba="${k}"${S.aba===k||(k==='chat'&&S.aba==='resp')?' aria-current="page"':''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[k]}</svg>${t}${k==='chat'&&S.naoLidas?`<b aria-label="${S.naoLidas} não lidas">${S.naoLidas}</b>`:''}</button>`).join('')}</div></nav>`}
+function nav(){const it=[['hoje','Hoje'],['chat','Conversa'],['ocor','Ocorrências'],['folga','Folga']].filter(x=>!(TERC()&&x[0]==='folga'));
+ return `<nav class="nav" aria-label="Seções"><div style="grid-template-columns:repeat(${it.length},1fr)">${it.map(([k,t])=>`<button type="button" data-aba="${k}"${S.aba===k||(k==='chat'&&S.aba==='resp')?' aria-current="page"':''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[k]}</svg>${t}${k==='chat'&&S.naoLidas?`<b aria-label="${S.naoLidas} não lidas">${S.naoLidas}</b>`:''}</button>`).join('')}</div></nav>`}
 const comNav=()=>S.etapa==='carro'||S.etapa==='pronto';
 async function carregaChat(sil){const C=S.chat;
  try{const r=await rpc('mot_chat',{p_token:S.token,p_rota:C.rota,p_ler:true});if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');C.err=r.erro;C.rotas=C.rotas||[];render();return}
@@ -223,13 +247,15 @@ function renderResp(){const L=S.chat.ed;let h=topo('Respostas prontas');h+='<mai
  h+=`</div></main><div class="foot" style="bottom:76px"><div style="display:grid;grid-template-columns:1fr 2fr;gap:8px"><button class="btn line" type="button" data-a="rcancel">Cancelar</button><button class="btn sun" type="button" data-a="rsalvar"${S.busy?' disabled':''}>Salvar respostas</button></div></div>`;
  return h}
 const TIPOS_OC=['Atraso','Pneu','Avaria','Abastecimento','Acidente','Outro'];
+const tiposOc=()=>TERC()?['Atraso','Pneu','Avaria','Pedágio','Acidente','Outro']:TIPOS_OC;
+const comValor=t=>t==='Abastecimento'||t==='Pedágio';
 async function carregaOcor(){try{const r=await rpc('mot_ocorrencias',{p_token:S.token});if(r.ok)S.oc.lista=r.ocorrencias;else if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.')}catch(e){S.oc.lista=S.oc.lista||[]}if(S.aba==='ocor')render()}
 function renderOcor(){const O=S.oc;let h=topo('Avise a Central na hora');h+='<main>';
  if(O.err)h+=`<p class="err" role="alert">${esc(O.err)}</p>`;
- h+=`<div class="card"><h2>O que aconteceu?</h2><div class="tipos" role="group" aria-label="Tipo da ocorrência">${TIPOS_OC.map(t=>`<button type="button" data-otipo="${t}" aria-pressed="${O.tipo===t}">${t}</button>`).join('')}</div>`;
- if(O.tipo){const ab=O.tipo==='Abastecimento';const temRota=S.chat.rotas&&S.chat.rotas.length;
+ h+=`<div class="card"><h2>O que aconteceu?</h2><div class="tipos" role="group" aria-label="Tipo da ocorrência">${tiposOc().map(t=>`<button type="button" data-otipo="${t}" aria-pressed="${O.tipo===t}">${t}</button>`).join('')}</div>`;
+ if(O.tipo){const ab=comValor(O.tipo),pd=O.tipo==='Pedágio';const temRota=S.chat.rotas&&S.chat.rotas.length;
   if(ab)h+=`<label class="campo">Valor (R$)<input id="ovalor" inputmode="decimal" placeholder="Ex.: 198,40" value="${esc(O.valor)}"></label>`;
-  h+=`<label class="campo">${ab?'Observação (opcional)':O.tipo==='Atraso'?'Motivo do atraso':'Conte o que aconteceu'}<textarea id="otexto" maxlength="500">${esc(O.texto)}</textarea></label>${fotoCampo('o',O.foto).replace('Tirar foto (opcional)',ab?'Foto do cupom (opcional)':'Tirar foto (opcional)')}`;
+  h+=`<label class="campo">${pd?'Praça / local (opcional)':ab?'Observação (opcional)':O.tipo==='Atraso'?'Motivo do atraso':'Conte o que aconteceu'}<textarea id="otexto" maxlength="500">${esc(O.texto)}</textarea></label>${fotoCampo('o',O.foto).replace('Tirar foto (opcional)',pd?'Foto do comprovante (opcional)':ab?'Foto do cupom (opcional)':'Tirar foto (opcional)')}`;
   if(temRota)h+=`<label class="ck"><input type="checkbox" id="oavisar"${O.avisar?' checked':''}>Avisar também o profissional na conversa</label>`;
   h+=`<button class="btn sun" type="button" data-a="oenviar"${S.busy?' disabled':''}>${S.busy?'Enviando…':'Enviar à Central'}</button>`}
  h+='</div><div class="card"><h2>Enviadas hoje e ontem</h2>';
@@ -289,7 +315,7 @@ function rotaHtml(t){
 function render(){
  const app=$('#app');let h='';
  app.classList.toggle('comnav',comNav());
- if(comNav()&&S.aba!=='hoje'){const foc=document.activeElement&&document.activeElement.id==='ctxt';app.innerHTML=(S.aba==='chat'?renderChat():S.aba==='resp'?renderResp():S.aba==='folga'?renderFolga():renderOcor())+nav();
+ if(comNav()&&S.aba!=='hoje'){const foc=document.activeElement&&document.activeElement.id==='ctxt';app.innerHTML=(S.aba==='chat'?renderChat():S.aba==='resp'?renderResp():S.aba==='folga'?renderFolga():S.aba==='gps'?renderGps():renderOcor())+nav();
   const ct=$('#ctxt');if(ct){ct.oninput=()=>{S.chat.txt=ct.value};if(foc){ct.focus();ct.setSelectionRange(ct.value.length,ct.value.length)}}
   const ov=$('#ovalor');if(ov)ov.oninput=()=>{S.oc.valor=ov.value};const ot=$('#otexto');if(ot)ot.oninput=()=>{S.oc.texto=ot.value};const oa=$('#oavisar');if(oa)oa.onchange=()=>{S.oc.avisar=oa.checked};
   document.querySelectorAll('[data-rsp]').forEach(i=>i.oninput=()=>{S.chat.ed[+i.dataset.rsp]=i.value});
@@ -303,6 +329,12 @@ function render(){
    <button class="btn sun" type="submit"${S.busy?' disabled':''}>${S.busy?'Salvando…':'Salvar PIN'}</button></form></main>`;return}
  if(S.etapa==='carregando'){app.innerHTML=topo()+'<main><p class="carregando">Carregando…</p></main>';return}
  if(S.etapa==='erro'){app.innerHTML=topo()+`<main><p class="err" role="alert">${esc(S.err)}</p><button class="btn wine" type="button" data-a="recarregar">Tentar de novo</button></main>`;return}
+ if(S.etapa==='carro'&&TERC()){
+  h=topo();h+='<main>';
+  if(S.err)h+=`<p class="err" role="alert">${esc(S.err)}</p>`;
+  h+=`<div class="card"><h2>Seu carro</h2><span style="font-size:24px;font-weight:800;letter-spacing:.04em">${esc(S.placaP||'sem placa')}</span><p class="meta">Carro próprio${S.empresa?' · '+esc(S.empresa):''}. Se a placa estiver errada, avise a Logística.</p>
+   <button class="btn sun" type="button" data-a="tiniciar"${S.busy||!S.placaP?' disabled':''}>${S.busy?'Iniciando…':'Iniciar plantão'}</button></div>${gpsCard()}</main>`;
+  app.innerHTML=h+nav();return}
  if(S.etapa==='carro'){
   h=topo();h+='<main>';
   if(S.err)h+=`<p class="err" role="alert">${esc(S.err)}</p>`;
@@ -339,14 +371,15 @@ function render(){
  if(S.etapa==='pronto'){const t=S.turno||{};const def=t.defeitos||[];
   h=topo('Plantão iniciado às '+hm(t.entrou_em));h+='<main>';
   if(t.critico)h+=`<div class="msg bad" role="alert"><b>Item crítico com problema.</b> Não saia com o carro antes de falar com a logística.</div>`;
-  h+=`<div class="card"><h2>Seu carro</h2><span style="font-size:24px;font-weight:800;letter-spacing:.04em">${esc(t.placa||'')}</span>
+  if(TERC())h+=`<div class="card"><h2>Seu carro</h2><span style="font-size:24px;font-weight:800;letter-spacing:.04em">${esc(t.placa||'')}</span><ul class="dl"><li><span class="chk">✓</span><span><b>Plantão iniciado às ${hm(t.entrou_em)}</b> · carro próprio${S.empresa?' · '+esc(S.empresa):''}</span></li></ul></div>${gpsCard()}`;
+  else h+=`<div class="card"><h2>Seu carro</h2><span style="font-size:24px;font-weight:800;letter-spacing:.04em">${esc(t.placa||'')}</span>
    <ul class="dl"><li><span class="chk">✓</span><span><b>Entrou no carro às ${hm(t.entrou_em)}</b> · registrado no Geotab pelo app</span></li>
    <li><span class="chk${def.length?' w':''}">${def.length?'!':'✓'}</span><span><b>Inspeção às ${hm(t.inspecao_em)}</b> · ${def.length?def.length+(def.length>1?' problemas registrados':' problema registrado'):'tudo OK'}</span></li></ul>
-   ${def.length?`<ul class="dl">${def.map(d=>`<li><span class="chk ${d.critico?'r':'w'}">!</span><span><b>${esc(d.nome)}</b>${d.critico?' (crítico)':''} · ${esc(d.obs)}${d.foto?` · <a href="${esc(d.foto)}" target="_blank" rel="noopener">ver foto</a>`:''}</span></li>`).join('')}</ul><p class="meta">A logística e a manutenção veem esses problemas no Geotab.</p>`:''}</div>
-   ${tkHtml()}
+   ${def.length?`<ul class="dl">${def.map(d=>`<li><span class="chk ${d.critico?'r':'w'}">!</span><span><b>${esc(d.nome)}</b>${d.critico?' (crítico)':''} · ${esc(d.obs)}${d.foto?` · <a href="${esc(d.foto)}" target="_blank" rel="noopener">ver foto</a>`:''}</span></li>`).join('')}</ul><p class="meta">A logística e a manutenção veem esses problemas no Geotab.</p>`:''}</div>`;
+  h+=`   ${TERC()?'':tkHtml()}
    ${(S.chat.rotas||[]).map(x=>`<div class="card" style="gap:6px"><h2>Profissional de hoje</h2><span style="font-size:18px;font-weight:800">${esc(x.profissional)}</span><p class="meta">${esc(x.especialidade||'')}${x.prev_inicio?' · saída prevista '+esc(x.prev_inicio):''}</p><button class="btn wine" type="button" data-aba="chat">Conversa${+x.nao_lidas?' · '+x.nao_lidas+(+x.nao_lidas>1?' novas':' nova'):''}</button></div>`).join('')}
    ${rotaHtml(t)}
-   <button class="btn line" type="button" data-a="encerrar">Encerrar plantão e sair do carro</button></main>`;
+   <button class="btn line" type="button" data-a="encerrar">${TERC()?'Encerrar plantão':'Encerrar plantão e sair do carro'}</button></main>`;
   app.innerHTML=h+nav();return}
  if(S.etapa==='visita'){const v=S.vis,c=S.co;const falhou=c.status==='failed';
   const mot=S.motivos.filter(m=>!m.tipo||m.tipo==='failed');
@@ -388,7 +421,7 @@ document.addEventListener('click',async e=>{
   if(d.aba){S.aba=d.aba;S.err='';render();scrollTo(0,0);if(d.aba==='chat'){S.chat.n=-1;carregaChat()}if(d.aba==='ocor'){carregaOcor();if(S.chat.rotas==null)contaRotas()}if(d.aba==='folga')carregaFolga();return}
   if(d.crota){S.chat.rota=+d.crota;S.chat.n=-1;carregaChat();return}
   if(d.pronta!=null){enviaChat(S.chat.resp[+d.pronta],true);return}
-  if(d.otipo){S.oc.tipo=d.otipo;S.oc.avisar=d.otipo==='Atraso';S.oc.err='';render();const t=$(d.otipo==='Abastecimento'?'#ovalor':'#otexto');if(t)t.focus();return}
+  if(d.otipo){S.oc.tipo=d.otipo;S.oc.avisar=d.otipo==='Atraso';S.oc.err='';render();const t=$(comValor(d.otipo)?'#ovalor':'#otexto');if(t)t.focus();return}
   const L=S.chat.ed;
   if(d.rup){const i=+d.rup;if(i>0){[L[i-1],L[i]]=[L[i],L[i-1]];render()}return}
   if(d.rdel){L.splice(+d.rdel,1);render();return}
@@ -401,8 +434,8 @@ document.addEventListener('click',async e=>{
  if(a==='rsalvar'){S.busy=true;render();try{const r=await rpc('mot_respostas_salvar',{p_token:S.token,p_lista:S.chat.ed});S.busy=false;if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');toast(r.erro);render();return}
   S.chat.resp=r.respostas;S.aba='chat';toast('Respostas salvas.');render();fimChat()}catch(x){S.busy=false;toast(x.message);render()}return}
  if(a==='oenviar'){const O=S.oc;O.err='';
-  if(O.tipo==='Abastecimento'&&!String(O.valor).trim()){O.err='Informe o valor do abastecimento.';render();return}
-  if(O.tipo!=='Abastecimento'&&!O.texto.trim()){O.err='Conte o que aconteceu.';render();return}
+  if(comValor(O.tipo)&&!String(O.valor).trim()){O.err='Informe o valor do '+O.tipo.toLowerCase()+'.';render();return}
+  if(!comValor(O.tipo)&&!O.texto.trim()){O.err='Conte o que aconteceu.';render();return}
   const temRota=S.chat.rotas&&S.chat.rotas.length;S.busy=true;render();
   try{const r=await api('ocorrencia',{tipo:O.tipo,texto:O.texto,valor:O.valor||undefined,foto:O.foto||undefined,avisar:!!(temRota&&O.avisar)},'mot-ocorrencia');S.busy=false;
    if(!r.ok){O.err=r.erro;render();return}
@@ -410,6 +443,7 @@ document.addEventListener('click',async e=>{
    toast('Ocorrência enviada à Central'+(r.avisou?' e ao profissional':'')+'.');if(O.foto&&r.foto===false)setTimeout(()=>toast('A foto não foi enviada.'),3300);
    S.oc={lista:O.lista,tipo:'',texto:'',valor:'',foto:null,avisar:true,err:''};render();scrollTo(0,0);carregaOcor()}
   catch(x){S.busy=false;if(x.message!=='sessao'){O.err=x.message;render()}}return}
+ if(a==='copia'){try{await navigator.clipboard.writeText(b.dataset.copia);toast('Copiado.')}catch(x){toast('Não consegui copiar. Segure o texto para copiar.')}return}
  if(a==='logout'){if(S.turno&&!S.turno.saiu_em&&!(await confirma('Sair do app?','Você continua registrado no carro. Para sair do carro, use "Encerrar plantão".','Sair do app')))return;sair();return}
  if(a==='recarregar'){S.err='';iniciar();return}
  if(a==='gps'){carregaCarros();return}
@@ -445,9 +479,13 @@ document.addEventListener('click',async e=>{
   try{const r=await api('inspecao',{respostas:S.resp});S.busy=false;if(!r.ok){S.err=r.erro;render();return}
    S.turno=r.turno;S.etapa='pronto';toast('Inspeção registrada no Geotab.');if(r.fotos_falharam&&r.fotos_falharam.length)setTimeout(()=>toast('Não consegui enviar a foto de: '+r.fotos_falharam.join(', ')+'. O problema foi registrado mesmo assim.'),3400);render();scrollTo(0,0);carregaRota();carregaTicket()}
   catch(x){S.busy=false;if(x.message!=='sessao'){S.err=x.message;render()}}return}
- if(a==='encerrar'){const ab=(S.rotas||[]).some(r=>r.status==='started');if(!(await confirma('Encerrar o plantão?',(ab?'Sua rota ainda está em andamento no SimpliRoute. ':'')+'O app tira você do carro '+(S.turno?S.turno.placa:'')+' no Geotab.','Encerrar')))return;
+ if(a==='tiniciar'){S.busy=true;S.err='';render();const g=await pegaGps();
+  try{const r=await api('entrar',g||{});S.busy=false;if(!r.ok){S.err=r.erro;render();return}S.turno=r.turno;S.etapa='pronto';toast('Plantão iniciado.');render();scrollTo(0,0);carregaRota();carregaGps()}
+  catch(x){S.busy=false;if(x.message!=='sessao'){S.err=x.message;render()}}return}
+ if(a==='gpsver'){toast('Verificando…');await carregaGps();const u=S.g.ultima_em?new Date(S.g.ultima_em):null;toast(u&&S.g.ultima_fonte==='traccar'&&Date.now()-u<10*6e4?'Localização chegando. Tudo certo!':S.turno?'Ainda não chegou posição do Traccar Client. Confira os passos.':'Inicie o plantão e depois verifique: fora do plantão a posição não é guardada.');return}
+ if(a==='encerrar'){const ab=(S.rotas||[]).some(r=>r.status==='started');if(!(await confirma('Encerrar o plantão?',(ab?'Sua rota ainda está em andamento no SimpliRoute. ':'')+(TERC()?'A localização deixa de ser usada.':'O app tira você do carro '+(S.turno?S.turno.placa:'')+' no Geotab.'),'Encerrar')))return;
   S.busy=true;render();
-  try{const r=await api('sair');S.busy=false;if(!r.ok){toast(r.erro);return}toast('Plantão encerrado. Bom descanso!');S.turno=null;S.lista=null;S.resp={};S.etapa='carro';render();carregaCarros()}
+  try{const r=await api('sair');S.busy=false;if(!r.ok){toast(r.erro);return}toast('Plantão encerrado. Bom descanso!');S.turno=null;S.lista=null;S.resp={};S.etapa='carro';render();if(!TERC())carregaCarros()}
   catch(x){S.busy=false;if(x.message!=='sessao')toast(x.message)}return}
 });
 function avisaPush(id){fetch(SB+'/functions/v1/push-chat',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({token:S.token,msg:id})}).catch(()=>{})}

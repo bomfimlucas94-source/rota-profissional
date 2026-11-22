@@ -293,7 +293,7 @@ function trkInfo(ro){
  if(d&&d.min!=null){const eta=new Date(Date.now()+d.min*6e4),parado=!d.dirigindo&&d.km>=0.5;
   l1=d.km<0.3?'<span class="big ok">Motorista chegando!</span>':`<span class="big">Chega às ${hhmm(eta)}</span>`;
   ex.push(`${d.km<0.3?'':'em ~'+d.min+' min · '}a ${d.km<1?Math.round(d.km*1000)+' m':String(d.km.toFixed(1)).replace('.',',')+' km'} de você${d.rua?' pelas ruas':''} · posição ${ha(d.posicao_em)}`);
-  if(parado)ex.push('o carro está parado agora; o horário vale se ele sair já')}
+  if(parado)ex.push('o carro está parado agora; o horário vale se ele sair já');if(d.fonte==='celular')ex.push('posição pelo celular do motorista')}
  // 2) terceiros (sem Geotab): horário do SimpliRoute + costume do motorista + atividade no app
  else if(ro.prev_inicio){const [h,m]=ro.prev_inicio.split(':').map(Number),prev=new Date();prev.setHours(h,m,0,0);
   const hist=ro.hist_n>=3&&ro.atraso_medio!=null,aj=hist?Math.max(-30,Math.min(60,+ro.atraso_medio)):0,est=new Date(+prev+aj*6e4),falta=Math.round((est-Date.now())/6e4);
@@ -303,7 +303,7 @@ function trkInfo(ro){
  if(ro.sr_inicio&&!(d&&d.min!=null)){l1='<span class="big">Motorista a caminho</span>';ex.length=0;ex.push(`saiu às ${esc(hm(ro.sr_inicio))} (iniciou a rota no SimpliRoute)`);if(velha)ex.push('sem posição ao vivo do carro agora')}
  else if(ro.sr_inicio&&d&&d.min!=null&&d.km>=0.3)ex.push(`saiu às ${esc(hm(ro.sr_inicio))}`);
  if(!l1)l1='<span class="big">Aguardando o motorista</span>';
- if(velha)ex.push(`o rastreador do carro${d0.placa?' '+esc(d0.placa):''} não envia posição desde ${esc(new Date(d0.posicao_em).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(',',' às'))} (o motorista pode estar em outro carro)`);
+ if(velha)ex.push(`${d0.fonte==='celular'?'o celular do motorista':'o rastreador do carro'+(d0.placa?' '+esc(d0.placa):'')} não envia posição desde ${esc(new Date(d0.posicao_em).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(',',' às'))} (o motorista pode estar em outro carro)`);
  if(!(d&&d.min!=null)&&!ro.sr_inicio){if(ro.mot_ativo_em)ex.push(`ativo no app SimpliRoute às ${esc(hm(ro.mot_ativo_em))}`);else if(ro.prev_inicio)ex.push('ainda não abriu o app SimpliRoute hoje')}
  if(T.err==='sem_login')ex.push('ainda não entrou no carro (MyGeotab)');
  return l1+(ex.length?`<small>${ex.join(' · ')}</small>`:'')}
@@ -312,7 +312,7 @@ async function trkCarrega(ro){if(T.busy||!S.token)return;T.busy=true;
   if(r.ok){T.d=r;T.d.rid=ro.id;T.err=''}else{if(r.erro==='sessao'){T.busy=false;return sair('Sua sessão expirou. Entre de novo.')}T.d=null;T.err=r.erro||''}}catch(e){T.err=''}
  T.at=Date.now();T.busy=false;trkAtualiza()}
 function trkAtualiza(){const ro=rotaAtual();const box=document.getElementById('trki');if(box&&ro)box.innerHTML=trkInfo(ro);const cw=document.getElementById('trkcw');if(cw&&ro)cw.innerHTML=trkContato(ro);if(ro)trkMapa(ro)}
-/* mapa do carro a caminho (só frota com MyGeotab, até o motorista chegar) */
+/* mapa do carro a caminho (frota com MyGeotab ou terceirizado com o celular, até o motorista chegar) */
 async function trkMapa(ro){const slot=document.getElementById('trkmap-slot');if(!slot)return;const d=T.d;
  if(!d||d.rid!==ro.id||d.lat==null||(d.posicao_em&&Date.now()-new Date(d.posicao_em)>30*6e4)){slot.innerHTML='';return}
  if(T.mapRota!==ro.id){if(T.map){try{T.map.remove()}catch(e){}}T.map=null;T.mk=null;T.mel=null;T.mapRota=ro.id}
