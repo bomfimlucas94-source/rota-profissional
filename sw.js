@@ -28,8 +28,11 @@ self.addEventListener('push', e => {
 self.addEventListener('notificationclick', e => {
   e.notification.close();
   const alvo = new URL((e.notification.data && e.notification.data.url) || './', self.registration.scope).href;
+  const pag = new URL(alvo).pathname;
   e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(ws => {
-    for (const w of ws) { if (w.url.startsWith(self.registration.scope)) { w.postMessage({ tipo: 'rota-nova', url: alvo }); return w.focus(); } }
+    // primeiro a mesma página (Central ou app do profissional); o app do profissional aceita qualquer janela do Minha Rota
+    for (const w of ws) { if (new URL(w.url).pathname === pag) { w.postMessage({ tipo: 'rota-nova', url: alvo }); return w.focus(); } }
+    if (!/central\.html$/.test(pag)) for (const w of ws) { if (w.url.startsWith(self.registration.scope) && !/central\.html/.test(w.url)) { w.postMessage({ tipo: 'rota-nova', url: alvo }); return w.focus(); } }
     return self.clients.openWindow(alvo);
   }));
 });
