@@ -37,6 +37,7 @@ header.top{background:var(--wine);color:#fff;border-bottom:5px solid var(--sun);
 .topin small{display:block;color:var(--peach);font-size:12px;font-weight:600}
 .topin .sp{flex:1}
 .topin .who{font-size:12.5px;color:var(--peach)}
+.lst{margin-top:6px;font-size:12.5px;line-height:1.45;border-radius:8px;padding:6px 10px;background:var(--off);color:var(--muted)}.lst.fora{background:var(--bad-bg);color:var(--bad)}.lst.dentro{background:var(--ok-bg);color:var(--ok)}.lst b{font-weight:700}.just{margin-top:6px;font-size:13px;line-height:1.45;border-left:3px solid #3a2f8f;background:#f3f1fd;padding:6px 10px;border-radius:0 8px 8px 0}.lsinfo{font-size:12px;color:var(--muted)}
 .hant{margin-top:6px;font-size:12.5px;line-height:1.45;color:var(--pend);background:var(--pend-bg);border-radius:8px;padding:6px 10px}.hant b{color:var(--bad)}.vsw{margin-top:14px}.hsub{margin:6px 0 10px;color:var(--muted);font-size:13.5px}
 .pushc{border:1px solid rgba(255,255,255,.35);background:transparent;color:#fff;border-radius:999px;padding:6px 12px;font-size:12.5px;font-weight:600;min-height:34px}.pushc.on{background:var(--sun);color:var(--wine-d);border-color:var(--sun)}
 .embed .topin>div:first-child,.embed .topin .who,.embed .topin .out{display:none}.embed header.top{border-bottom-width:3px}.embed .topin{padding:8px 16px}
@@ -62,7 +63,7 @@ main{max-width:1200px;margin:0 auto;padding:14px 16px 40px;display:flex;flex-dir
 .rth .c{font-size:12.5px;color:var(--muted)}.rth .c code{font-weight:700;color:var(--wine)}
 .rth .r{margin-left:auto;display:flex;align-items:center;gap:8px}.rth .r small{font-size:11.5px;color:var(--muted)}
 .bd{font-size:11px;font-weight:700;border-radius:999px;padding:2px 9px;white-space:nowrap}
-.bd.pendente{background:var(--pend-bg);color:var(--pend)}.bd.aprovada{background:var(--ok-bg);color:var(--ok)}.bd.recusada{background:var(--bad-bg);color:var(--bad)}.bd.aplicada{background:#f1dceb;color:var(--wine)}
+.bd.pendente{background:var(--pend-bg);color:var(--pend)}.bd.aprovada{background:var(--ok-bg);color:var(--ok)}.bd.recusada{background:var(--bad-bg);color:var(--bad)}.bd.aplicada{background:#f1dceb;color:var(--wine)}.bd.questionada{background:#e6e1fb;color:#3a2f8f}
 ol.ls{list-style:none;margin:0;padding:0 14px 8px}
 ol.ls li{border-top:1px solid var(--line);padding:10px 0;display:flex;flex-direction:column;gap:5px}
 .lh{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
@@ -175,7 +176,7 @@ tr.crit td{background:#fdf1f2}
 <script>
 const SB='https://sizbevhqreaccxrlimup.supabase.co',KEY='sb_publishable_sOPBmFvZMrGj3JvHzxIyYQ_4LsvUbSG';
 const TIPOS={horario_fixo:'Horário fixo',nao_antes:'Não atender antes de',trocar_ordem:'Trocar a ordem',nao_atender:'Paciente não será atendido',observacao:'Observação para o motorista'};
-const STN={pendente:'Pendente',aprovada:'Aprovada',recusada:'Recusada',aplicada:'Aplicada no SimpliRoute'};
+const STN={pendente:'Pendente',questionada:'Aguardando justificativa',aprovada:'Aprovada',recusada:'Recusada',aplicada:'Aplicada no SimpliRoute'};
 const LOGI=()=>S.perfil!=='adm_medico';
 const S={token:null,nome:'',perfil:'logistica',itens:null,err:'',busy:false,f:{st:'',esp:'',dia:''},open:{},draft:{},at:0,tab:'sol'};
 // Segurança: a sessão fica só nesta aba (sessionStorage). Fechou o navegador ou abriu o link em outra aba/pessoa → pede celular e PIN.
@@ -203,7 +204,7 @@ function sair(msg){if(EMBED){S.token=null;S.itens=null;avisaPainel({tipo:'centra
 async function carregar(sil){if(!S.token||S.trocar)return;
  if(!LOGI()){try{const r=await rpc('eq_check',{p_token:S.token});if(!r.ok)return sair('Sua sessão expirou. Entre de novo.');S.nome=r.nome;S.perfil=r.perfil||'adm_medico';try{sessionStorage.setItem('lg-perfil',S.perfil)}catch(x){}if(LOGI())return carregar(sil);if(S.tab!=='fro'&&S.tab!=='evo')S.tab='fro';if(S.tab==='fro'&&!F.d)carregarFrota();if(S.tab==='evo'&&!V.d)carregarEvoC();render()}catch(e){}return}
  try{const r=await rpc('eq_solicitacoes',{p_token:S.token});if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');throw new Error(r.erro)}
-  S.nome=r.nome;S.itens=r.itens||[];S.err='';S.at=Date.now();render()}catch(e){if(!sil){S.err=e.message;render()}}}
+  S.nome=r.nome;S.itens=r.itens||[];S.lists=r.lists||null;S.err='';S.at=Date.now();render()}catch(e){if(!sil){S.err=e.message;render()}}}
 
 /* ===== Envio de rotas (SimpliRoute → Minha Rota) ===== */
 const hojeSP=(d=0)=>{const t=new Date(Date.now()+d*864e5);return t.toLocaleDateString('sv-SE',{timeZone:'America/Sao_Paulo'})};
@@ -440,6 +441,43 @@ function lerExtratoTicket(txt){const doc=new DOMParser().parseFromString(txt,'te
   const cart=r[iC]||'';const st=(cart.match(/\(([A-Z])\)/)||[])[1]||'A';const dig=cart.replace(/\D/g,'');
   out.push({placa:pl,cartao_final:dig.slice(-4),status:st,modelo:iM>=0?r[iM]:null,reservado:iR>=0?num(r[iR]):null,limite:iL>=0?num(r[iL]):null,utilizado:iU>=0?num(r[iU]):null,saldo:num(r[iS])})}
  if(!out.length)throw new Error('O arquivo não tem nenhum cartão com placa.');return out}
+/* Lists (janela de horário dos pacientes): comparação com o pedido, questionar e recusar */
+const minH=t=>{const m=String(t||'').match(/(\d{1,2}):(\d{2})/);return m?(+m[1])*60+(+m[2]):null};
+const winTxt=L=>L.map(w=>(w.de||'?')+'–'+(w.ate||'?')).join(' ou ');
+function cmpLists(r){const L=(r.lists||[]).filter(w=>w.de||w.ate);
+ if(!L.length)return S.lists&&(r.tipo==='horario_fixo'||r.tipo==='nao_antes')?{st:'sem'}:null;
+ if(r.tipo==='horario_fixo'){const a=minH(r.horario_de),b=minH(r.horario_ate);if(a==null||b==null)return{st:'info',L};return{st:L.some(w=>a>=minH(w.de)&&b<=minH(w.ate))?'dentro':'fora',L}}
+ if(r.tipo==='nao_antes'){const a=minH(r.horario_de);if(a==null)return{st:'info',L};return{st:L.some(w=>a<minH(w.ate))?'dentro':'fora',L}}
+ return{st:'info',L}}
+function listsTxt(r){const c=cmpLists(r);if(!c)return'';
+ if(c.st==='sem')return'<div class="lst">📋 Paciente sem janela no Lists.</div>';
+ const ped=jan(r);
+ if(c.st==='fora')return `<div class="lst fora">📋 <b>No Lists:</b> ${esc(winTxt(c.L))} · <b>Pedido:</b> ${esc(ped)} → <b>diferente do cadastro</b>${r.motivo||r.justificativa?'':' e sem motivo'}</div>`;
+ if(c.st==='dentro')return `<div class="lst dentro">📋 <b>No Lists:</b> ${esc(winTxt(c.L))} · pedido dentro da janela cadastrada</div>`;
+ return `<div class="lst">📋 <b>No Lists:</b> ${esc(winTxt(c.L))}</div>`}
+function qBtns(r){const c=cmpLists(r);let h=`<button class="btn ghost sm" type="button" data-qst="${r.id}" title="Pede ao profissional que justifique o pedido">Questionar</button>`;
+ if(c&&c.st==='fora')h+=`<button class="btn ghost sm" type="button" data-rsj="${r.id}" title="Recusa com resposta pronta">Recusar sem justificativa</button>`;return h}
+function listsBar(){return `<button class="btn ghost sm" type="button" data-limp title="Exporte a lista Janela de Horário Pacientes do Lists em CSV e importe aqui">Importar Lists</button><input type="file" id="lsfile" accept=".csv,text/csv" hidden><span class="lsinfo">${S.lists&&S.lists.em?'Lists de '+esc(brDTc(S.lists.em))+' · '+S.lists.pacientes+' pacientes':'Lists ainda não importado'}</span>`}
+function perguntaPadrao(r){const c=cmpLists(r);const w=c&&c.L&&c.L.length?winTxt(c.L):'';
+ return w?`Sobre ${r.paciente}: no nosso cadastro a janela de atendimento é ${w}. Pode justificar o pedido de ${jan(r)||(TIPOS[r.tipo]||r.tipo).toLowerCase()}?`:`Sobre ${r.paciente}: pode explicar melhor o motivo deste pedido?`}
+function csvLinhas(t){const R=[];let row=[],f='',q=false;for(let i=0;i<t.length;i++){const ch=t[i];
+ if(q){if(ch==='"'){if(t[i+1]==='"'){f+='"';i++}else q=false}else f+=ch}
+ else if(ch==='"')q=true;else if(ch===','||ch===';'){row.push(f);f=''}else if(ch==='\n'){row.push(f);R.push(row);row=[];f=''}else if(ch!=='\r')f+=ch}
+ if(f!==''||row.length){row.push(f);R.push(row)}return R}
+async function importaLists(file){try{let t=await file.text();t=t.replace(/^﻿/,'');const R=csvLinhas(t).filter(r=>r.some(c=>String(c).trim()));if(R.length<2)throw new Error('O arquivo está vazio.');
+ const H=R[0].map(c=>normP(c));const ip=H.findIndex(c=>c.includes('paciente')),ii=H.findIndex(c=>c.includes('inicial')||c==='de'),ifi=H.findIndex(c=>c.includes('final')||c==='ate'),ic=H.findIndex(c=>c.includes('consulta'));
+ if(ip<0||ii<0||ifi<0)throw new Error('Não achei as colunas Paciente / Janela de horário inicial / final. Exporte a lista "Janela de Horário Pacientes" em CSV.');
+ const L=R.slice(1).map(r=>({p:r[ip]||'',id:ic>=0?(r[ic]||''):'',de:r[ii]||'',ate:r[ifi]||''})).filter(x=>x.p.trim());
+ const x=await rpc('eq_lists_importar',{p_token:S.token,p_arquivo:file.name,p_linhas:L});
+ if(!x.ok){if(x.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');throw new Error(x.erro||'Não foi possível importar.')}
+ toast(`Lists importado: ${x.linhas} linhas · ${x.pacientes} pacientes.`);await carregar(true)}catch(e){toast(e.message||'Não foi possível ler o arquivo.')}}
+document.addEventListener('change',e=>{if(e.target&&e.target.id==='lsfile'&&e.target.files&&e.target.files[0])importaLists(e.target.files[0])});
+document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.closest('[data-limp],[data-qst],[data-rsj]');if(!b)return;e.stopPropagation();const d=b.dataset;
+ if(d.limp!==undefined){const f=document.getElementById('lsfile');if(f){f.value='';f.click()}return}
+ const r=(S.itens||[]).find(x=>String(x.id)===String(d.qst||d.rsj));if(!r)return;
+ if(d.qst){const t=(S.draft[r.id]||'').trim()||perguntaPadrao(r);if(!confirm('Enviar esta pergunta ao profissional?\n\n'+t))return;b.disabled=true;try{await responder(r.id,'questionada',t);toast('Pergunta enviada. O profissional é avisado no app.')}catch(x){b.disabled=false;toast(x.message)}return}
+ if(d.rsj){const c=cmpLists(r);const t=`Pedido recusado: o horário pedido (${jan(r)}) é diferente da janela cadastrada para o paciente (${c&&c.L?winTxt(c.L):'—'}) e não veio justificativa. Se houver motivo, faça um novo pedido explicando.`;
+  if(!confirm('Recusar com esta resposta?\n\n'+t))return;b.disabled=true;try{await responder(r.id,'recusada',t);toast('Recusada. O profissional já vê no app.')}catch(x){b.disabled=false;toast(x.message)}}},true);
 /* Histórico de solicitações por paciente */
 const H={d:null,dias:90,q:'',busy:false,err:'',ab:{}};
 try{S.solv=localStorage.getItem('lg-solv')==='hist'?'hist':'lista'}catch(e){S.solv='lista'}
@@ -592,10 +630,10 @@ function render(){
  if(S.tab==='fro'){app.innerHTML=h+renderFrota()+'</main>';desenhaFrota();return}
  h+=solVsw();
  if(S.solv==='hist'){h+=renderHist();app.innerHTML=h+'</main>';const q=$('#hq');if(q)q.oninput=()=>{H.q=q.value;const p=q.selectionStart;render();const n=$('#hq');n.focus();n.setSelectionRange(p,p)};const pd=$('#hdias');if(pd)pd.onchange=()=>{H.dias=+pd.value;H.d=null;carregarHist()};return}
- h+=`<div class="bar"><div class="chips" role="group" aria-label="Filtrar por situação">${['pendente','aprovada','recusada','aplicada'].map(st=>`<button type="button" data-st="${st}" class="${S.f.st===st?'on':''}">${STN[st].replace(' no SimpliRoute','')}<b>${cnt(st)}</b></button>`).join('')}<button type="button" data-st="" class="${!S.f.st?'on':''}">Todas<b>${all.length}</b></button></div>
+ h+=`<div class="bar"><div class="chips" role="group" aria-label="Filtrar por situação">${['pendente','questionada','aprovada','recusada','aplicada'].map(st=>`<button type="button" data-st="${st}" class="${S.f.st===st?'on':''}">${STN[st].replace(' no SimpliRoute','')}<b>${cnt(st)}</b></button>`).join('')}<button type="button" data-st="" class="${!S.f.st?'on':''}">Todas<b>${all.length}</b></button></div>
   <select id="fesp" aria-label="Equipe"><option value="">Todas as equipes</option>${esps.map(e=>`<option${S.f.esp===e?' selected':''}>${esc(e)}</option>`).join('')}</select>
   <select id="fdia" aria-label="Dia da rota"><option value="">Todos os dias</option>${dias.map(d=>`<option value="${d}"${S.f.dia===d?' selected':''}>${dm(d)}</option>`).join('')}</select>
-  <span class="sp"></span><span class="upd">${S.at?'Atualizado às '+new Date(S.at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+' · a cada 30 s':''}</span><button class="btn ghost sm" type="button" data-a="atualizar">Atualizar</button></div>`;
+  ${listsBar()}<span class="sp"></span><span class="upd">${S.at?'Atualizado às '+new Date(S.at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+' · a cada 30 s':''}</span><button class="btn ghost sm" type="button" data-a="atualizar">Atualizar</button></div>`;
  if(S.err)h+=`<p class="err" role="alert">${esc(S.err)}</p>`;
  if(S.itens===null)h+='<div class="empty">Carregando…</div>';
  else if(!L.length)h+='<div class="empty">Nenhuma solicitação com esses filtros.</div>';
@@ -608,10 +646,10 @@ function render(){
     h+=`<article class="rt${np?'':' ok'}"><button type="button" class="rth" data-tg="${id}" aria-expanded="${ab}"><span class="p"><b>${esc(r0.profissional)}</b>${r0.especialidade?`<small>${esc(r0.especialidade)}</small>`:''}</span><span class="c">${r0.placa?`<code>${esc(r0.placa)}</code>`:''}${r0.motorista?' · '+esc(r0.motorista):''}${r0.rota_confirmada?' · rota confirmada '+esc(r0.rota_confirmada):''}</span><span class="r">${np?`<span class="bd pendente">${np} ${np===1?'pendente':'pendentes'}</span>`:'<span class="bd aprovada">Tudo respondido</span>'}<small>${tot.length} ${tot.length===1?'pedido':'pedidos'}</small><span aria-hidden="true">${ab?'▾':'▸'}</span></span></button>`;
     if(ab){h+='<ol class="ls">';rs.forEach(r=>{const pend=r.status==='pendente',j=jan(r);
      h+=`<li><div class="lh"><span class="tp">${esc(TIPOS[r.tipo]||r.tipo)}</span>${j?`<span class="jn">${esc(j)}</span>`:''}<span class="bd ${r.status}">${STN[r.status]||r.status}</span></div>
-      <div class="pc">${r.paciente_ordem?esc(r.paciente_ordem)+'. ':''}<b>${esc(r.paciente)}</b>${r.bairro?' · '+esc(r.bairro):''}${r.teste?' <em class="tt">teste</em>':''}<small> · pedido ${hm(r.criado_em)}</small></div>${antTxt(r)}
+      <div class="pc">${r.paciente_ordem?esc(r.paciente_ordem)+'. ':''}<b>${esc(r.paciente)}</b>${r.bairro?' · '+esc(r.bairro):''}${r.teste?' <em class="tt">teste</em>':''}<small> · pedido ${hm(r.criado_em)}</small></div>${antTxt(r)}${listsTxt(r)}${r.justificativa?`<div class="just">💬 <b>Justificativa do profissional${r.justificado_em?" ("+hm(r.justificado_em)+")":""}:</b> ${esc(r.justificativa)}</div>`:""}
       ${r.motivo?`<p class="mo">“${esc(r.motivo)}”</p>`:''}
-      ${pend?`<div class="act"><input type="text" data-rs="${r.id}" maxlength="500" placeholder="Resposta ao profissional (obrigatória para recusar)" value="${esc(S.draft[r.id]||'')}" aria-label="Resposta para ${esc(r.paciente)}"><button class="btn wine sm" type="button" data-ok="${r.id}">Aprovar</button><button class="btn ghost sm" type="button" data-no="${r.id}">Recusar</button></div>`
-       :`<div class="resp">${r.resposta?`<span><b>Resposta:</b> ${esc(r.resposta)}</span>`:'<span>Sem resposta escrita.</span>'}<small>${esc(r.respondido_por||'')} · ${hm(r.respondido_em)}</small><div class="act">${r.status==='aprovada'?`<button class="btn ghost sm" type="button" data-ap="${r.id}">Marcar como aplicada</button>`:''}${r.status!=='aplicada'?`<button class="btn ghost sm" type="button" data-re="${r.id}">Reabrir</button>`:''}</div></div>`}</li>`});
+      ${pend?`<div class="act"><input type="text" data-rs="${r.id}" maxlength="500" placeholder="Resposta ao profissional (obrigatória para recusar)" value="${esc(S.draft[r.id]||'')}" aria-label="Resposta para ${esc(r.paciente)}"><button class="btn wine sm" type="button" data-ok="${r.id}">Aprovar</button><button class="btn ghost sm" type="button" data-no="${r.id}">Recusar</button>${qBtns(r)}</div>`
+       :`<div class="resp">${r.resposta?`<span><b>${r.status==='questionada'?'Pergunta enviada ao profissional':'Resposta'}:</b> ${esc(r.resposta)}</span>${r.status==='questionada'?'<span class="lsinfo">Aguardando a justificativa no app. Quando ele responder, o pedido volta para Pendente e você é avisado.</span>':''}`:'<span>Sem resposta escrita.</span>'}<small>${esc(r.respondido_por||'')} · ${hm(r.respondido_em)}</small><div class="act">${r.status==='aprovada'?`<button class="btn ghost sm" type="button" data-ap="${r.id}">Marcar como aplicada</button>`:''}${r.status!=='aplicada'?`<button class="btn ghost sm" type="button" data-re="${r.id}">Reabrir</button>`:''}</div></div>`}</li>`});
      h+='</ol>';const pids=rs.filter(r=>r.status==='pendente').map(r=>r.id);if(pids.length>1)h+=`<div class="all"><button class="btn ghost sm" type="button" data-all="${pids.join(',')}">Aprovar os ${pids.length} pendentes desta rota</button></div>`}
     h+='</article>'});h+='</div>'})}
  h+='</main>';app.innerHTML=h}
