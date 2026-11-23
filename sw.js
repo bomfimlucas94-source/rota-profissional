@@ -1,6 +1,6 @@
 // Minha Rota: permite instalar o app e abre mesmo com internet fraca.
 // Páginas sempre buscam a versão nova primeiro; dados (Supabase) nunca são guardados.
-const CACHE = 'minha-rota-v3';
+const CACHE = 'minha-rota-v4';
 const BASE = ['./index.html', './manifest.webmanifest'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(BASE)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => {
@@ -32,7 +32,8 @@ self.addEventListener('notificationclick', e => {
   e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(ws => {
     // primeiro a mesma página (Central ou app do profissional); o app do profissional aceita qualquer janela do Minha Rota
     for (const w of ws) { if (new URL(w.url).pathname === pag) { w.postMessage({ tipo: 'rota-nova', url: alvo }); return w.focus(); } }
-    if (!/central\.html$/.test(pag)) for (const w of ws) { if (w.url.startsWith(self.registration.scope) && !/central\.html/.test(w.url)) { w.postMessage({ tipo: 'rota-nova', url: alvo }); return w.focus(); } }
+    // app do profissional (index) aceita qualquer janela do Minha Rota que não seja a Central nem o app do motorista
+    if (!/(central|motorista)\.html$/.test(pag)) for (const w of ws) { if (w.url.startsWith(self.registration.scope) && !/(central|motorista)\.html/.test(w.url)) { w.postMessage({ tipo: 'rota-nova', url: alvo }); return w.focus(); } }
     return self.clients.openWindow(alvo);
   }));
 });

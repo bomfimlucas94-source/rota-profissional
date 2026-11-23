@@ -183,6 +183,7 @@ nav.tabs button.on{color:var(--wine);font-weight:800;box-shadow:inset 0 3px 0 va
 const SB='https://sizbevhqreaccxrlimup.supabase.co',KEY='sb_publishable_sOPBmFvZMrGj3JvHzxIyYQ_4LsvUbSG';
 const TIPOS={horario_fixo:'Atender em horário fixo',nao_antes:'Não atender antes de',nao_atender:'Paciente não será atendido',observacao:'Observação para o motorista'};
 const ST={pendente:['Aguardando','pend'],questionada:['Logística pediu justificativa','pend'],aprovada:['OK','ok'],aplicada:['OK','ok'],recusada:['Não foi possível','no']};
+const LG={msgs:null,nl:0,txt:'',busy:false,err:''};
 const S={token:null,nome:'',rotas:[],dia:null,tela:'rota',sel:null,tipo:'horario_fixo',busy:false,err:'',zoom:false};
 try{S.token=localStorage.getItem('rp-token');S.nome=localStorage.getItem('rp-nome')||'';S.trocar=localStorage.getItem('rp-trocar')==='1'}catch(e){}
 /* modo visualização: a logística abre o app do médico pela Central (#ver=token), só leitura, 30 min */
@@ -247,7 +248,7 @@ function bannerPush(){if(S.leitura||pushFechado||!('Notification' in window&&'se
  if(ehIOS&&!instalado()&&!('PushManager' in window))return `<div class="inst"><div><b>Receba aviso quando sua rota chegar</b>No iPhone, primeiro instale o app: toque em Compartilhar › <b style="display:inline">Adicionar à Tela de Início</b> e abra por lá.</div><button class="ix" type="button" data-a="pushx" aria-label="Fechar aviso">×</button></div>`;
  if(!pushSuporta()||Notification.permission!=='default')return'';
  return `<div class="inst"><div><b>🔔 Ativar notificações</b>Saiba na hora quando a logística enviar ou mudar a sua rota.</div><button class="ib" type="button" data-a="pushon">Ativar</button><button class="ix" type="button" data-a="pushx" aria-label="Agora não">×</button></div>`}
-if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.tipo==='rota-nova'&&S.token){if(e.data.url&&/#chat=/.test(e.data.url))carregar(true).then(()=>abreChatHash(e.data.url));else carregar()}});
+if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.tipo==='rota-nova'&&S.token){if(e.data.url&&/#canal/.test(e.data.url)){S.tela='log';render();carregaLog()}else if(e.data.url&&/#chat=/.test(e.data.url))carregar(true).then(()=>abreChatHash(e.data.url));else carregar()}});
 
 function bannerInst(){if(instalado()||instFechado)return'';
  if(INST)return`<div class="inst"><img src="https://sizbevhqreaccxrlimup.supabase.co/storage/v1/object/public/app-icones/icon-192.png" alt=""><div><b>Instale o Minha Rota</b>Abre em tela cheia, direto do ícone no celular.</div><button class="ib" type="button" data-a="instalar">Instalar</button><button class="ix" type="button" data-a="instx" aria-label="Fechar aviso">×</button></div>`;
@@ -395,12 +396,13 @@ function render(){
   const ro=rotaAtual();
   const nPend=ro?ro.pedidos.filter(p=>p.status==='pendente').length:0;
   let h=`<header class="top"><div class="r1"><span class="hi">Olá, ${esc(S.nome)}</span><button class="out" type="button" data-a="sair">Sair</button></div>
-   <h2>${S.tela==='chat'||S.tela==='chatresp'?'Conversa com o motorista':S.tela==='pedido'?'Necessidade do paciente':S.tela==='pedidos'?'Meus pedidos':S.tela==='evo'?'Evoluções':'Minha rota'}</h2>
-   ${ro&&S.tela!=='evo'?`<div class="sub">${esc(dExt(ro.data))} · ${/^carro\b/i.test(ro.placa||'')?'':'Carro '}${esc(ro.placa)}${ro.motorista?' · Motorista '+esc(ro.motorista):''}</div>`:''}</header>`;
-  if(S.rotas.length>1&&S.tela!=='pedido'&&S.tela!=='evo')h+=`<div class="days" role="tablist" aria-label="Dias">${S.rotas.map(x=>{const on=String(x.id)===String(S.dia),dup=S.rotas.filter(y=>y.data===x.data).length>1;return `<button type="button" role="tab" data-dia="${x.id}" class="${on?'on':''}" aria-selected="${on}">${esc(dExt(x.data).split(',')[0].slice(0,3))} ${x.data.slice(8,10)}/${x.data.slice(5,7)}${dup?' · '+esc(x.placa||''):''}</button>`}).join('')}</div>`;
+   <h2>${S.tela==='chat'||S.tela==='chatresp'?'Conversa com o motorista':S.tela==='pedido'?'Necessidade do paciente':S.tela==='pedidos'?'Meus pedidos':S.tela==='evo'?'Evoluções':S.tela==='log'?'Logística':'Minha rota'}</h2>
+   ${ro&&S.tela!=='evo'&&S.tela!=='log'?`<div class="sub">${esc(dExt(ro.data))} · ${/^carro\b/i.test(ro.placa||'')?'':'Carro '}${esc(ro.placa)}${ro.motorista?' · Motorista '+esc(ro.motorista):''}</div>`:''}</header>`;
+  if(S.rotas.length>1&&S.tela!=='pedido'&&S.tela!=='evo'&&S.tela!=='log')h+=`<div class="days" role="tablist" aria-label="Dias">${S.rotas.map(x=>{const on=String(x.id)===String(S.dia),dup=S.rotas.filter(y=>y.data===x.data).length>1;return `<button type="button" role="tab" data-dia="${x.id}" class="${on?'on':''}" aria-selected="${on}">${esc(dExt(x.data).split(',')[0].slice(0,3))} ${x.data.slice(8,10)}/${x.data.slice(5,7)}${dup?' · '+esc(x.placa||''):''}</button>`}).join('')}</div>`;
   h+='<main>'+(S.leitura?`<div class="verb" role="status"><span>👁 Você está vendo o app como <b>${esc(S.nome||'o médico')}</b>. Só leitura: nada é enviado e a rota não é marcada como vista.</span><button type="button" data-a="sair">Encerrar</button></div>`:bannerInst()+(S.tela==='rota'?bannerPush():''));if(S.tela==='rota'||S.tela==='pedidos')h+=evoHtml();
   if(S.err)h+=`<p class="err" role="alert">${esc(S.err)}</p>`;
   if(S.tela==='evo'){h+=evoTela()}
+  else if(S.tela==='log'){h+=logTela()}
   else if(!ro){h+=`<p class="empty">Nenhuma rota publicada para você ainda.<br>Quando a logística publicar, ela aparece aqui.</p><button class="btn line" type="button" data-a="atualizar" style="align-self:center">Atualizar</button>`}
   else if(S.tela==='rota'){
     h+=ro.confirmado_em?`<div class="note ok">Rota confirmada às ${hm(ro.confirmado_em)}.</div>`:ro.atualizado_em?`<div class="note pend">A logística atualizou esta rota às ${hm(ro.atualizado_em)}. Confira de novo e confirme.</div>`:`<div class="note pend">Confira sua rota e indique as necessidades dos pacientes o quanto antes.</div>`;
@@ -439,7 +441,7 @@ function render(){
     h+=`<button class="btn line" type="button" data-a="atualizar" style="align-self:center">Atualizar</button>`;
   }
   if(S.tela!=='chat'&&S.tela!=='chatresp')h+=`<p class="lgpd">Dados de pacientes são sigilosos (LGPD). Não compartilhe prints desta tela.</p>`;h+='</main>';
-  h+=`<nav class="tabs" aria-label="Navegação"><div><button type="button" data-a="rota" class="${['rota','pedido','chat','chatresp'].includes(S.tela)?'on':''}">Minha rota</button><button type="button" data-a="pedidos" class="${S.tela==='pedidos'?'on':''}">Meus pedidos${nPend?' ('+nPend+')':''}</button><button type="button" data-a="evotab" class="${S.tela==='evo'?'on':''}">Evoluções${S.evo&&S.evo.l.length?'<b class="nb">'+S.evo.l.length+'</b>':''}</button></div></nav>`;
+  h+=`<nav class="tabs" aria-label="Navegação"><div><button type="button" data-a="rota" class="${['rota','pedido','chat','chatresp'].includes(S.tela)?'on':''}">Minha rota</button><button type="button" data-a="pedidos" class="${S.tela==='pedidos'?'on':''}">Meus pedidos${nPend?' ('+nPend+')':''}</button><button type="button" data-a="evotab" class="${S.tela==='evo'?'on':''}">Evoluções${S.evo&&S.evo.l.length?'<b class="nb">'+S.evo.l.length+'</b>':''}</button><button type="button" data-a="logtab" class="${S.tela==='log'?'on':''}">Logística${LG.nl?'<b class="nb">'+LG.nl+'</b>':''}</button></div></nav>`;
   if(S.zoom&&ro&&ro.print)h+=`<div class="zoom" role="dialog" aria-modal="true" aria-label="Print da rota"><div><img src="${esc(ro.print)}" alt="Print da rota ampliado"></div><button type="button" data-a="fechar">Fechar</button></div>`;
   const foc=document.activeElement&&document.activeElement.id==='ctxt';
   app.innerHTML=h;
@@ -452,6 +454,7 @@ document.addEventListener('submit',async e=>{
   e.preventDefault();
   if(S.leitura){toast('Modo visualização: ações do médico estão desativadas.');return}
   if(e.target.id==='fchat'){enviaChat(CH.txt,false);return}
+  if(e.target.id==='flogp'){enviaLog();return}
   if(e.target.id==='flogin'){
     const cel=$('#cel').value,pin=$('#pin').value;if(!cel||!pin){S.err='Preencha o celular e o PIN.';render();return}
     S.busy=true;S.err='';render();
@@ -497,6 +500,7 @@ document.addEventListener('click',async e=>{
   if(b.dataset.tipo){const mot=$('#mot')?$('#mot').value:'';S.tipo=b.dataset.tipo;render();if($('#mot'))$('#mot').value=mot;return}
   const a=b.dataset.a;if(!a)return;
   if(a==='sair'){sair();return}
+  if(a==='logtab'){S.tela='log';render();window.scrollTo(0,0);carregaLog();return}
   if(a==='chat'){S.tela='chat';CH.n=-1;render();window.scrollTo(0,0);carregaChat();return}
   if(a==='chatresp'){CH.ed=(CH.d.respostas||[]).slice();S.tela='chatresp';render();window.scrollTo(0,0);return}
   if(a==='chatvolta'){S.tela='chat';render();fimChat();return}
@@ -532,6 +536,26 @@ document.addEventListener('input',e=>{const f=e.target.closest&&e.target.closest
 document.addEventListener('submit',async e=>{const f=e.target;if(!f.dataset||!f.dataset.just)return;e.preventDefault();const t=(f.querySelector('textarea').value||'').trim();if(t.length<5){toast('Escreva a justificativa.');return}
  const bt=f.querySelector('button');bt.disabled=true;try{const r=await rpc('app_justificar',{p_token:S.token,p_id:+f.dataset.just,p_texto:t});if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');bt.disabled=false;toast(r.erro||'Não foi possível enviar.');return}
  if(S.jd)delete S.jd[f.dataset.just];toast('Justificativa enviada à logística.');await carregar()}catch(x){bt.disabled=false;toast('Não foi possível enviar agora.')}});
+
+/* Canal direto com a Logística (e avisos para todos) */
+function logTela(){let h=`<div class="card" style="padding:14px;display:flex;flex-direction:column;gap:4px"><b style="font-size:17px">Canal com a Logística</b><small style="color:var(--muted);font-size:12.5px">Fale com a Logística a qualquer hora, sem depender da rota. Os avisos gerais também aparecem aqui.</small></div>`;
+ if(LG.err)h+=`<p class="err" role="alert">${esc(LG.err)}</p>`;
+ if(LG.msgs==null)return h+'<p class="empty">Abrindo a conversa…</p>';
+ h+='<div class="bubs" aria-live="polite">';if(!LG.msgs.length)h+='<p class="empty" style="padding:16px">Nenhuma mensagem ainda.</p>';
+ LG.msgs.forEach(m=>{const eu=m.de==='usuario';const hoje=new Date(m.em).toDateString()===new Date().toDateString();h+=`<div class="bub${eu?' eu':' cen'}">${eu?'':`<small style="margin:0 0 2px;font-weight:700">${m.aviso?'📢 Aviso da Logística':'Logística · '+esc(String(m.autor||'').split(' ')[0])}</small>`}${esc(m.texto)}<small>${hoje?hm(m.em):new Date(m.em).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' '+hm(m.em)}</small></div>`});
+ h+='</div>';if(S.leitura)return h;
+ return h+`<div class="chatfoot"><form class="envia" id="flogp"><label for="ltxt" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Mensagem para a Logística</label><input id="ltxt" maxlength="800" autocomplete="off" placeholder="Mensagem para a Logística" value="${esc(LG.txt)}"><button type="submit"${LG.busy?' disabled':''}>Enviar</button></form></div>`}
+function fimLog(){const l=document.querySelector('.bub:last-child');if(l)l.scrollIntoView({block:'end'})}
+async function carregaLog(sil){try{const r=await rpc('app_canal',{p_token:S.token,p_ler:true});if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');LG.err=r.erro;LG.msgs=LG.msgs||[];render();return}
+ const mudou=!LG.msgs||LG.msgs.length!==r.msgs.length;LG.msgs=r.msgs;LG.nl=r.nao_lidas||0;LG.err='';if(S.tela==='log'&&(mudou||!sil)){const f=document.activeElement&&document.activeElement.id==='ltxt';render();fimLog();if(f){const i=document.getElementById('ltxt');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length)}}}}catch(e){if(!sil){LG.err='Não foi possível abrir a conversa agora.';LG.msgs=LG.msgs||[];render()}}}
+async function contaLog(){try{const r=await rpc('app_canal',{p_token:S.token,p_ler:false});if(r&&r.ok&&r.nao_lidas!==LG.nl){LG.nl=r.nao_lidas;if(S.tela!=='pedido'&&S.tela!=='chat')render()}}catch(e){}}
+async function enviaLog(){const t=String(LG.txt||'').trim();if(!t||LG.busy)return;LG.busy=true;render();
+ try{const r=await rpc('app_canal_enviar',{p_token:S.token,p_texto:t});LG.busy=false;if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');toast(r.erro);render();return}
+  LG.txt='';LG.msgs=r.msgs;render();fimLog();const i=document.getElementById('ltxt');if(i)i.focus()}catch(x){LG.busy=false;toast('Não foi possível enviar agora.');render()}}
+document.addEventListener('input',e=>{if(e.target.id==='ltxt')LG.txt=e.target.value});
+let lgTick=0;setInterval(()=>{if(!S.token||S.trocar||document.hidden)return;lgTick++;if(S.tela==='log')carregaLog(true);else if(lgTick%3===0)contaLog()},12000);
+setTimeout(()=>{if(S.token&&!S.trocar)contaLog()},2000);
+if(/^#canal/.test(location.hash)&&S.token){S.tela='log';try{history.replaceState(null,'',location.pathname+location.search)}catch(x){}setTimeout(()=>{render();carregaLog()},300)}
 </script>
 </body>
 </html>
