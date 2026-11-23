@@ -37,6 +37,8 @@ header.top{background:var(--wine);color:#fff;border-bottom:5px solid var(--sun);
 .topin small{display:block;color:var(--peach);font-size:12px;font-weight:600}
 .topin .sp{flex:1}
 .topin .who{font-size:12.5px;color:var(--peach)}
+.hant{margin-top:6px;font-size:12.5px;line-height:1.45;color:var(--pend);background:var(--pend-bg);border-radius:8px;padding:6px 10px}.hant b{color:var(--bad)}.vsw{margin-top:14px}.hsub{margin:6px 0 10px;color:var(--muted);font-size:13.5px}
+.pushc{border:1px solid rgba(255,255,255,.35);background:transparent;color:#fff;border-radius:999px;padding:6px 12px;font-size:12.5px;font-weight:600;min-height:34px}.pushc.on{background:var(--sun);color:var(--wine-d);border-color:var(--sun)}
 .embed .topin>div:first-child,.embed .topin .who,.embed .topin .out{display:none}.embed header.top{border-bottom-width:3px}.embed .topin{padding:8px 16px}
 .out{background:rgba(255,255,255,.14);color:#fff;border:0;border-radius:999px;font-size:12px;font-weight:700;padding:7px 12px}
 main{max-width:1200px;margin:0 auto;padding:14px 16px 40px;display:flex;flex-direction:column;gap:12px}
@@ -438,6 +440,63 @@ function lerExtratoTicket(txt){const doc=new DOMParser().parseFromString(txt,'te
   const cart=r[iC]||'';const st=(cart.match(/\(([A-Z])\)/)||[])[1]||'A';const dig=cart.replace(/\D/g,'');
   out.push({placa:pl,cartao_final:dig.slice(-4),status:st,modelo:iM>=0?r[iM]:null,reservado:iR>=0?num(r[iR]):null,limite:iL>=0?num(r[iL]):null,utilizado:iU>=0?num(r[iU]):null,saldo:num(r[iS])})}
  if(!out.length)throw new Error('O arquivo não tem nenhum cartão com placa.');return out}
+/* Histórico de solicitações por paciente */
+const H={d:null,dias:90,q:'',busy:false,err:'',ab:{}};
+try{S.solv=localStorage.getItem('lg-solv')==='hist'?'hist':'lista'}catch(e){S.solv='lista'}
+const normP=t=>String(t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/\s+/g,' ').trim();
+const ehHora=t=>t==='horario_fixo'||t==='nao_antes';
+const janA=x=>jan({tipo:x.tipo,horario_de:x.de,horario_ate:x.ate});
+function antTxt(r){const a=r.anteriores||[];if(!a.length)return'';
+ const outro=ehHora(r.tipo)&&a.some(x=>ehHora(x.tipo)&&janA(x)!==jan(r));
+ return `<div class="hant">↺ Este paciente já teve ${a.length===5?'5 ou mais':a.length} ${a.length===1?'pedido':'pedidos'} antes: ${a.slice(0,3).map(x=>esc(dm(String(x.data)))+' '+esc(janA(x)||TIPOS[x.tipo]||x.tipo)).join(' · ')}${outro?' — <b>horário diferente do que já foi pedido</b>':''}</div>`}
+function solVsw(){return `<div class="bar vsw"><div class="chips" role="group" aria-label="Visualização"><button type="button" data-solv="lista" class="${S.solv!=='hist'?'on':''}">Pedidos recentes</button><button type="button" data-solv="hist" class="${S.solv==='hist'?'on':''}">Histórico por paciente</button></div></div>`}
+async function carregarHist(){if(H.busy)return;H.busy=true;H.err='';try{const r=await rpc('eq_sol_historico',{p_token:S.token,p_dias:H.dias});if(!r.ok){if(r.erro==='sessao'){H.busy=false;return sair('Sua sessão expirou. Entre de novo.')}H.err=r.erro||'Não consegui carregar o histórico.'}else H.d=r.itens||[]}catch(e){H.err='Não consegui carregar o histórico agora.'}H.busy=false;render()}
+function gruposHist(){const q=normP(H.q),G={};(H.d||[]).forEach(r=>{if(q&&!normP(r.paciente+' '+r.profissional+' '+(r.bairro||'')).includes(q))return;const k=normP(r.paciente);(G[k]=G[k]||[]).push(r)});
+ return Object.values(G).map(l=>{const hs=l.filter(x=>ehHora(x.tipo)),jans=[...new Set(hs.map(jan).filter(Boolean))];return{l,hs,jans,rec:hs.length>=2&&jans.length>=1}})
+  .sort((a,b)=>(+b.rec-+a.rec)||b.hs.length-a.hs.length||b.l.length-a.l.length||String(b.l[0].data_rota).localeCompare(String(a.l[0].data_rota)))}
+function renderHist(){if(!H.d&&!H.busy&&!H.err)carregarHist();
+ let h=`<div class="bar"><input id="hq" type="search" placeholder="Buscar paciente, profissional ou bairro" value="${esc(H.q)}" aria-label="Buscar no histórico" style="flex:1;min-width:220px;padding:9px 12px;border:1px solid var(--line);border-radius:10px"><select id="hdias" aria-label="Período">${[[30,'Últimos 30 dias'],[90,'Últimos 90 dias'],[365,'Último ano'],[3650,'Tudo']].map(([v,t])=>`<option value="${v}"${H.dias===v?' selected':''}>${t}</option>`).join('')}</select><button class="btn ghost sm" type="button" data-hcsv>Baixar Excel</button></div>`;
+ if(H.err)return h+`<p class="err" role="alert">${esc(H.err)}</p>`;
+ if(!H.d)return h+'<div class="empty">Carregando histórico…</div>';
+ const gs=gruposHist(),nrec=gs.filter(g=>g.rec).length,np=gs.reduce((t,g)=>t+g.l.length,0);
+ h+=`<p class="hsub">${gs.length} ${gs.length===1?'paciente':'pacientes'} · ${np} ${np===1?'pedido':'pedidos'}${nrec?` · <b>${nrec} ${nrec===1?'paciente teve':'pacientes tiveram'} horário pedido mais de uma vez</b> (aparecem primeiro)`:''}</p>`;
+ if(!gs.length)return h+'<div class="empty">Nenhum pedido no período.</div>';
+ h+='<div class="grid">';gs.forEach(g=>{const r0=g.l[0],k='h'+normP(r0.paciente).replace(/[^a-z0-9]/g,''),ab=!!H.ab[k];
+  h+=`<article class="rt${g.rec?'':' ok'}"><button type="button" class="rth" data-htg="${k}" aria-expanded="${ab}"><span class="p"><b>${esc(r0.paciente)}</b>${r0.bairro?`<small>${esc(r0.bairro)}</small>`:''}</span><span class="c">${g.jans.length?'Horários pedidos: '+g.jans.map(esc).join(' · '):'Sem pedido de horário'}</span><span class="r">${g.rec?'<span class="bd pendente">Horário pedido '+g.hs.length+'x</span>':''}<small>${g.l.length} ${g.l.length===1?'pedido':'pedidos'} · último ${dm(String(r0.data_rota))}</small><span aria-hidden="true">${ab?'▾':'▸'}</span></span></button>`;
+  if(ab){h+='<ol class="ls">';g.l.forEach(r=>{const j=jan(r);h+=`<li><div class="lh"><span class="tp">${esc(TIPOS[r.tipo]||r.tipo)}</span>${j?`<span class="jn">${esc(j)}</span>`:''}<span class="bd ${r.status}">${STN[r.status]||r.status}</span></div><div class="pc">Rota de <b>${dm(String(r.data_rota))}</b> · ${esc(r.profissional)}${r.placa?' · <code>'+esc(r.placa)+'</code>':''}</div>${r.motivo?`<div class="pc"><small>Motivo: ${esc(r.motivo)}</small></div>`:''}${r.resposta?`<div class="pc"><small>Resposta da Logística: ${esc(r.resposta)}</small></div>`:''}</li>`});h+='</ol>'}
+  h+='</article>'});
+ return h+'</div>'}
+function baixaHistCsv(){const gs=gruposHist(),c=v=>'"'+String(v??'').replace(/"/g,'""')+'"',L=[['Data da rota','Paciente','Bairro','Profissional','Especialidade','Carro','Tipo','Horário','Situação','Motivo','Resposta','Pedido em','Pedidos de horário do paciente no período'].map(c).join(';')];
+ gs.forEach(g=>g.l.forEach(r=>L.push([dm(String(r.data_rota))+'/'+String(r.data_rota).slice(0,4),r.paciente,r.bairro,r.profissional,r.especialidade,r.placa,TIPOS[r.tipo]||r.tipo,jan(r),(STN[r.status]||r.status),r.motivo,r.resposta,r.criado_em?new Date(r.criado_em).toLocaleString('pt-BR'):'',g.hs.length].map(c).join(';'))));
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+L.join('\r\n')],{type:'text/csv;charset=utf-8'}));a.download='historico-solicitacoes.csv';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-solv],[data-htg],[data-hcsv]');if(!b)return;e.stopPropagation();const d=b.dataset;
+ if(d.solv){S.solv=d.solv;try{localStorage.setItem('lg-solv',d.solv)}catch(x){}if(d.solv==='hist')H.d=null;render();return}
+ if(d.htg){H.ab[d.htg]=!H.ab[d.htg];render();return}
+ if(d.hcsv!==undefined)baixaHistCsv()},true);
+/* Avisos no aparelho: notificação quando chega solicitação nova (Logística) */
+const VAPID_C='BJtcxQcuxJz_-k4vrCm9Wh9J5pkCLa7dSDPlCxN4gdvtf-hXwyUIchWSVV4G3cUGHYCZtmLTrZaPtK57gizWNVs';
+let PUSHC=null,PUSHC_ok=false;
+const pushSupC=()=>!EMBED&&'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window&&location.protocol==='https:';
+const b64uC=t=>{const p='='.repeat((4-t.length%4)%4),b=atob((t+p).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from(b,c=>c.charCodeAt(0))};
+function pushBtnC(){if(!pushSupC())return'';if(!PUSHC_ok){PUSHC_ok=true;pushChecarC()}
+ return PUSHC==='on'?'<button type="button" class="pushc on" data-a="pushc" title="Você recebe um aviso neste aparelho quando chega solicitação nova">🔔 Avisos ligados</button>':'<button type="button" class="pushc" data-a="pushc" title="Receber aviso neste aparelho quando chegar solicitação nova">🔕 Ativar avisos</button>'}
+async function pushRegC(){let r=await navigator.serviceWorker.getRegistration();if(!r)r=await navigator.serviceWorker.register('sw.js');return navigator.serviceWorker.ready}
+async function pushChecarC(){try{if(Notification.permission!=='granted')return;const r=await navigator.serviceWorker.getRegistration();const sub=r&&await r.pushManager.getSubscription();if(!sub)return;const j=sub.toJSON();
+ const x=await rpc('eq_push_inscrever',{p_token:S.token,p_endpoint:j.endpoint,p_p256dh:j.keys.p256dh,p_auth:j.keys.auth});if(x&&x.ok){PUSHC='on';render()}}catch(e){}}
+async function pushTrocarC(){try{
+ if(PUSHC==='on'){if(!confirm('Desligar os avisos de solicitação neste aparelho?'))return;const r=await navigator.serviceWorker.getRegistration();const sub=r&&await r.pushManager.getSubscription();if(sub){await rpc('eq_push_sair',{p_token:S.token,p_endpoint:sub.endpoint}).catch(()=>{});}PUSHC=null;render();return}
+ const perm=await Notification.requestPermission();if(perm!=='granted'){alert('As notificações estão bloqueadas neste navegador. Libere nas configurações do site e tente de novo.');return}
+ const reg=await pushRegC();let sub=await reg.pushManager.getSubscription();
+ if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64uC(VAPID_C)});
+ const j=sub.toJSON();const x=await rpc('eq_push_inscrever',{p_token:S.token,p_endpoint:j.endpoint,p_p256dh:j.keys.p256dh,p_auth:j.keys.auth});
+ if(!x||!x.ok){alert((x&&x.erro)||'Não consegui ativar os avisos agora.');return}
+ PUSHC='on';render();
+ try{reg.showNotification('Avisos ligados',{body:'Você vai receber um aviso aqui quando chegar solicitação nova na Central.',tag:'pushc-teste'})}catch(e){}
+}catch(e){alert('Não consegui ativar os avisos neste aparelho ('+(e&&e.message||e)+').')}}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-a="pushc"]');if(!b)return;e.stopPropagation();pushTrocarC()},true);
+if(!EMBED&&'serviceWorker' in navigator&&location.protocol==='https:'){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+ navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.url&&/central\.html#solicitacoes/.test(e.data.url)&&S.token){S.tab='sol';try{localStorage.setItem('lg-tab','sol')}catch(x){}carregar()}})}
+if(location.hash==='#solicitacoes'){S.tab='sol';try{localStorage.setItem('lg-tab','sol');history.replaceState(null,'',location.pathname+location.search)}catch(e){}}
 document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('[data-tkimp]')){const f=document.getElementById('tkfile');if(f){f.value='';f.click()}}});
 document.addEventListener('change',async e=>{if(e.target.id!=='tkfile')return;const f=e.target.files&&e.target.files[0];if(!f)return;
  M.tkBusy=true;render();
@@ -523,7 +582,7 @@ function render(){
  const esps=[...new Set(all.map(r=>r.especialidade).filter(Boolean))].sort(),dias=[...new Set(all.map(r=>r.data_rota))].sort();
  const L=all.filter(r=>(!S.f.st||r.status===S.f.st)&&(!S.f.esp||r.especialidade===S.f.esp)&&(!S.f.dia||r.data_rota===S.f.dia));
  const npend=cnt('pendente');
- let h=`<header class="top"><div class="topin"><div><h2>Central de Solicitações</h2><small>${LOGI()?'Logística':'Administrativo Médico'} · Solar Cuidados</small></div>${LOGI()?`<nav class="tabs" aria-label="Seções"><button type="button" data-tab="sol" class="${S.tab==='sol'?'on':''}">Solicitações${npend?`<b>${npend}</b>`:''}</button><button type="button" data-tab="env" class="${S.tab==='env'?'on':''}">Envio de rotas</button><button type="button" data-tab="rel" class="${S.tab==='rel'?'on':''}">Relatório</button><button type="button" data-tab="fro" class="${S.tab==='fro'?'on':''}">Frota ao vivo</button><button type="button" data-tab="evo" class="${S.tab==='evo'?'on':''}">Evoluções</button><button type="button" data-tab="mot" class="${S.tab==='mot'?'on':''}">${motTabTxt()}</button><button type="button" data-tab="cad" class="${S.tab==='cad'?'on':''}">Cadastros</button></nav>`:`<nav class="tabs" aria-label="Seções"><button type="button" data-tab="fro" class="${S.tab==='fro'?'on':''}">Frota ao vivo</button><button type="button" data-tab="evo" class="${S.tab==='evo'?'on':''}">Evoluções</button></nav>`}<span class="sp"></span><span class="who">${esc(S.nome)}</span><button class="out" type="button" data-a="sair">Sair</button></div></header><main>`;
+ let h=`<header class="top"><div class="topin"><div><h2>Central de Solicitações</h2><small>${LOGI()?'Logística':'Administrativo Médico'} · Solar Cuidados</small></div>${LOGI()?`<nav class="tabs" aria-label="Seções"><button type="button" data-tab="sol" class="${S.tab==='sol'?'on':''}">Solicitações${npend?`<b>${npend}</b>`:''}</button><button type="button" data-tab="env" class="${S.tab==='env'?'on':''}">Envio de rotas</button><button type="button" data-tab="rel" class="${S.tab==='rel'?'on':''}">Relatório</button><button type="button" data-tab="fro" class="${S.tab==='fro'?'on':''}">Frota ao vivo</button><button type="button" data-tab="evo" class="${S.tab==='evo'?'on':''}">Evoluções</button><button type="button" data-tab="mot" class="${S.tab==='mot'?'on':''}">${motTabTxt()}</button><button type="button" data-tab="cad" class="${S.tab==='cad'?'on':''}">Cadastros</button></nav>`:`<nav class="tabs" aria-label="Seções"><button type="button" data-tab="fro" class="${S.tab==='fro'?'on':''}">Frota ao vivo</button><button type="button" data-tab="evo" class="${S.tab==='evo'?'on':''}">Evoluções</button></nav>`}<span class="sp"></span>${LOGI()?pushBtnC():''}<span class="who">${esc(S.nome)}</span><button class="out" type="button" data-a="sair">Sair</button></div></header><main>`;
  if(!LOGI()&&S.tab!=='fro'&&S.tab!=='evo')S.tab='fro';
  if(S.tab==='env'){app.innerHTML=h+renderEnv()+'</main>';return}
  if(S.tab==='rel'){app.innerHTML=h+renderRel()+'</main>';return}
@@ -531,6 +590,8 @@ function render(){
  if(S.tab==='mot'){app.innerHTML=h+renderMot()+'</main>';document.querySelectorAll('.conv .cm').forEach(x=>x.scrollTop=x.scrollHeight);document.querySelectorAll('[data-cvd]').forEach(i=>i.oninput=()=>{M.draft[i.dataset.cvd]=i.value});const q=$('#mq');if(q)q.oninput=()=>{M.q=q.value;const p=q.selectionStart;render();const n=$('#mq');n.focus();n.setSelectionRange(p,p)};return}
  if(S.tab==='evo'){app.innerHTML=h+renderEvoC()+'</main>';return}
  if(S.tab==='fro'){app.innerHTML=h+renderFrota()+'</main>';desenhaFrota();return}
+ h+=solVsw();
+ if(S.solv==='hist'){h+=renderHist();app.innerHTML=h+'</main>';const q=$('#hq');if(q)q.oninput=()=>{H.q=q.value;const p=q.selectionStart;render();const n=$('#hq');n.focus();n.setSelectionRange(p,p)};const pd=$('#hdias');if(pd)pd.onchange=()=>{H.dias=+pd.value;H.d=null;carregarHist()};return}
  h+=`<div class="bar"><div class="chips" role="group" aria-label="Filtrar por situação">${['pendente','aprovada','recusada','aplicada'].map(st=>`<button type="button" data-st="${st}" class="${S.f.st===st?'on':''}">${STN[st].replace(' no SimpliRoute','')}<b>${cnt(st)}</b></button>`).join('')}<button type="button" data-st="" class="${!S.f.st?'on':''}">Todas<b>${all.length}</b></button></div>
   <select id="fesp" aria-label="Equipe"><option value="">Todas as equipes</option>${esps.map(e=>`<option${S.f.esp===e?' selected':''}>${esc(e)}</option>`).join('')}</select>
   <select id="fdia" aria-label="Dia da rota"><option value="">Todos os dias</option>${dias.map(d=>`<option value="${d}"${S.f.dia===d?' selected':''}>${dm(d)}</option>`).join('')}</select>
@@ -547,7 +608,7 @@ function render(){
     h+=`<article class="rt${np?'':' ok'}"><button type="button" class="rth" data-tg="${id}" aria-expanded="${ab}"><span class="p"><b>${esc(r0.profissional)}</b>${r0.especialidade?`<small>${esc(r0.especialidade)}</small>`:''}</span><span class="c">${r0.placa?`<code>${esc(r0.placa)}</code>`:''}${r0.motorista?' · '+esc(r0.motorista):''}${r0.rota_confirmada?' · rota confirmada '+esc(r0.rota_confirmada):''}</span><span class="r">${np?`<span class="bd pendente">${np} ${np===1?'pendente':'pendentes'}</span>`:'<span class="bd aprovada">Tudo respondido</span>'}<small>${tot.length} ${tot.length===1?'pedido':'pedidos'}</small><span aria-hidden="true">${ab?'▾':'▸'}</span></span></button>`;
     if(ab){h+='<ol class="ls">';rs.forEach(r=>{const pend=r.status==='pendente',j=jan(r);
      h+=`<li><div class="lh"><span class="tp">${esc(TIPOS[r.tipo]||r.tipo)}</span>${j?`<span class="jn">${esc(j)}</span>`:''}<span class="bd ${r.status}">${STN[r.status]||r.status}</span></div>
-      <div class="pc">${r.paciente_ordem?esc(r.paciente_ordem)+'. ':''}<b>${esc(r.paciente)}</b>${r.bairro?' · '+esc(r.bairro):''}${r.teste?' <em class="tt">teste</em>':''}<small> · pedido ${hm(r.criado_em)}</small></div>
+      <div class="pc">${r.paciente_ordem?esc(r.paciente_ordem)+'. ':''}<b>${esc(r.paciente)}</b>${r.bairro?' · '+esc(r.bairro):''}${r.teste?' <em class="tt">teste</em>':''}<small> · pedido ${hm(r.criado_em)}</small></div>${antTxt(r)}
       ${r.motivo?`<p class="mo">“${esc(r.motivo)}”</p>`:''}
       ${pend?`<div class="act"><input type="text" data-rs="${r.id}" maxlength="500" placeholder="Resposta ao profissional (obrigatória para recusar)" value="${esc(S.draft[r.id]||'')}" aria-label="Resposta para ${esc(r.paciente)}"><button class="btn wine sm" type="button" data-ok="${r.id}">Aprovar</button><button class="btn ghost sm" type="button" data-no="${r.id}">Recusar</button></div>`
        :`<div class="resp">${r.resposta?`<span><b>Resposta:</b> ${esc(r.resposta)}</span>`:'<span>Sem resposta escrita.</span>'}<small>${esc(r.respondido_por||'')} · ${hm(r.respondido_em)}</small><div class="act">${r.status==='aprovada'?`<button class="btn ghost sm" type="button" data-ap="${r.id}">Marcar como aplicada</button>`:''}${r.status!=='aplicada'?`<button class="btn ghost sm" type="button" data-re="${r.id}">Reabrir</button>`:''}</div></div>`}</li>`});
