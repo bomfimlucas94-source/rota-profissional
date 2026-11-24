@@ -202,6 +202,16 @@ tr.crit td{background:#fdf1f2}
 .fout2{width:20px;height:20px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 1px 1px rgba(0,0,0,.35))}
 .avbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:#fff7e6;border:1px solid #f3d9a4;border-radius:12px;padding:10px 12px;margin:0 0 14px;font-size:13.5px;color:var(--ink)}
 .avbar span{flex:1;min-width:220px}.avbar .avx{border:0;background:none;font-size:20px;line-height:1;color:var(--muted);cursor:pointer;padding:0 4px}
+.ajbar{flex-wrap:wrap;gap:10px;align-items:flex-end}.ajbar label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700;color:var(--muted)}.ajbar select{font:inherit;font-size:14px;padding:7px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;min-width:200px}
+.ajhead{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 16px;margin:12px 0;display:flex;flex-direction:column;gap:4px}.ajhead small{display:block;color:var(--muted);font-size:13px}
+.ajt td{vertical-align:top}.ajt tr.ajfeita td{opacity:.55}.ajt tr.ajmud td{background:#fffaf0}
+.ajj{display:flex;gap:6px;align-items:center}.ajj input{font:inherit;font-size:13.5px;padding:5px 6px;border:1px solid var(--line);border-radius:8px;width:104px}.ajj span{font-size:12px;color:var(--muted)}
+.ajt input[type=number]{font:inherit;font-size:13.5px;padding:5px 6px;border:1px solid var(--line);border-radius:8px}
+.ajchip{font-size:12px;color:var(--muted);margin-top:4px}.ajchip.ped{color:#3a2f8f}.lnk{border:0;background:none;color:var(--wine);font:inherit;font-weight:700;text-decoration:underline;cursor:pointer;padding:0 2px}
+.ajw{color:#9a6a00;font-size:12px}.ajbad{color:#b4232b}
+.ajmv{display:flex;flex-direction:column;gap:2px}.ajmv button{border:1px solid var(--line);background:#fff;border-radius:6px;font-size:11px;line-height:1;padding:4px 8px;cursor:pointer}.ajmv button:disabled{opacity:.3;cursor:default}
+.ajfoot{position:sticky;bottom:0;background:var(--bg);border-top:1px solid var(--line);padding:12px 0;margin-top:12px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.ajres{flex:1;display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-size:14px}.ajbtns{display:flex;gap:8px;flex-wrap:wrap}
 </style>
 </head>
 <body>
@@ -454,7 +464,7 @@ async function carregarMot(sil){if(!S.token||!LOGI())return;if(!sil&&!M.d){M.bus
  M.busy=false;if(!(isMot()&&document.activeElement&&document.activeElement.closest&&document.activeElement.closest('.cbox,.cform,.conv form')))render();else{const t=document.querySelector('[data-grp=fro]');if(t)t.innerHTML='Frota'+grpBadge('fro')}}
 const isMot=()=>/^mot/.test(S.tab);
 /* Menus: 4 grupos + ⚙. Cada grupo tem sub-abas; S.tab continua sendo a sub-aba ativa */
-const GRP=[['ped','Pedidos',[['sol','Solicitações']]],['rot','Rotas',[['env','Envio de rotas'],['rel','Relatório'],['evo','Evoluções']]],['fro','Frota',[['fro','Ao vivo'],['motf','Plantões e ocorrências'],['motc','Ticket Log e pedágios']]],['conv','Conversas',[['can','Canal com a Logística'],['motv','Conversas das rotas']]],['cfg','⚙',[['cad','Equipe e profissionais'],['mota','Acesso dos motoristas']]]];
+const GRP=[['ped','Pedidos',[['sol','Solicitações']]],['rot','Rotas',[['env','Envio de rotas'],['aju','Ajustar rota'],['rel','Relatório'],['evo','Evoluções']]],['fro','Frota',[['fro','Ao vivo'],['motf','Plantões e ocorrências'],['motc','Ticket Log e pedágios']]],['conv','Conversas',[['can','Canal com a Logística'],['motv','Conversas das rotas']]],['cfg','⚙',[['cad','Equipe e profissionais'],['mota','Acesso dos motoristas']]]];
 const grpDe=t=>(GRP.find(g=>g[2].some(x=>x[0]===t))||GRP[0])[0];
 const SUBULT={};try{Object.assign(SUBULT,JSON.parse(localStorage.getItem('lg-sub')||'{}'))}catch(e){}
 function grpBadge(g){if(g==='ped'){const n=(S.itens||[]).filter(r=>r.status==='pendente').length;return n?`<b>${n}</b>`:''}
@@ -563,6 +573,82 @@ document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.c
  if(d.kavenv){const t=(K.av.txt||'').trim();if(!t){toast('Escreva o aviso.');return}const quem={todos:'todos os motoristas e profissionais',motoristas:'todos os motoristas',profissionais:'todos os profissionais'}[K.av.para];
   if(!confirm('Enviar este aviso para '+quem+'?\n\n'+t))return;b.disabled=true;try{const r=await rpc('eq_aviso_enviar',{p_token:S.token,p_para:K.av.para,p_texto:t});b.disabled=false;if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');toast(r.erro);return}
    K.av.txt='';toast('Aviso enviado.');carregarCanal()}catch(x){b.disabled=false;toast(x.message)}}});
+const ajBtn=r=>LOGI()&&r.data_rota>=hojeSP()&&(r.tipo==='horario_fixo'||r.tipo==='nao_antes'||r.tipo==='trocar_ordem')?`<button class="btn ghost sm" type="button" data-ajr="${r.id}" title="Abrir a rota com o pedido já aplicado, ver os horários e enviar ao SimpliRoute">Ajustar na rota</button>`:'';
+/* ===== Ajustar rota: ordem e janelas direto no SimpliRoute, com pré-visualização ===== */
+const AJ={data:hojeSP(),rotas:null,route:'',d:null,ord:[],sim:null,busy:'',err:'',sols:[],pre:null,ok:false,veic:''};
+async function ajApi(acao,extra){const r=await fetch(SB+'/functions/v1/rota-editar',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({token:S.token,acao,data:AJ.data,route:AJ.route,...(extra||{})})}).then(r=>r.json());
+ if(!r.ok&&r.erro==='sessao'){sair('Sua sessão expirou. Entre de novo.');throw new Error('sessao')}return r}
+async function ajRotas(){AJ.busy='rotas';AJ.err='';render();try{const r=await ajApi('rotas');AJ.rotas=r.ok?r.rotas:[];if(!r.ok)AJ.err=r.erro;
+  if(AJ.veic&&!AJ.route){const x=AJ.rotas.find(z=>normP(z.veiculo)===normP(AJ.veic));if(x){AJ.route=x.id;AJ.busy='';return ajCarregar()}AJ.err='Não achei a rota '+AJ.veic+' em '+dm(AJ.data)+' no SimpliRoute.'}}catch(e){if(e.message!=='sessao')AJ.err=e.message}AJ.busy='';render()}
+async function ajCarregar(){if(!AJ.route)return;AJ.busy='carregar';AJ.err='';AJ.sim=null;AJ.ok=false;render();
+ try{const r=await ajApi('carregar');if(!r.ok)throw new Error(r.erro);AJ.d=r;AJ.ord=r.rota.visitas.map(v=>({id:v.id,de:v.de,ate:v.ate,duracao:v.duracao}));
+  if(AJ.pre){const p=AJ.pre;AJ.pre=null;const v=r.rota.visitas.find(x=>!x.feita&&(normP(x.titulo)===normP(p.paciente)||normP(x.titulo).includes(normP(p.paciente))||normP(p.paciente).includes(normP(x.titulo))));
+   if(v)ajUsarPedido(v.id,p);else toast('Paciente '+p.paciente+' não encontrado nesta rota.')}}
+ catch(e){if(e.message!=='sessao')AJ.err=e.message}AJ.busy='';render()}
+const ajV=id=>AJ.d&&AJ.d.rota.visitas.find(v=>String(v.id)===String(id));
+const ajO=id=>AJ.ord.find(v=>String(v.id)===String(id));
+function ajMudou(){if(!AJ.d)return 0;const V=AJ.d.rota.visitas;let n=0;AJ.ord.forEach((o,i)=>{const v=ajV(o.id);if(String(V[i].id)!==String(o.id)||v.de!==o.de||v.ate!==o.ate||v.duracao!==+o.duracao)n++});return n}
+function ajUsarPedido(id,p){const o=ajO(id);if(!o)return;if(p.tipo==='horario_fixo'){o.de=p.de||'';o.ate=p.ate||''}else if(p.tipo==='nao_antes'){o.de=p.de||'';o.ate=''}else return;
+ if(p.id&&!AJ.sols.includes(p.id))AJ.sols.push(p.id);AJ.sim=null;AJ.ok=false}
+const ajMin=t=>{const m=String(t||'').match(/(\d{1,2}):(\d{2})/);return m?+m[1]*60+ +m[2]:null};
+function renderAju(){let h=`<div class="bar ajbar"><label>Dia <select id="ajdia">${[0,1,2].map(k=>{const d=new Date();d.setDate(d.getDate()+k);const s=d.toLocaleDateString('sv-SE',{timeZone:'America/Sao_Paulo'});return `<option value="${s}"${AJ.data===s?' selected':''}>${k===0?'Hoje':k===1?'Amanhã':dExt(s)} · ${dm(s)}</option>`}).join('')}</select></label>
+ <label>Rota <select id="ajrota"><option value="">${AJ.rotas==null?'Carregando…':'Escolha a rota'}</option>${(AJ.rotas||[]).length?`<optgroup label="Rotas médicas">${AJ.rotas.filter(r=>r.medica).map(r=>`<option value="${r.id}"${AJ.route===r.id?' selected':''}>${esc(r.veiculo||'?')} · ${esc(String(r.motorista||'').split(' ')[0])} · ${r.feitas}/${r.total}${r.status==='finished'?' · finalizada':''}</option>`).join('')}</optgroup><optgroup label="Outras rotas">${AJ.rotas.filter(r=>!r.medica).map(r=>`<option value="${r.id}"${AJ.route===r.id?' selected':''}>${esc(r.veiculo||'?')} · ${r.feitas}/${r.total}</option>`).join('')}</optgroup>`:''}</select></label>
+ <button class="btn ghost sm" type="button" data-aj="recarregar"${AJ.busy?' disabled':''}>Recarregar</button><span class="sp"></span><span class="lsinfo">Muda a ordem e as janelas no SimpliRoute. Nada é alterado antes do <b>OK</b>.</span></div>`;
+ if(AJ.err)h+=`<p class="err" role="alert">${esc(AJ.err)}</p>`;
+ if(AJ.rotas==null&&!AJ.busy&&!AJ.veic&&!AJ._q){AJ._q=1;setTimeout(()=>{AJ._q=0;if(AJ.rotas==null&&!AJ.busy)ajRotas()},0)}
+ if(!AJ.route)return h+'<div class="empty">Escolha a rota para ver as visitas.</div>';
+ if(!AJ.d)return h+`<div class="empty">${AJ.busy?'Buscando a rota no SimpliRoute…':'—'}</div>`;
+ const R=AJ.d.rota,L=AJ.d.lists||{},P=AJ.d.pedidos||[],sim=AJ.sim,sv=sim?new Map((sim.visitas||[]).map(x=>[String(x.id),x])):new Map();
+ const mud=ajMudou(),fin=R.status==='finished';
+ h+=`<div class="ajhead"><div><b style="font-size:17px">${esc(R.veiculo)}</b><small> · ${esc(R.motorista||'sem motorista')} · ${R.status==='started'?'em andamento':R.status==='finished'?'finalizada':'não iniciada'} · saída prevista ${esc(R.inicio)}${R.fim?' · volta prevista '+esc(R.fim):''}</small>
+  <small>${AJ.d.enviada?`Enviada no Minha Rota para <b>${esc(AJ.d.enviada.profissional)}</b>: ao confirmar, a rota dele é atualizada.`:'Ainda não enviada no Minha Rota.'}${P.length?` · <b>${P.length}</b> pedido(s) do profissional para esta rota`:''}</small></div></div>`;
+ h+=`<div class="tw"><table class="rel ajt"><thead><tr><th style="width:44px">#</th><th>Paciente</th><th>Janela de horário</th><th style="width:78px">Duração</th><th style="width:88px">Hoje no SR</th><th style="width:170px">Prevista</th><th style="width:64px"></th></tr></thead><tbody>`;
+ let pend=0;AJ.ord.forEach((o,i)=>{const v=ajV(o.id);if(!v)return;const x=sv.get(String(v.id));const lw=(L[v.titulo]||[]).filter(w=>w.de||w.ate);const ps=P.filter(p=>normP(p.paciente)===normP(v.titulo)||normP(v.titulo).includes(normP(p.paciente)));
+  const mudJ=v.de!==o.de||v.ate!==o.ate,mudO=String(R.visitas[i].id)!==String(o.id);
+  let prev='<small class="lsinfo">—</small>';if(v.feita)prev=`<small>${v.status==='completed'?'✓ atendida':'✗ não atendida'}</small>`;else if(x)prev=`<b>${x.chegada}</b>${x.espera?` <small class="ajw">espera ${x.espera} min → ${x.inicio}</small>`:''}${x.atraso?` <span class="bd recusada">atrasa ${x.atraso} min</span>`:(o.de||o.ate)?' <span class="bd aprovada">na janela</span>':''}`;
+  if(!v.feita)pend++;
+  h+=`<tr class="${v.feita?'ajfeita':''}${mudO||mudJ?' ajmud':''}"><td class="n"><b>${i+1}</b>${mudO?'<br><small class="ajw">antes '+(R.visitas.findIndex(z=>String(z.id)===String(o.id))+1)+'º</small>':''}</td>
+   <td><b>${esc(v.titulo)}</b><br><small>${esc(v.bairro||'')}</small>${lw.length?`<div class="ajchip">📋 Lists: ${esc(lw.map(w=>(w.de||'?')+'–'+(w.ate||'?')).join(' ou '))}${!v.feita&&lw.length===1?` <button type="button" class="lnk" data-ajlist="${v.id}">usar</button>`:''}</div>`:''}${ps.map(p=>`<div class="ajchip ped">💬 ${esc(TIPOS[p.tipo]||p.tipo)}${p.de||p.ate?' '+esc(jan({tipo:p.tipo,horario_de:p.de,horario_ate:p.ate})):''} · ${esc(STN[p.status]||p.status)}${!v.feita&&(p.tipo==='horario_fixo'||p.tipo==='nao_antes')?` <button type="button" class="lnk" data-ajped="${v.id}:${p.id}">usar</button>`:''}${AJ.sols.includes(p.id)?' ✓':''}</div>`).join('')}</td>
+   <td>${v.feita?`<small>${esc(v.de&&v.ate?v.de+'–'+v.ate:'sem janela')}</small>`:`<div class="ajj"><input type="time" data-ajde="${v.id}" value="${esc(o.de)}" aria-label="Janela de ${esc(v.titulo)} a partir de"><span>até</span><input type="time" data-ajate="${v.id}" value="${esc(o.ate)}" aria-label="Janela de ${esc(v.titulo)} até">${o.de||o.ate?`<button type="button" class="lnk" data-ajlimpa="${v.id}" title="Tirar a janela">×</button>`:''}</div>${mudJ?`<small class="ajw">antes: ${esc(v.de||v.ate?(v.de||'…')+'–'+(v.ate||'…'):'sem janela')}</small>`:''}`}</td>
+   <td>${v.feita?`<small>${v.duracao} min</small>`:`<input type="number" min="5" max="240" step="5" data-ajdur="${v.id}" value="${o.duracao}" style="width:62px"> <small>min</small>`}</td>
+   <td class="n"><small>${esc(v.eta||'—')}</small></td><td>${prev}</td>
+   <td>${v.feita?'':`<div class="ajmv"><button type="button" data-ajup="${i}" aria-label="Subir"${i===0||ajV(AJ.ord[i-1].id).feita?' disabled':''}>▲</button><button type="button" data-ajdn="${i}" aria-label="Descer"${i===AJ.ord.length-1?' disabled':''}>▼</button></div>`}</td></tr>`});
+ h+='</tbody></table></div>';
+ h+=`<div class="ajfoot">${sim?`<div class="ajres"><span>Volta à base: <b>${esc(sim.atual?sim.atual.fim:'—')}</b> → <b>${esc(sim.fim)}</b></span><span>Atrasos: <b class="${sim.atrasos?'ajbad':''}">${sim.atrasos||0}</b></span><span>Espera total: <b>${sim.espera_total||0} min</b></span>${sim.sem_encaixe&&sim.sem_encaixe.length?`<span class="ajbad">${sim.sem_encaixe.length} visita(s) não couberam nas janelas</span>`:''}<small class="lsinfo">Tempos de deslocamento calculados pelo SimpliRoute${R.status==='started'?', a partir de agora e da última visita feita':''}.</small></div>`:`<div class="ajres"><span class="lsinfo">${mud?`<b>${mud}</b> visita(s) alterada(s). `:''}Faça a pré-visualização para ver os horários antes de enviar.</span></div>`}
+  <div class="ajbtns"><button class="btn ghost" type="button" data-aj="desfazer"${!mud||AJ.busy?' disabled':''}>Desfazer</button><button class="btn ghost" type="button" data-aj="otimizar"${AJ.busy||pend<2||fin?' disabled':''} title="O otimizador do SimpliRoute propõe a ordem que cumpre as janelas">${AJ.busy==='otimizar'?'Calculando…':'Sugerir melhor ordem'}</button>
+  <button class="btn ghost" type="button" data-aj="simular"${AJ.busy||!pend?' disabled':''}>${AJ.busy==='simular'?'Calculando…':'Pré-visualizar'}</button>
+  <button class="btn wine" type="button" data-aj="aplicar"${AJ.busy||!AJ.ok||!mud||fin?' disabled':''} title="${!AJ.ok?'Faça a pré-visualização primeiro':''}">${AJ.busy==='aplicar'?'Enviando…':'OK, enviar ao SimpliRoute'}</button></div></div>`;
+ return h}
+function ajMexeu(){AJ.sim=null;AJ.ok=false}
+document.addEventListener('change',e=>{const t=e.target;if(!t)return;
+ if(t.id==='ajdia'){AJ.data=t.value;AJ.route='';AJ.d=null;AJ.rotas=null;AJ.sols=[];ajMexeu();render();ajRotas();return}
+ if(t.id==='ajrota'){AJ.route=t.value;AJ.d=null;AJ.sols=[];ajMexeu();render();ajCarregar();return}
+ const d=t.dataset||{};
+ if(d.ajde||d.ajate){const o=ajO(d.ajde||d.ajate);if(o){if(d.ajde)o.de=t.value;else o.ate=t.value;ajMexeu();render()}return}
+ if(d.ajdur){const o=ajO(d.ajdur);if(o){o.duracao=Math.max(5,Math.min(240,+t.value||30));ajMexeu();render()}}});
+document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.closest('[data-aj],[data-ajup],[data-ajdn],[data-ajlist],[data-ajped],[data-ajlimpa],[data-ajr]');if(!b)return;const d=b.dataset;
+ if(d.ajr){const r=(S.itens||[]).find(x=>String(x.id)===String(d.ajr));if(!r)return;AJ.data=r.data_rota;AJ.veic=r.placa;AJ.route='';AJ.d=null;AJ.rotas=null;AJ.sols=[];AJ.pre={id:r.id,paciente:r.paciente,tipo:r.tipo,de:r.horario_de?String(r.horario_de).slice(0,5):'',ate:r.horario_ate?String(r.horario_ate).slice(0,5):''};ajMexeu();
+  S.tab='aju';SUBULT.rot='aju';try{localStorage.setItem('lg-tab','aju');localStorage.setItem('lg-sub',JSON.stringify(SUBULT))}catch(x){}render();window.scrollTo(0,0);await ajRotas();AJ.veic='';return}
+ if(d.ajup!==undefined||d.ajdn!==undefined){const i=+(d.ajup??d.ajdn),j=d.ajup!==undefined?i-1:i+1;if(j<0||j>=AJ.ord.length||ajV(AJ.ord[j].id).feita)return;[AJ.ord[i],AJ.ord[j]]=[AJ.ord[j],AJ.ord[i]];ajMexeu();render();return}
+ if(d.ajlimpa){const o=ajO(d.ajlimpa);if(o){o.de='';o.ate='';ajMexeu();render()}return}
+ if(d.ajlist){const v=ajV(d.ajlist),w=((AJ.d.lists||{})[v.titulo]||[]).filter(x=>x.de||x.ate)[0],o=ajO(d.ajlist);if(w&&o){o.de=w.de||'';o.ate=w.ate||'';ajMexeu();render()}return}
+ if(d.ajped){const [vid,pid]=d.ajped.split(':');const p=(AJ.d.pedidos||[]).find(x=>String(x.id)===pid);if(p){ajUsarPedido(vid,p);render()}return}
+ const a=d.aj;
+ if(a==='recarregar'){AJ.rotas=null;AJ.sols=[];ajMexeu();await ajRotas();if(AJ.route)ajCarregar();return}
+ if(a==='desfazer'){AJ.ord=AJ.d.rota.visitas.map(v=>({id:v.id,de:v.de,ate:v.ate,duracao:v.duracao}));AJ.sols=[];ajMexeu();render();return}
+ const vis=AJ.ord.map(o=>({id:o.id,de:o.de,ate:o.ate,duracao:+o.duracao}));
+ if(a==='simular'||a==='otimizar'){AJ.busy=a;AJ.err='';render();try{const r=await ajApi(a,{visitas:vis});if(!r.ok){if(r.recarregar){AJ.busy='';return ajCarregar()}throw new Error(r.erro)}
+   if(a==='otimizar'&&r.ordem){const m=new Map(AJ.ord.map(o=>[String(o.id),o]));AJ.ord=r.ordem.map(id=>m.get(String(id))).filter(Boolean)}
+   AJ.sim=r;if(a==='otimizar'){const r2=await ajApi('simular',{visitas:AJ.ord.map(o=>({id:o.id,de:o.de,ate:o.ate,duracao:+o.duracao}))});if(r2.ok)AJ.sim={...r2,sem_encaixe:r.sem_encaixe}}AJ.ok=true}catch(x){if(x.message!=='sessao')AJ.err=x.message}AJ.busy='';render();return}
+ if(a==='aplicar'){const R=AJ.d.rota,n=ajMudou();const fim=AJ.sim?AJ.sim.fim:'';
+  if(!confirm(`Enviar ao SimpliRoute as mudanças na rota ${R.veiculo}?\n\n• ${n} visita(s) com ordem, janela ou duração alterada\n• Volta prevista à base: ${fim||'—'}${AJ.sim&&AJ.sim.atrasos?`\n• Atenção: ${AJ.sim.atrasos} visita(s) fora da janela`:''}${AJ.sols.length?`\n• ${AJ.sols.length} pedido(s) do profissional serão marcados como aplicados`:''}${AJ.d.enviada?`\n• A rota de ${AJ.d.enviada.profissional} no Minha Rota será atualizada`:''}`))return;
+  AJ.busy='aplicar';AJ.err='';render();
+  try{const r=await ajApi('aplicar',{visitas:vis,solicitacoes:AJ.sols});if(r.recarregar){AJ.busy='';AJ.err=r.erro;return ajCarregar()}
+   if(!r.ok&&!r.alteradas)throw new Error(r.erro||'Não foi possível alterar.');
+   toast(r.ok?`Rota ${R.veiculo} alterada no SimpliRoute.`:r.erro);
+   if(AJ.d.enviada){try{E.data=AJ.data;await carregarEnv(true,true);const x=(E.sr||[]).find(z=>String(z.route_id)===String(R.id));if(x)await enviarRota(chave(x),true);toast('Rota do profissional atualizada no Minha Rota.')}catch(x){toast('A rota mudou no SimpliRoute, mas não consegui reenviar ao profissional: '+x.message)}}
+   AJ.sols=[];AJ.busy='';carregar(true);return ajCarregar()}catch(x){if(x.message!=='sessao')AJ.err=x.message}AJ.busy='';render()}});
+
 /* Lists (janela de horário dos pacientes): comparação com o pedido, questionar e recusar */
 const minH=t=>{const m=String(t||'').match(/(\d{1,2}):(\d{2})/);return m?(+m[1])*60+(+m[2]):null};
 const winTxt=L=>L.map(w=>(w.de||'?')+'–'+(w.ate||'?')).join(' ou ');
@@ -577,7 +663,7 @@ function listsTxt(r){const c=cmpLists(r);if(!c)return'';
  if(c.st==='fora')return `<div class="lst fora">📋 <b>No Lists:</b> ${esc(winTxt(c.L))} · <b>Pedido:</b> ${esc(ped)} → <b>diferente do cadastro</b>${r.motivo||r.justificativa?'':' e sem motivo'}</div>`;
  if(c.st==='dentro')return `<div class="lst dentro">📋 <b>No Lists:</b> ${esc(winTxt(c.L))} · pedido dentro da janela cadastrada</div>`;
  return `<div class="lst">📋 <b>No Lists:</b> ${esc(winTxt(c.L))}</div>`}
-function qBtns(r){const c=cmpLists(r);let h=`<button class="btn ghost sm" type="button" data-qst="${r.id}" title="Pede ao profissional que justifique o pedido">Questionar</button>`;
+function qBtns(r){const c=cmpLists(r);let h=ajBtn(r)+`<button class="btn ghost sm" type="button" data-qst="${r.id}" title="Pede ao profissional que justifique o pedido">Questionar</button>`;
  if(c&&c.st==='fora')h+=`<button class="btn ghost sm" type="button" data-rsj="${r.id}" title="Recusa com resposta pronta">Recusar sem justificativa</button>`;return h}
 function listsBar(){return `<button class="btn ghost sm" type="button" data-limp title="Exporte a lista Janela de Horário Pacientes do Lists em CSV e importe aqui">Importar Lists</button><input type="file" id="lsfile" accept=".csv,text/csv" hidden><span class="lsinfo">${S.lists&&S.lists.em?'Lists de '+esc(brDTc(S.lists.em))+' · '+S.lists.pacientes+' pacientes':'Lists ainda não importado'}</span>`}
 function perguntaPadrao(r){const c=cmpLists(r);const w=c&&c.L&&c.L.length?winTxt(c.L):'';
@@ -746,6 +832,7 @@ function render(){
  if(!LOGI()&&S.tab!=='fro'&&S.tab!=='evo')S.tab='fro';
  if(S.tab==='env'){app.innerHTML=h+renderEnv()+'</main>';return}
  if(S.tab==='rel'){app.innerHTML=h+renderRel()+'</main>';return}
+ if(S.tab==='aju'){app.innerHTML=h+renderAju()+'</main>';return}
  if(S.tab==='cad'){app.innerHTML=h+renderCad()+'</main>';return}
  if(S.tab==='can'){const fo=document.activeElement&&document.activeElement.id;app.innerHTML=h+renderCanal()+'</main>';const m=document.querySelector('.kms');if(m)m.scrollTop=m.scrollHeight;if(fo){const n=document.getElementById(fo);if(n&&(n.tagName==='TEXTAREA'||n.tagName==='INPUT')){n.focus();try{n.setSelectionRange(n.value.length,n.value.length)}catch(x){}}}return}
  if(isMot()){app.innerHTML=h+renderMot(S.tab)+'</main>';document.querySelectorAll('.conv .cm').forEach(x=>x.scrollTop=x.scrollHeight);document.querySelectorAll('[data-cvd]').forEach(i=>i.oninput=()=>{M.draft[i.dataset.cvd]=i.value});const q=$('#mq');if(q)q.oninput=()=>{M.q=q.value;const p=q.selectionStart;render();const n=$('#mq');n.focus();n.setSelectionRange(p,p)};return}
@@ -772,7 +859,7 @@ function render(){
       <div class="pc">${r.paciente_ordem?esc(r.paciente_ordem)+'. ':''}<b>${esc(r.paciente)}</b>${r.bairro?' · '+esc(r.bairro):''}${r.teste?' <em class="tt">teste</em>':''}<small> · pedido ${hm(r.criado_em)}</small></div>${antTxt(r)}${listsTxt(r)}${r.justificativa?`<div class="just">💬 <b>Justificativa do profissional${r.justificado_em?" ("+hm(r.justificado_em)+")":""}:</b> ${esc(r.justificativa)}</div>`:""}
       ${r.motivo?`<p class="mo">“${esc(r.motivo)}”</p>`:''}
       ${pend?`<div class="act"><input type="text" data-rs="${r.id}" maxlength="500" placeholder="Resposta ao profissional (obrigatória para recusar)" value="${esc(S.draft[r.id]||'')}" aria-label="Resposta para ${esc(r.paciente)}"><button class="btn wine sm" type="button" data-ok="${r.id}">Aprovar</button><button class="btn ghost sm" type="button" data-no="${r.id}">Recusar</button>${qBtns(r)}</div>`
-       :`<div class="resp">${r.resposta?`<span><b>${r.status==='questionada'?'Pergunta enviada ao profissional':'Resposta'}:</b> ${esc(r.resposta)}</span>${r.status==='questionada'?'<span class="lsinfo">Aguardando a justificativa no app. Quando ele responder, o pedido volta para Pendente e você é avisado.</span>':''}`:'<span>Sem resposta escrita.</span>'}<small>${esc(r.respondido_por||'')} · ${hm(r.respondido_em)}</small><div class="act">${r.status==='aprovada'?`<button class="btn ghost sm" type="button" data-ap="${r.id}">Marcar como aplicada</button>`:''}${r.status!=='aplicada'?`<button class="btn ghost sm" type="button" data-re="${r.id}">Reabrir</button>`:''}</div></div>`}</li>`});
+       :`<div class="resp">${r.resposta?`<span><b>${r.status==='questionada'?'Pergunta enviada ao profissional':'Resposta'}:</b> ${esc(r.resposta)}</span>${r.status==='questionada'?'<span class="lsinfo">Aguardando a justificativa no app. Quando ele responder, o pedido volta para Pendente e você é avisado.</span>':''}`:'<span>Sem resposta escrita.</span>'}<small>${esc(r.respondido_por||'')} · ${hm(r.respondido_em)}</small><div class="act">${r.status==='aprovada'?`<button class="btn ghost sm" type="button" data-ap="${r.id}">Marcar como aplicada</button>`:''}${r.status!=='aplicada'?`<button class="btn ghost sm" type="button" data-re="${r.id}">Reabrir</button>`:''}${r.status==='aprovada'?ajBtn(r):''}</div></div>`}</li>`});
      h+='</ol>';const pids=rs.filter(r=>r.status==='pendente').map(r=>r.id);if(pids.length>1)h+=`<div class="all"><button class="btn ghost sm" type="button" data-all="${pids.join(',')}">Aprovar os ${pids.length} pendentes desta rota</button></div>`}
     h+='</article>'});h+='</div>'})}
  h+='</main>';app.innerHTML=h}
@@ -839,7 +926,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden||!S.token)r
 function iniciarCarga(){if(!S.token)return;carregar();if(LOGI()){if(pushSupC()&&!PUSHC_ok){PUSHC_ok=true;pushChecarC()}carregarMot(S.tab!=='mot');carregarCanal(S.tab!=='can')}if(S.tab==='env')carregarEnv(true);if(S.tab==='rel')carregarRel();if(S.tab==='cad')carregarCad();if(S.tab==='evo')carregarEvoC();if(S.tab==='fro')carregarFrota()}
 if(EMBED){addEventListener('message',e=>{if(e.origin!==PAINEL_ORIGEM||!e.data||e.data.tipo!=='central-login')return;const d=e.data;if(!/^[a-f0-9]{20,}$/.test(String(d.token||'')))return;
   const novo=S.token!==d.token;S.token=d.token;S.nome=d.nome||'';S.perfil='logistica';S.trocar=false;try{sessionStorage.setItem('lg-token',S.token);sessionStorage.setItem('lg-nome',S.nome);sessionStorage.setItem('lg-perfil','logistica');sessionStorage.setItem('lg-ult',String(Date.now()))}catch(x){}
-  if(d.tab&&['sol','env','rel','fro','evo','mot','motf','motc','motv','mota','cad','can'].includes(d.tab)){S.tab=d.tab==='mot'?'motf':d.tab}if(novo){render();iniciarCarga()}else render()});
+  if(d.tab&&['sol','env','aju','rel','fro','evo','mot','motf','motc','motv','mota','cad','can'].includes(d.tab)){S.tab=d.tab==='mot'?'motf':d.tab}if(novo){render();iniciarCarga()}else render()});
  avisaPainel({tipo:'central-pronto'})}
 render();iniciarCarga();
 setInterval(()=>{if(S.token&&!S.trocar&&S.tab==='fro'&&!document.hidden&&Date.now()-F.at>55e3)carregarFrota(true)},15000);
