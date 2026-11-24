@@ -135,6 +135,9 @@ nav.nav b{position:absolute;top:6px;left:calc(50% + 6px);background:var(--bad);c
 .vtag.jan{background:#fff1d6;color:#7a4b00}.vtag.ok{background:#e3f3e8;color:#1d6b3a}.vtag.bad{background:#fbe5e5;color:#9c1f1f}
 .rhead .aa{margin-left:auto;border:1px solid var(--line);background:#fff;border-radius:999px;font:inherit;font-weight:800;font-size:13px;padding:5px 10px;color:var(--wine);cursor:pointer;flex:none}
 html.letra .vis .t b{font-size:17px}html.letra .vis .t small{font-size:15.5px;line-height:1.35}
+.verbar{position:sticky;top:0;z-index:50;background:#fff1d6;color:#5f0040;font-size:13px;font-weight:700;padding:8px 14px;display:flex;gap:10px;align-items:center;justify-content:space-between;border-bottom:1px solid #f3d9a4}
+.verbar button{border:1px solid #5f0040;background:#fff;color:#5f0040;border-radius:999px;font:inherit;font-size:12px;padding:4px 10px;cursor:pointer;flex:none}
+html.leitura .chatfoot,html.leitura [data-a="pushon"]{display:none}
 </style>
 </head>
 <body>
@@ -145,6 +148,9 @@ const SB='https://sizbevhqreaccxrlimup.supabase.co',KEY='sb_publishable_sOPBmFvZ
 const S={hj:{rotas:null,at:0,busy:false,err:'',aberto:true},tplaca:'',lg:{msgs:null,nl:0,txt:'',err:''},am:{rotas:null,at:0,busy:false,err:'',aberto:false},alvo:'',token:null,nome:'',trocar:false,etapa:'carregando',turno:null,lista:null,carros:null,gps:null,busca:'',sec:0,resp:{},busy:false,err:'',rotas:null,motivos:[],rotaErr:'',vis:null,co:null,aba:'hoje',naoLidas:0,fg:{d:null,err:'',sel:{},mot:{}},
  chat:{rotas:null,rota:null,msgs:[],resp:[],txt:'',err:'',ed:null,n:-1},oc:{lista:null,tipo:'',texto:'',valor:'',foto:null,avisar:true,err:''}};
 try{S.token=localStorage.getItem('rm-token');S.nome=localStorage.getItem('rm-nome')||'';S.trocar=localStorage.getItem('rm-trocar')==='1'}catch(e){}
+/* visualização da Logística: aberta pela Central com #ver=token (só leitura, 30 min); não mexe no login do motorista deste aparelho */
+try{const m=location.hash.match(/^#ver=([0-9a-f]{20,})$/);if(m){sessionStorage.setItem('rm-ver',m[1]);history.replaceState(null,'',location.pathname+location.search)}
+ const v=sessionStorage.getItem('rm-ver');if(v){S.token=v;S.leitura=true;S.trocar=false;S.nome='';document.documentElement.classList.add('leitura')}}catch(e){}
 let PIN_TMP='';
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -156,7 +162,8 @@ async function api(acao,extra,fn){const r=await fetch(SB+'/functions/v1/'+(fn||'
  if(!r.ok)throw new Error('Falha de conexão ('+r.status+'). Tente de novo.');const j=await r.json();if(!j.ok&&j.erro==='sessao'){sair('Sua sessão expirou. Entre de novo.');throw new Error('sessao')}return j}
 function confirma(t,p,sim){return new Promise(ok=>{const d=$('#dlg');$('#dlgT').textContent=t;$('#dlgP').textContent=p;$('#dlgS').textContent=sim||'Confirmar';d.showModal();
  const fim=v=>{d.close();$('#dlgS').onclick=null;$('#dlgN').onclick=null;ok(v)};$('#dlgS').onclick=()=>fim(true);$('#dlgN').onclick=()=>fim(false)})}
-function sair(msg){try{if(S.token)rpc('mot_sair',{p_token:S.token}).catch(()=>{});localStorage.removeItem('rm-token');localStorage.removeItem('rm-trocar')}catch(e){}
+function sair(msg){if(S.leitura){try{sessionStorage.removeItem('rm-ver');rpc('mot_sair',{p_token:S.token}).catch(()=>{})}catch(e){}S.token=null;document.body.innerHTML='<main style="padding:40px 20px;font-family:Montserrat,Arial,sans-serif;text-align:center"><h2 style="color:#5f0040">Visualização encerrada</h2><p>'+(msg&&/expir/.test(msg)?'A visualização vale 30 minutos.':'')+' Abra de novo pela Central quando precisar.</p></main>';return}
+ try{if(S.token)rpc('mot_sair',{p_token:S.token}).catch(()=>{});localStorage.removeItem('rm-token');localStorage.removeItem('rm-trocar')}catch(e){}
  S.token=null;S.turno=null;S.err=msg||'';location.href='index.html'+(msg?'#msg='+encodeURIComponent(msg):'')}
 function gps1(o,ms){return new Promise(ok=>{if(!navigator.geolocation)return ok(null);let fim=false;const t=setTimeout(()=>{if(!fim){fim=true;ok(null)}},ms);
  navigator.geolocation.getCurrentPosition(p=>{if(!fim){fim=true;clearTimeout(t);ok({lat:p.coords.latitude,lng:p.coords.longitude,prec:Math.round(p.coords.accuracy||0)||null})}},()=>{if(!fim){fim=true;clearTimeout(t);ok(null)}},o)})}
@@ -206,7 +213,7 @@ function renderGps(){const g=S.g;let h=topo('Localização pelo celular');h+=`<m
  <div class="card"><h2>3 · Libere a localização</h2><p class="meta" style="font-size:14px">Quando o celular perguntar, escolha <b>Permitir o tempo todo</b> (ou <b>Sempre</b>, no iPhone).<br>No Android: Configurações → Apps → Traccar Client → Bateria → <b>Sem restrições</b>. Sem isso o celular desliga o envio.</p></div>
  <div class="card"><h2>4 · Ligue o envio</h2><p class="meta" style="font-size:14px">Na tela inicial do Traccar Client, ligue o <b>Rastreamento contínuo</b>. Para testar na hora, toque em <b>Enviar localização</b>. Pode deixar ligado: fora do plantão a posição é descartada. Não use o botão SOS.</p><button class="btn sun" type="button" data-a="gpsver">Verificar se está chegando</button></div>
  <button class="btn line" type="button" data-aba="hoje">Voltar</button></main>`;return h}
-setInterval(async()=>{if(!S.token||!TERC()||!S.turno||document.hidden)return;const g=await pegaGps();if(g)api('posicao',g).catch(()=>{});carregaGps()},90000);
+setInterval(async()=>{if(!S.token||S.leitura||!TERC()||!S.turno||document.hidden)return;const g=await pegaGps();if(g)api('posicao',g).catch(()=>{});carregaGps()},90000);
 const visStatus=v=>v.status==='completed'?'ok':v.status==='failed'?'bad':'';
 async function iniciar(){
  if(!S.token){location.href='index.html';return}
@@ -223,7 +230,7 @@ async function carregaCarros(){S.carros=null;render();S.gps=await pegaGps();
 const passos=()=>{const e=S.etapa;const T3=TERC();const i=e==='carro'?0:e==='inspecao'?1:(e==='pronto'||e==='visita')?(T3?1:2):-1;
  return `<ol class="steps" aria-label="Etapas do início do plantão">${(T3?['1 · Plantão','2 · Rota']:['1 · Carro','2 · Inspeção','3 · Rota']).map((t,k)=>`<li class="${k===i?'on':k<i?'ok':''}"${k===i?' aria-current="step"':''}><i></i>${t}</li>`).join('')}</ol>`};
 function topo(sub){const d=new Date().toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'});
- return `<header class="top"><div class="k"><span>Minha Rota · Motorista</span><button type="button" data-a="logout">Sair</button></div><h1>${esc(saud())}, ${esc((S.nome||'').split(' ')[0])}</h1><p>${esc(sub||d)}</p>${S.etapa==='pin'||S.aba!=='hoje'?'':passos()}</header>`}
+ return `${S.leitura?`<div class="verbar" role="note">👁 Visualização da Logística: você vê o app como o motorista vê. Nada é alterado. <button type="button" data-a="logout">Encerrar</button></div>`:''}<header class="top"><div class="k"><span>Minha Rota · Motorista</span>${S.leitura?'':'<button type="button" data-a="logout">Sair</button>'}</div><h1>${esc(saud())}, ${esc((S.nome||'').split(' ')[0])}</h1><p>${esc(sub||d)}</p>${S.etapa==='pin'||S.aba!=='hoje'?'':passos()}</header>`}
 const saud=()=>{const h=new Date().getHours();return h<12?'Bom dia':h<18?'Boa tarde':'Boa noite'};
 function itensSec(i){return (S.lista&&S.lista[i])?S.lista[i].itens:[]}
 function secCompleta(i){return itensSec(i).every(it=>{const r=S.resp[it.id];return r&&(r.ok||String(r.obs||'').trim())})}
@@ -602,7 +609,7 @@ async function pushAtivar(pedir){if(!pushOk()||!S.token)return false;
   if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64uM(VAPID)});
   const r=await rpc('mot_push_salvar',{p_token:S.token,p_sub:sub.toJSON()});if(!r||!r.ok){pushErrM=(r&&r.erro)||'O servidor não aceitou.';return false}
   pushSalvoM=true;return true}catch(e){pushErrM=(e&&e.message)||String(e);return false}}
-function pushCard(){if(pushFechadoM||!('Notification' in window))return'';
+function pushCard(){if(S.leitura||pushFechadoM||!('Notification' in window))return'';
  if(ehIOSm&&!instaladoM()&&!('PushManager' in window))return `<div class="card" style="gap:6px"><h2>🔔 Receba as mensagens no celular</h2><p class="meta">No iPhone, instale o app primeiro: toque em Compartilhar › <b>Adicionar à Tela de Início</b> e abra por lá.</p><button class="btn line" type="button" data-a="pushx">Agora não</button></div>`;
  if(!pushOk()||Notification.permission!=='default')return'';
  return `<div class="card" style="gap:8px"><h2>🔔 Ativar notificações</h2><p class="meta">Receba no celular as mensagens da Logística, os avisos e a conversa com o profissional, mesmo com o app fechado.</p><div style="display:grid;grid-template-columns:2fr 1fr;gap:8px"><button class="btn sun" type="button" data-a="pushon">Ativar</button><button class="btn line" type="button" data-a="pushx">Agora não</button></div></div>`}
@@ -612,7 +619,7 @@ document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.c
 function abreDoAviso(u){if(!S.token)return;if(/#canal/.test(u)){S.aba='chat';S.alvo='log';render();carregaLog()}else if(/#chat/.test(u)){S.aba='chat';S.alvo='prof';S.chat.n=-1;render();carregaChat()}}
 if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.tipo==='rota-nova'&&e.data.url&&comNav())abreDoAviso(e.data.url)});
 const HASH0=location.hash;if(/^#(canal|chat)/.test(HASH0)){try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}const t0=setInterval(()=>{if(comNav()){clearInterval(t0);abreDoAviso(HASH0)}},500);setTimeout(()=>clearInterval(t0),20000)}
-setTimeout(()=>{if(S.token&&!pushSalvoM&&pushOk()&&Notification.permission==='granted')pushAtivar(false)},4000);
+setTimeout(()=>{if(S.token&&!S.leitura&&!pushSalvoM&&pushOk()&&Notification.permission==='granted')pushAtivar(false)},4000);
 
 /* leitura: endereço em duas linhas (rua / bairro em destaque), sem cidade e CEP quando é Rio; letra maior opcional */
 var LETRA=false;try{LETRA=localStorage.getItem('rm-letra')==='1'}catch(e){}
@@ -624,6 +631,11 @@ function partesEnd(e){const p=String(e||'').split(' - ').map(x=>x.trim()).filter
  return{rua:p[0],bairro,cidade:/^rio de janeiro$/i.test(cidade)?'':cidade}}
 function endHtml(e){if(!e)return'';const x=partesEnd(e);return `<span class="vend">${esc(x.rua)}</span>${x.bairro||x.cidade?`<span class="vbai">${esc(x.bairro)}${x.cidade?(x.bairro?' · ':'')+esc(x.cidade):''}</span>`:''}`}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-a="letra"]');if(!b)return;e.stopImmediatePropagation();LETRA=!LETRA;try{localStorage.setItem('rm-letra',LETRA?'1':'0')}catch(x){}document.documentElement.classList.toggle('letra',LETRA);render()},true);
+
+/* visualização: só navegar e ver; qualquer ação que muda algo é bloqueada aqui (e também no servidor) */
+const VER_OK=new Set(['amrec','rotarec','recarregar','letra','logout','voltar','vvoltar','gpsver','copia','pushx']);
+document.addEventListener('click',e=>{if(!S.leitura)return;const b=e.target.closest&&e.target.closest('[data-a]');if(!b||VER_OK.has(b.dataset.a))return;e.preventDefault();e.stopImmediatePropagation();toast('Visualização da Logística: aqui só dá para ver.')},true);
+document.addEventListener('submit',e=>{if(!S.leitura)return;e.preventDefault();e.stopImmediatePropagation();toast('Visualização da Logística: aqui só dá para ver.')},true);
 </script>
 </body>
 </html>
