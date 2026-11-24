@@ -80,7 +80,7 @@ dialog .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .vis .l{display:flex;gap:10px;align-items:flex-start}
 .vis .o{width:26px;height:26px;border-radius:50%;background:#efeae4;color:var(--wine);font-size:12.5px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:none}
 .vis .o.ok{background:var(--ok);color:#fff}.vis .o.bad{background:var(--bad);color:#fff}
-.vis .t{flex:1;min-width:0}.vis .t b{display:block;font-size:14.5px}.vis .t small{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
+.vis .t{flex:1;min-width:0}.vis .t b{display:block;font-size:14.5px}.vis .t small{display:block;font-size:12.5px;color:var(--wine);margin-top:2px}
 .vis .acts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .vis .acts .btn{min-height:44px;font-size:14px}
 .seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -134,7 +134,7 @@ nav.nav b{position:absolute;top:6px;left:calc(50% + 6px);background:var(--bad);c
 .vtag{font-size:13px;font-weight:700;line-height:1;padding:6px 9px;border-radius:999px;background:#f3eee8;color:#3f3338}
 .vtag.jan{background:#fff1d6;color:#7a4b00}.vtag.ok{background:#e3f3e8;color:#1d6b3a}.vtag.bad{background:#fbe5e5;color:#9c1f1f}
 .rhead .aa{margin-left:auto;border:1px solid var(--line);background:#fff;border-radius:999px;font:inherit;font-weight:800;font-size:13px;padding:5px 10px;color:var(--wine);cursor:pointer;flex:none}
-html.letra .vis .t b{font-size:17px}html.letra .vis .t .vend,html.letra .vis .t .vbai{font-size:16.5px}html.letra .vtag{font-size:15px;padding:7px 10px}
+html.letra .vis .t b{font-size:17px}html.letra .vis .t small{font-size:15.5px;line-height:1.35}
 </style>
 </head>
 <body>
@@ -356,8 +356,8 @@ function rotaHtml(t){
   if(r.prev_inicio&&r.status!=='finished')h+=`<p class="meta">Previsto: ${esc(r.prev_inicio)}${r.prev_fim?' às '+esc(r.prev_fim):''}</p>`;
   if(r.status!=='started'&&r.status!=='finished')h+=t.critico?'<p class="msg bad" style="margin:0">Resolva o item crítico com a logística antes de iniciar.</p>':`<button class="btn sun" type="button" data-a="riniciar" data-r="${esc(r.id)}"${S.busy?' disabled':''}>Iniciar rota</button>`;
   vs.forEach(v=>{const k=visStatus(v),at=prox&&prox.id===v.id;
-   h+=`<div class="vis${at?' atual':''}"><div class="l"><span class="o ${k}">${k==='ok'?'✓':k==='bad'?'✕':v.ordem}</span><span class="t"><b>${esc(v.titulo||'Visita '+v.ordem)}</b>${endHtml(v.endereco)}
-    <span class="vtags">${v.checkout?`<span class="vtag ${k==='ok'?'ok':'bad'}">${k==='ok'?'✓ Realizada':'✕ Não realizada'} às ${hm(v.checkout)}</span>`:v.checkin?`<span class="vtag ok">Chegou às ${hm(v.checkin)}</span>`:`${v.prev?`<span class="vtag">🕒 Previsão ${esc(v.prev)}</span>`:''}${v.janela?`<span class="vtag jan">Janela ${esc(v.janela)}</span>`:''}`}</span></span></div>`;
+   h+=`<div class="vis${at?' atual':''}"><div class="l"><span class="o ${k}">${k==='ok'?'✓':k==='bad'?'✕':v.ordem}</span><span class="t"><b>${esc(v.titulo||'Visita '+v.ordem)}</b><small>${esc(v.endereco)}</small>
+    <small>${v.checkout?(k==='ok'?'Realizada':'Não realizada')+' às '+hm(v.checkout):v.checkin?'Chegou às '+hm(v.checkin):[v.prev?'Previsão '+v.prev:'',v.janela?'janela '+v.janela:''].filter(Boolean).join(' · ')}</small></span></div>`;
    if(r.status==='started'&&!k){
     const nav=v.lat!=null?`https://www.google.com/maps/dir/?api=1&destination=${v.lat},${v.lng}`:'https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(v.endereco);
     h+=`<div class="acts"><a class="btn line" href="${esc(nav)}" target="_blank" rel="noopener">Navegar</a>${v.checkin?`<button class="btn wine" type="button" data-a="fvisita" data-v="${esc(v.id)}">Finalizar visita</button>`:`<button class="btn wine" type="button" data-a="checkin" data-v="${esc(v.id)}"${S.busy?' disabled':''}>Cheguei</button>`}</div>`}
