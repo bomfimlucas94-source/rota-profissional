@@ -128,6 +128,13 @@ nav.nav b{position:absolute;top:6px;left:calc(50% + 6px);background:var(--bad);c
 .dgrid button[aria-pressed=true]{background:var(--wine);border-color:var(--wine);color:#fff}.dgrid button[aria-pressed=true] small{color:var(--peach)}
 .dgrid button:disabled{background:#efeae4;color:#b9aeb3;border-color:#efeae4;cursor:default}.dgrid button.atual{border:2px dashed var(--wine);color:var(--wine)}
 .link{background:none;border:0;color:var(--wine);font-weight:700;font-size:13px;padding:0;min-height:32px;cursor:pointer;text-decoration:underline}
+.vis .t .vend{display:block;font-size:14px;line-height:1.35;color:#3f3338;margin-top:3px}
+.vis .t .vbai{display:block;font-size:14px;font-weight:700;color:var(--wine);margin-top:1px}
+.vtags{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+.vtag{font-size:13px;font-weight:700;line-height:1;padding:6px 9px;border-radius:999px;background:#f3eee8;color:#3f3338}
+.vtag.jan{background:#fff1d6;color:#7a4b00}.vtag.ok{background:#e3f3e8;color:#1d6b3a}.vtag.bad{background:#fbe5e5;color:#9c1f1f}
+.rhead .aa{margin-left:auto;border:1px solid var(--line);background:#fff;border-radius:999px;font:inherit;font-weight:800;font-size:13px;padding:5px 10px;color:var(--wine);cursor:pointer;flex:none}
+html.letra .vis .t b{font-size:17px}html.letra .vis .t .vend,html.letra .vis .t .vbai{font-size:16.5px}html.letra .vtag{font-size:15px;padding:7px 10px}
 </style>
 </head>
 <body>
@@ -345,12 +352,12 @@ function rotaHtml(t){
   const st=r.status==='started'?'and':r.status==='finished'?'fim':'';
   const stT=r.status==='started'?'Em andamento'+(r.inicio?' · desde '+String(r.inicio).slice(0,5):''):r.status==='finished'?'Finalizada':'Não iniciada';
   const prox=r.status==='started'?vs.find(v=>v.status!=='completed'&&v.status!=='failed'):null;
-  let h=`<div class="card rota"><div class="rhead"><h2>Rota${S.rotas.length>1?' '+(ri+1):''} · ${feitas} de ${vs.length} visitas</h2><span class="pill ${st}">${esc(stT)}</span></div>`;
+  let h=`<div class="card rota"><div class="rhead"><h2>Rota${S.rotas.length>1?' '+(ri+1):''} · ${feitas} de ${vs.length} visitas</h2><span class="pill ${st}">${esc(stT)}</span><button type="button" class="aa" data-a="letra" aria-pressed="${LETRA}" title="${LETRA?'Voltar a letra ao normal':'Aumentar a letra'}">${LETRA?'A−':'A+'}</button></div>`;
   if(r.prev_inicio&&r.status!=='finished')h+=`<p class="meta">Previsto: ${esc(r.prev_inicio)}${r.prev_fim?' às '+esc(r.prev_fim):''}</p>`;
   if(r.status!=='started'&&r.status!=='finished')h+=t.critico?'<p class="msg bad" style="margin:0">Resolva o item crítico com a logística antes de iniciar.</p>':`<button class="btn sun" type="button" data-a="riniciar" data-r="${esc(r.id)}"${S.busy?' disabled':''}>Iniciar rota</button>`;
   vs.forEach(v=>{const k=visStatus(v),at=prox&&prox.id===v.id;
-   h+=`<div class="vis${at?' atual':''}"><div class="l"><span class="o ${k}">${k==='ok'?'✓':k==='bad'?'✕':v.ordem}</span><span class="t"><b>${esc(v.titulo||'Visita '+v.ordem)}</b><small>${esc(v.endereco)}</small>
-    <small>${v.checkout?(k==='ok'?'Realizada':'Não realizada')+' às '+hm(v.checkout):v.checkin?'Chegou às '+hm(v.checkin):[v.prev?'Previsão '+v.prev:'',v.janela?'janela '+v.janela:''].filter(Boolean).join(' · ')}</small></span></div>`;
+   h+=`<div class="vis${at?' atual':''}"><div class="l"><span class="o ${k}">${k==='ok'?'✓':k==='bad'?'✕':v.ordem}</span><span class="t"><b>${esc(v.titulo||'Visita '+v.ordem)}</b>${endHtml(v.endereco)}
+    <span class="vtags">${v.checkout?`<span class="vtag ${k==='ok'?'ok':'bad'}">${k==='ok'?'✓ Realizada':'✕ Não realizada'} às ${hm(v.checkout)}</span>`:v.checkin?`<span class="vtag ok">Chegou às ${hm(v.checkin)}</span>`:`${v.prev?`<span class="vtag">🕒 Previsão ${esc(v.prev)}</span>`:''}${v.janela?`<span class="vtag jan">Janela ${esc(v.janela)}</span>`:''}`}</span></span></div>`;
    if(r.status==='started'&&!k){
     const nav=v.lat!=null?`https://www.google.com/maps/dir/?api=1&destination=${v.lat},${v.lng}`:'https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(v.endereco);
     h+=`<div class="acts"><a class="btn line" href="${esc(nav)}" target="_blank" rel="noopener">Navegar</a>${v.checkin?`<button class="btn wine" type="button" data-a="fvisita" data-v="${esc(v.id)}">Finalizar visita</button>`:`<button class="btn wine" type="button" data-a="checkin" data-v="${esc(v.id)}"${S.busy?' disabled':''}>Cheguei</button>`}</div>`}
@@ -606,6 +613,17 @@ function abreDoAviso(u){if(!S.token)return;if(/#canal/.test(u)){S.aba='chat';S.a
 if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.tipo==='rota-nova'&&e.data.url&&comNav())abreDoAviso(e.data.url)});
 const HASH0=location.hash;if(/^#(canal|chat)/.test(HASH0)){try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}const t0=setInterval(()=>{if(comNav()){clearInterval(t0);abreDoAviso(HASH0)}},500);setTimeout(()=>clearInterval(t0),20000)}
 setTimeout(()=>{if(S.token&&!pushSalvoM&&pushOk()&&Notification.permission==='granted')pushAtivar(false)},4000);
+
+/* leitura: endereço em duas linhas (rua / bairro em destaque), sem cidade e CEP quando é Rio; letra maior opcional */
+var LETRA=false;try{LETRA=localStorage.getItem('rm-letra')==='1'}catch(e){}
+document.documentElement.classList.toggle('letra',LETRA);
+function partesEnd(e){const p=String(e||'').split(' - ').map(x=>x.trim()).filter(Boolean);if(p.length<2)return{rua:String(e||'').trim(),bairro:'',cidade:''};
+ let resto=p.slice(1).join(', ').replace(/,?\s*\d{5}-?\d{3}\s*$/,'');
+ const q=resto.split(',').map(x=>x.trim()).filter(x=>x&&!/^[A-Z]{2}$/.test(x)&&!/^\d{5}-?\d{3}$/.test(x));
+ let cidade=q.length>1?q[q.length-1]:'',bairro=q.length>1?q.slice(0,-1).join(', '):(q[0]||'');
+ return{rua:p[0],bairro,cidade:/^rio de janeiro$/i.test(cidade)?'':cidade}}
+function endHtml(e){if(!e)return'';const x=partesEnd(e);return `<span class="vend">${esc(x.rua)}</span>${x.bairro||x.cidade?`<span class="vbai">${esc(x.bairro)}${x.cidade?(x.bairro?' · ':'')+esc(x.cidade):''}</span>`:''}`}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-a="letra"]');if(!b)return;e.stopImmediatePropagation();LETRA=!LETRA;try{localStorage.setItem('rm-letra',LETRA?'1':'0')}catch(x){}document.documentElement.classList.toggle('letra',LETRA);render()},true);
 </script>
 </body>
 </html>
