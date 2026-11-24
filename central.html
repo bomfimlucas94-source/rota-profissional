@@ -200,6 +200,8 @@ tr.crit td{background:#fdf1f2}
 .fnum{position:absolute;left:24px;top:-6px;min-width:16px;height:16px;padding:0 3px;border-radius:8px;background:#fff;color:var(--wine);border:1.5px solid var(--wine);font:800 9.5px/13px Montserrat,Arial,sans-serif;text-align:center;box-sizing:border-box}
 .fnum.mov{border-color:#f5a623}.fnum.off{border-color:#9a8f94;color:#6b6266}
 .fout2{width:20px;height:20px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 1px 1px rgba(0,0,0,.35))}
+.avbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:#fff7e6;border:1px solid #f3d9a4;border-radius:12px;padding:10px 12px;margin:0 0 14px;font-size:13.5px;color:var(--ink)}
+.avbar span{flex:1;min-width:220px}.avbar .avx{border:0;background:none;font-size:20px;line-height:1;color:var(--muted);cursor:pointer;padding:0 4px}
 </style>
 </head>
 <body>
@@ -495,6 +497,24 @@ document.addEventListener('click',e=>{const g=e.target.closest&&e.target.closest
  const gr=GRP.find(x=>x[0]===g.dataset.grp);if(!gr)return;let t=SUBULT[gr[0]]||gr[2][0][0];if(!LOGI())t=gr[0]==='rot'?'evo':'fro';
  const fake=document.createElement('button');fake.dataset.tab=t;fake.style.display='none';document.body.appendChild(fake);fake.click();fake.remove()},true);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&S.cfgAb){S.cfgAb=false;render()}});
+/* Avisos dentro da Central (funcionam também dentro do painel): som, aviso na tela e contador no título da aba.
+   O aviso no computador com a Central fechada depende de cada pessoa ativar "Ativar avisos" no próprio navegador. */
+let AVX=false;try{AVX=localStorage.getItem('lg-avx')==='x'}catch(e){}
+function avisoBar(){if(!LOGI()||AVX||PUSHC==='on')return'';
+ if(EMBED){const u=location.href.replace(/([?&])embed(=[^&]*)?&?/,'$1').replace(/[?&]$/,'');return `<div class="avbar" role="note"><span>🔔 Dentro do painel a Central só avisa com a tela aberta (som e contador). Para receber aviso no computador mesmo com ela fechada, abra a Central direto no navegador e ative os avisos.</span><a class="btn wine sm" href="${esc(u)}" target="_blank" rel="noopener">Abrir a Central</a><button type="button" class="avx" data-avx="1" aria-label="Fechar">×</button></div>`}
+ if(!pushSupC())return'';
+ return `<div class="avbar" role="note"><span>🔔 Ative os avisos neste computador para saber na hora quando chegar <b>mensagem</b> ou <b>solicitação</b>, mesmo com a Central fechada.</span><button type="button" class="btn wine sm" data-a="pushc">Ativar avisos</button><button type="button" class="avx" data-avx="1" aria-label="Fechar">×</button></div>`}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-avx]');if(!b)return;AVX=true;try{localStorage.setItem('lg-avx','x')}catch(x){}render()});
+let AUD=null;document.addEventListener('pointerdown',()=>{try{if(!AUD)AUD=new (window.AudioContext||window.webkitAudioContext)();if(AUD.state==='suspended')AUD.resume()}catch(e){}},{passive:true});
+function bip(){try{if(!AUD)return;const t=AUD.currentTime;[[880,0],[1175,.16]].forEach(([f,d])=>{const o=AUD.createOscillator(),g=AUD.createGain();o.frequency.value=f;o.type='sine';g.gain.setValueAtTime(0.0001,t+d);g.gain.exponentialRampToValueAtTime(0.18,t+d+.02);g.gain.exponentialRampToValueAtTime(0.0001,t+d+.14);o.connect(g).connect(AUD.destination);o.start(t+d);o.stop(t+d+.16)})}catch(e){}}
+const TIT0=document.title;let ULT={pend:null,msg:null};
+function vigia(){if(!S.token||!LOGI())return;const pend=(S.itens||[]).filter(r=>r.status==='pendente').length,msg=K.nl||0;
+ if(ULT.pend!=null&&pend>ULT.pend){toast(pend-ULT.pend>1?(pend-ULT.pend)+' solicitações novas':'Nova solicitação chegou');bip()}
+ if(ULT.msg!=null&&msg>ULT.msg){const c=((K.d&&K.d.conversas)||[]).filter(x=>+x.nao_lidas).sort((a,b)=>String(b.ult).localeCompare(String(a.ult)))[0];toast(c?'Mensagem de '+String(c.nome||'').split(' ').slice(0,2).join(' ')+': '+String(c.ultimo||'').slice(0,60):'Nova mensagem no Canal');bip()}
+ if(ULT.pend==null&&S.itens)ULT.pend=pend;else if(S.itens)ULT.pend=pend;if(K.d)ULT.msg=msg;
+ const tot=pend+msg;document.title=(tot?'('+tot+') ':'')+TIT0}
+setInterval(vigia,4000);
+setInterval(()=>{if(S.token&&LOGI()&&!K.busy&&S.tab!=='can')carregarCanal(true)},20000);
 /* Canal: conversa direta de cada motorista e profissional com a Logística + avisos para todos */
 const K={d:null,sel:null,msgs:null,lido:null,draft:{},av:{para:'todos',txt:''},q:'',nl:0,busy:false,err:'',modo:'conv'};
 const kKey=(t,u)=>t+':'+u;
@@ -619,12 +639,12 @@ let PUSHC=null,PUSHC_ok=false;
 const pushSupC=()=>!EMBED&&'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window&&location.protocol==='https:';
 const b64uC=t=>{const p='='.repeat((4-t.length%4)%4),b=atob((t+p).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from(b,c=>c.charCodeAt(0))};
 function pushBtnC(){if(!pushSupC())return'';if(!PUSHC_ok){PUSHC_ok=true;pushChecarC()}
- return PUSHC==='on'?'<button type="button" class="pushc on" data-a="pushc" title="Você recebe um aviso neste aparelho quando chega solicitação nova">🔔 Avisos ligados</button>':'<button type="button" class="pushc" data-a="pushc" title="Receber aviso neste aparelho quando chegar solicitação nova">🔕 Ativar avisos</button>'}
+ return PUSHC==='on'?'<button type="button" class="pushc on" data-a="pushc" title="Você recebe um aviso neste aparelho quando chega solicitação ou mensagem nova">🔔 Avisos ligados</button>':'<button type="button" class="pushc" data-a="pushc" title="Receber aviso neste aparelho quando chegar solicitação ou mensagem nova">🔕 Ativar avisos</button>'}
 async function pushRegC(){let r=await navigator.serviceWorker.getRegistration();if(!r)r=await navigator.serviceWorker.register('sw.js');return navigator.serviceWorker.ready}
 async function pushChecarC(){try{if(Notification.permission!=='granted')return;const r=await navigator.serviceWorker.getRegistration();const sub=r&&await r.pushManager.getSubscription();if(!sub)return;const j=sub.toJSON();
  const x=await rpc('eq_push_inscrever',{p_token:S.token,p_endpoint:j.endpoint,p_p256dh:j.keys.p256dh,p_auth:j.keys.auth});if(x&&x.ok){PUSHC='on';render()}}catch(e){}}
 async function pushTrocarC(){try{
- if(PUSHC==='on'){if(!confirm('Desligar os avisos de solicitação neste aparelho?'))return;const r=await navigator.serviceWorker.getRegistration();const sub=r&&await r.pushManager.getSubscription();if(sub){await rpc('eq_push_sair',{p_token:S.token,p_endpoint:sub.endpoint}).catch(()=>{});}PUSHC=null;render();return}
+ if(PUSHC==='on'){if(!confirm('Desligar os avisos de solicitações e mensagens neste aparelho?'))return;const r=await navigator.serviceWorker.getRegistration();const sub=r&&await r.pushManager.getSubscription();if(sub){await rpc('eq_push_sair',{p_token:S.token,p_endpoint:sub.endpoint}).catch(()=>{});}PUSHC=null;render();return}
  const perm=await Notification.requestPermission();if(perm!=='granted'){alert('As notificações estão bloqueadas neste navegador. Libere nas configurações do site e tente de novo.');return}
  const reg=await pushRegC();let sub=await reg.pushManager.getSubscription();
  if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64uC(VAPID_C)});
@@ -722,7 +742,7 @@ function render(){
  const esps=[...new Set(all.map(r=>r.especialidade).filter(Boolean))].sort(),dias=[...new Set(all.map(r=>r.data_rota))].sort();
  const L=all.filter(r=>(!S.f.st||r.status===S.f.st)&&(!S.f.esp||r.especialidade===S.f.esp)&&(!S.f.dia||r.data_rota===S.f.dia));
  const npend=cnt('pendente');
- let h=`<header class="top"><div class="topin"><div><h2>Central de Solicitações</h2><small>${LOGI()?'Logística':'Administrativo Médico'} · Solar Cuidados</small></div>${navGrupos()}<span class="sp"></span>${menuCfg()}<span class="who">${esc(S.nome)}</span><button class="out" type="button" data-a="sair">Sair</button></div></header><main>`+subNav();
+ let h=`<header class="top"><div class="topin"><div><h2>Central de Solicitações</h2><small>${LOGI()?'Logística':'Administrativo Médico'} · Solar Cuidados</small></div>${navGrupos()}<span class="sp"></span>${menuCfg()}<span class="who">${esc(S.nome)}</span><button class="out" type="button" data-a="sair">Sair</button></div></header><main>`+avisoBar()+subNav();
  if(!LOGI()&&S.tab!=='fro'&&S.tab!=='evo')S.tab='fro';
  if(S.tab==='env'){app.innerHTML=h+renderEnv()+'</main>';return}
  if(S.tab==='rel'){app.innerHTML=h+renderRel()+'</main>';return}
@@ -816,7 +836,7 @@ document.addEventListener('click',async e=>{const b=e.target.closest('button');i
  }catch(x){b.disabled=false;toast(x.message)}});
 setInterval(()=>{try{if(!EMBED&&S.token&&Date.now()-(+sessionStorage.getItem('lg-ult')||0)>INATIVO_MIN*6e4){sair('Por segurança, a sessão foi encerrada após '+INATIVO_MIN+' minutos sem uso. Entre de novo.');return}}catch(e){}if(S.token&&!document.hidden&&!document.querySelector('[data-rs]:focus,select:focus')){carregar(true);if(LOGI()&&(isMot()||Date.now()-M.at>120e3))carregarMot(true);if(S.tab==='env'&&E.sr!==null&&!E.busy)carregarEnv(false,true);if(LOGI()&&!K.busy)carregarCanal(true)}},30000);
 document.addEventListener('visibilitychange',()=>{if(document.hidden||!S.token)return;try{if(!EMBED&&Date.now()-(+sessionStorage.getItem('lg-ult')||0)>INATIVO_MIN*6e4)return sair('Por segurança, a sessão foi encerrada após '+INATIVO_MIN+' minutos sem uso. Entre de novo.')}catch(e){}carregar(true)});
-function iniciarCarga(){if(!S.token)return;carregar();if(LOGI()){carregarMot(S.tab!=='mot');carregarCanal(S.tab!=='can')}if(S.tab==='env')carregarEnv(true);if(S.tab==='rel')carregarRel();if(S.tab==='cad')carregarCad();if(S.tab==='evo')carregarEvoC();if(S.tab==='fro')carregarFrota()}
+function iniciarCarga(){if(!S.token)return;carregar();if(LOGI()){if(pushSupC()&&!PUSHC_ok){PUSHC_ok=true;pushChecarC()}carregarMot(S.tab!=='mot');carregarCanal(S.tab!=='can')}if(S.tab==='env')carregarEnv(true);if(S.tab==='rel')carregarRel();if(S.tab==='cad')carregarCad();if(S.tab==='evo')carregarEvoC();if(S.tab==='fro')carregarFrota()}
 if(EMBED){addEventListener('message',e=>{if(e.origin!==PAINEL_ORIGEM||!e.data||e.data.tipo!=='central-login')return;const d=e.data;if(!/^[a-f0-9]{20,}$/.test(String(d.token||'')))return;
   const novo=S.token!==d.token;S.token=d.token;S.nome=d.nome||'';S.perfil='logistica';S.trocar=false;try{sessionStorage.setItem('lg-token',S.token);sessionStorage.setItem('lg-nome',S.nome);sessionStorage.setItem('lg-perfil','logistica');sessionStorage.setItem('lg-ult',String(Date.now()))}catch(x){}
   if(d.tab&&['sol','env','rel','fro','evo','mot','motf','motc','motv','mota','cad','can'].includes(d.tab)){S.tab=d.tab==='mot'?'motf':d.tab}if(novo){render();iniciarCarga()}else render()});
