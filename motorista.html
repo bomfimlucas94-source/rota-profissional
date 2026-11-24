@@ -135,7 +135,7 @@ nav.nav b{position:absolute;top:6px;left:calc(50% + 6px);background:var(--bad);c
 <dialog id="dlg"><h3 id="dlgT"></h3><p id="dlgP"></p><div class="row"><button class="btn line" id="dlgN" type="button">Cancelar</button><button class="btn wine" id="dlgS" type="button">Confirmar</button></div></dialog>
 <script>
 const SB='https://sizbevhqreaccxrlimup.supabase.co',KEY='sb_publishable_sOPBmFvZMrGj3JvHzxIyYQ_4LsvUbSG';
-const S={lg:{msgs:null,nl:0,txt:'',err:''},am:{rotas:null,at:0,busy:false,err:'',aberto:false},alvo:'',token:null,nome:'',trocar:false,etapa:'carregando',turno:null,lista:null,carros:null,gps:null,busca:'',sec:0,resp:{},busy:false,err:'',rotas:null,motivos:[],rotaErr:'',vis:null,co:null,aba:'hoje',naoLidas:0,fg:{d:null,err:'',sel:{},mot:{}},
+const S={hj:{rotas:null,at:0,busy:false,err:'',aberto:true},tplaca:'',lg:{msgs:null,nl:0,txt:'',err:''},am:{rotas:null,at:0,busy:false,err:'',aberto:false},alvo:'',token:null,nome:'',trocar:false,etapa:'carregando',turno:null,lista:null,carros:null,gps:null,busca:'',sec:0,resp:{},busy:false,err:'',rotas:null,motivos:[],rotaErr:'',vis:null,co:null,aba:'hoje',naoLidas:0,fg:{d:null,err:'',sel:{},mot:{}},
  chat:{rotas:null,rota:null,msgs:[],resp:[],txt:'',err:'',ed:null,n:-1},oc:{lista:null,tipo:'',texto:'',valor:'',foto:null,avisar:true,err:''}};
 try{S.token=localStorage.getItem('rm-token');S.nome=localStorage.getItem('rm-nome')||'';S.trocar=localStorage.getItem('rm-trocar')==='1'}catch(e){}
 let PIN_TMP='';
@@ -253,6 +253,17 @@ const amanhaK=()=>{const d=new Date();d.setDate(d.getDate()+1);return d.toLocale
 async function carregaAmanha(forca){const A=S.am;if(A.busy||(!forca&&A.at&&Date.now()-A.at<10*60000))return;A.busy=true;
  try{const r=await api('rota',{dia:amanhaK()});A.busy=false;A.at=Date.now();if(!r.ok){A.err=r.erro;A.rotas=[]}else{A.err='';A.rotas=r.rotas||[];A.dia=r.dia}}catch(e){A.busy=false;if(e.message==='sessao')return;A.err=e.message;A.rotas=[]}
  if(S.aba==='hoje'&&comNav())render()}
+/* rota de hoje antes de iniciar o plantão: só leitura (a rota completa aparece depois de entrar no carro) */
+async function carregaHoje(forca){const A=S.hj;if(A.busy||(!forca&&A.at&&Date.now()-A.at<5*60000))return;A.busy=true;
+ try{const r=await api('rota');A.busy=false;A.at=Date.now();if(!r.ok){A.err=r.erro;A.rotas=[]}else{A.err='';A.rotas=r.rotas||[]}}catch(e){A.busy=false;if(e.message==='sessao')return;A.err=e.message;A.rotas=[]}
+ if(S.aba==='hoje'&&comNav())render()}
+function hojeHtml(){const A=S.hj;if(!A.at&&!A.busy)setTimeout(()=>carregaHoje(),0);
+ let h=`<details class="card hojepv"${A.aberto!==false?' open':''}><summary style="cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:8px"><h2 style="margin:0">Sua rota de hoje</h2><span class="meta">${A.rotas==null?'…':A.rotas.length?A.rotas.reduce((a,r)=>a+(r.visitas||[]).length,0)+' visitas':'—'} ▾</span></summary>`;
+ if(A.rotas==null)h+='<p class="carregando">Buscando no SimpliRoute…</p>';
+ else if(A.err)h+=`<p class="err">${esc(A.err)}</p>`;
+ else if(!A.rotas.length)h+='<p class="meta">Nenhuma rota sua para hoje no SimpliRoute. Se você deveria ter rota, avise a Logística.</p>';
+ else A.rotas.forEach((r,ri)=>{const vs=r.visitas||[];h+=`<p class="meta" style="margin-top:6px"><b>Rota${A.rotas.length>1?' '+(ri+1):''}</b>${r.prev_inicio?' · saída prevista '+esc(r.prev_inicio):''} · ${vs.length} visitas</p><ol class="dl" style="padding-left:0;list-style:none">${vs.map(v=>`<li><span class="chk" style="background:var(--off);color:var(--ink)">${v.ordem}</span><span><b>${esc(v.titulo)}</b>${v.prev?' · '+esc(v.prev):''}<br><small class="meta">${esc(v.endereco)}</small></span></li>`).join('')}</ol>`});
+ h+='<p class="meta">Para iniciar a rota, fazer check-in e finalizar, comece o plantão acima.</p></details>';return h}
 function amanhaHtml(){const A=S.am;if(!A.at&&!A.busy)setTimeout(()=>carregaAmanha(),0);const k=amanhaK();
  let h=`<details class="card amanha"${A.aberto?' open':''}><summary style="cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:8px"><h2 style="margin:0">Rota de amanhã · ${esc(dlong(k))}</h2><span class="meta">${A.rotas==null?'…':A.rotas.length?A.rotas.reduce((a,r)=>a+(r.visitas||[]).length,0)+' visitas':'—'} ▾</span></summary>`;
  if(A.rotas==null)h+='<p class="carregando">Buscando no SimpliRoute…</p>';
@@ -368,8 +379,12 @@ function render(){
  if(S.etapa==='carro'&&TERC()){
   h=topo();h+='<main>';
   if(S.err)h+=`<p class="err" role="alert">${esc(S.err)}</p>`;
-  h+=`<div class="card"><h2>Seu carro</h2><span style="font-size:24px;font-weight:800;letter-spacing:.04em">${esc(S.placaP||'sem placa')}</span><p class="meta">Carro próprio${S.empresa?' · '+esc(S.empresa):''}. Se a placa estiver errada, avise a Logística.</p>
-   <button class="btn sun" type="button" data-a="tiniciar"${S.busy||!S.placaP?' disabled':''}>${S.busy?'Iniciando…':'Iniciar plantão'}</button></div>${pushCard()}${gpsCard()}${amanhaHtml()}</main>`;
+  h+=S.placaP?`<div class="card"><h2>Seu carro</h2><span style="font-size:24px;font-weight:800;letter-spacing:.04em">${esc(S.placaP)}</span><p class="meta">Carro próprio${S.empresa?' · '+esc(S.empresa):''}. Se a placa estiver errada, avise a Logística.</p>
+   <button class="btn sun" type="button" data-a="tiniciar"${S.busy?' disabled':''}>${S.busy?'Iniciando…':'Iniciar plantão'}</button></div>`
+   :`<div class="card"><h2>Seu carro</h2><p class="meta">Carro próprio${S.empresa?' · '+esc(S.empresa):''}. Seu cadastro ainda está sem a placa: informe abaixo (só na primeira vez).</p>
+   <label class="fl" for="tplaca" style="font-weight:700">Placa do carro</label><input id="tplaca" maxlength="8" autocomplete="off" autocapitalize="characters" placeholder="ABC1D23" value="${esc(S.tplaca||'')}" style="font-size:22px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:10px 12px;border:1px solid var(--line);border-radius:10px">
+   <button class="btn sun" type="button" data-a="tiniciar"${S.busy?' disabled':''}>${S.busy?'Iniciando…':'Salvar placa e iniciar plantão'}</button></div>`;
+  h+=`${hojeHtml()}${pushCard()}${gpsCard()}${amanhaHtml()}</main>`;
   app.innerHTML=h+nav();return}
  if(S.etapa==='carro'){
   h=topo();h+='<main>';
@@ -383,7 +398,7 @@ function render(){
    l.forEach(c=>{const perto=c.distancia_m!=null&&c.distancia_m<=300;
     h+=`<button type="button" class="carro" data-a="escolher" data-id="${esc(c.id)}"><span><b>${esc(c.placa)}</b><small>${esc(c.modelo||'')}${c.distancia_m!=null?' · '+km(c.distancia_m):''}</small></span>${c.sugerido?'<span class="tag ult">Último que você usou</span>':perto?'<span class="tag perto">Perto de você</span>':''}</button>`});
    if(!q&&S.carros.length>8)h+='<p class="meta" style="text-align:center">Não achou? Busque pela placa.</p>'}
-  h+=`<button class="btn line" type="button" data-a="gps">Atualizar localização</button>${pushCard()}${amanhaHtml()}</main>`;
+  h+=`<button class="btn line" type="button" data-a="gps">Atualizar localização</button>${hojeHtml()}${pushCard()}${amanhaHtml()}</main>`;
   app.innerHTML=h+nav();const b=$('#busca');if(b)b.oninput=()=>{S.busca=b.value;const p=b.selectionStart;render();const n=$('#busca');n.focus();n.setSelectionRange(p,p)};return}
  if(S.etapa==='inspecao'){
   const L=S.lista||[];const sec=L[S.sec];const tot=L.reduce((a,s)=>a+s.itens.length,0),feitos=Object.keys(S.resp).length;
@@ -523,8 +538,9 @@ document.addEventListener('click',async e=>{
   try{const r=await api('inspecao',{respostas:S.resp});S.busy=false;if(!r.ok){S.err=r.erro;render();return}
    S.turno=r.turno;S.etapa='pronto';toast('Inspeção registrada no Geotab.');if(r.fotos_falharam&&r.fotos_falharam.length)setTimeout(()=>toast('Não consegui enviar a foto de: '+r.fotos_falharam.join(', ')+'. O problema foi registrado mesmo assim.'),3400);render();scrollTo(0,0);carregaRota();carregaTicket()}
   catch(x){S.busy=false;if(x.message!=='sessao'){S.err=x.message;render()}}return}
- if(a==='tiniciar'){S.busy=true;S.err='';render();const g=await pegaGps();
-  try{const r=await api('entrar',g||{});S.busy=false;if(!r.ok){S.err=r.erro;render();return}S.turno=r.turno;S.etapa='pronto';toast('Plantão iniciado.');render();scrollTo(0,0);carregaRota();carregaGps()}
+ if(a==='tiniciar'){const pl=String(S.tplaca||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(!S.placaP&&!/^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/.test(pl)){S.err='Informe a placa do carro no formato ABC1D23 ou ABC1234.';render();return}
+  S.busy=true;S.err='';render();const g=await pegaGps();
+  try{const r=await api('entrar',{...(g||{}),...(S.placaP?{}:{placa:pl})});if(r.ok&&!S.placaP)S.placaP=pl;S.busy=false;if(!r.ok){S.err=r.erro;render();return}S.turno=r.turno;S.etapa='pronto';toast('Plantão iniciado.');render();scrollTo(0,0);carregaRota();carregaGps()}
   catch(x){S.busy=false;if(x.message!=='sessao'){S.err=x.message;render()}}return}
  if(a==='gpsver'){toast('Verificando…');await carregaGps();const u=S.g.ultima_em?new Date(S.g.ultima_em):null;const ct=S.g.contato_em&&Date.now()-new Date(S.g.contato_em)<15*6e4;toast(u&&S.g.ultima_fonte==='traccar'&&Date.now()-u<10*6e4?'Localização chegando. Tudo certo!':!S.turno&&ct?'Traccar configurado certo. A posição vale quando você iniciar o plantão.':S.turno&&ct?'O Traccar está falando com o servidor; aguarde a próxima posição.':S.turno?'Ainda não chegou posição do Traccar Client. Confira os passos.':'Inicie o plantão e depois verifique: fora do plantão a posição não é guardada.');return}
  if(a==='encerrar'){const ab=(S.rotas||[]).some(r=>r.status==='started');if(!(await confirma('Encerrar o plantão?',(ab?'Sua rota ainda está em andamento no SimpliRoute. ':'')+(TERC()?'A localização deixa de ser usada.':'O app tira você do carro '+(S.turno?S.turno.placa:'')+' no Geotab.'),'Encerrar')))return;
@@ -560,7 +576,8 @@ let tick=0;setInterval(()=>{if(!S.token||document.hidden||!comNav())return;tick+
  if(S.aba==='chat'){if(!S.busy){if(S.alvo==='log')carregaLog(true);else carregaChat(true)}if(tick%3===0){if(S.alvo==='log')contaNaoLidas();else contaLog()}}
  else if(tick%3===0){contaNaoLidas();contaLog()}},10000);
 setTimeout(()=>{if(S.token&&comNav()){contaNaoLidas();contaLog()}},2500);
-document.addEventListener('toggle',e=>{if(e.target.classList&&e.target.classList.contains('amanha'))S.am.aberto=e.target.open},true);
+document.addEventListener('toggle',e=>{if(e.target.classList&&e.target.classList.contains('amanha'))S.am.aberto=e.target.open;if(e.target.classList&&e.target.classList.contains('hojepv'))S.hj.aberto=e.target.open},true);
+document.addEventListener('input',e=>{if(e.target&&e.target.id==='tplaca')S.tplaca=e.target.value});
 
 /* Notificações no celular do motorista: mensagens da Logística, avisos e conversa da rota */
 const VAPID='BJtcxQcuxJz_-k4vrCm9Wh9J5pkCLa7dSDPlCxN4gdvtf-hXwyUIchWSVV4G3cUGHYCZtmLTrZaPtK57gizWNVs';

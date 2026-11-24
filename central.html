@@ -194,6 +194,12 @@ tr.crit td{background:#fdf1f2}
 .cfgm{position:absolute;right:0;top:44px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 32px rgba(43,10,31,.18);min-width:250px;padding:6px;display:flex;flex-direction:column;z-index:40}
 .cfgm>button{text-align:left;border:0;background:none;font:inherit;font-size:14px;padding:10px 12px;border-radius:8px;color:var(--ink);cursor:pointer}.cfgm>button:hover{background:var(--off)}
 .cfgm .pushc{margin:4px 6px;justify-content:flex-start;color:var(--wine);border-color:var(--line);text-align:left}.cfgsep{height:1px;background:var(--line);margin:4px 0}.cfgnote{font-size:12px;color:var(--muted);padding:6px 12px}
+.fcar2{position:relative;width:36px;height:36px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 1px 2px rgba(0,0,0,.45))}
+.fcar2 .frot{width:34px;height:34px;display:flex;align-items:center;justify-content:center;transition:transform .6s ease}
+.fcar2.sel .frot svg rect:first-child{stroke:#f5a623;stroke-width:3}
+.fnum{position:absolute;left:24px;top:-6px;min-width:16px;height:16px;padding:0 3px;border-radius:8px;background:#fff;color:var(--wine);border:1.5px solid var(--wine);font:800 9.5px/13px Montserrat,Arial,sans-serif;text-align:center;box-sizing:border-box}
+.fnum.mov{border-color:#f5a623}.fnum.off{border-color:#9a8f94;color:#6b6266}
+.fout2{width:20px;height:20px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 1px 1px rgba(0,0,0,.35))}
 </style>
 </head>
 <body>
@@ -329,6 +335,9 @@ async function carregarFrota(sil){if(!S.token||S.trocar||F.busy)return;F.busy=tr
  try{const r=await fetch(SB+'/functions/v1/frota-ao-vivo',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({token:S.token})}).then(r=>r.json());
   if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');throw new Error(r.erro)}F.d=r;F.err='';F.at=Date.now()}catch(e){F.err=e.message||'Falha ao carregar.'}
  F.busy=false;if(S.tab==='fro')render()}
+/* carrinho visto de cima, apontando para a direção do movimento (bearing do Geotab; 0° = norte) */
+const fCarSvg=(cor,w,h)=>`<svg viewBox="0 0 24 40" width="${w}" height="${h}" aria-hidden="true"><rect x="2" y="1.5" width="20" height="37" rx="7" fill="${cor}" stroke="#fff" stroke-width="2"/><path d="M5.5 11.5q6.5-4 13 0l-1.4 5.2q-5.1-1.8-10.2 0z" fill="#fff" opacity=".92"/><path d="M6.6 29.5q5.4 1.6 10.8 0l1 4q-6.4 2.4-12.8 0z" fill="#fff" opacity=".7"/><rect x="4.8" y="18.5" width="1.6" height="8" rx=".8" fill="#fff" opacity=".45"/><rect x="17.6" y="18.5" width="1.6" height="8" rx=".8" fill="#fff" opacity=".45"/><circle cx="6" cy="3.6" r="1.3" fill="#ffe9a8"/><circle cx="18" cy="3.6" r="1.3" fill="#ffe9a8"/></svg>`;
+const fDir=c=>c&&c.direcao!=null&&isFinite(+c.direcao)?+c.direcao:0;
 const fNum=v=>{const m=String(v||'').match(/(extra)?\D*(\d+)\s*$/i);return m?(m[1]?'E':'')+m[2]:String(v||'?').slice(0,2)};
 const fMod=c=>String(c.modelo||'').split('|').pop().trim();
 const fIdade=t=>{if(!t)return'';const m=Math.round((Date.now()-new Date(t))/6e4);return m<1?'agora':m<60?'há '+m+' min':'há '+Math.floor(m/60)+'h'+String(m%60).padStart(2,'0')};
@@ -358,10 +367,10 @@ async function desenhaFrota(){const slot=document.getElementById('fmapa-slot');i
  if(!F.map){F.map=L.map(F.el,{scrollWheelZoom:true});L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap'}).addTo(F.map);F.map.setView([-22.93,-43.3],10)}
  setTimeout(()=>F.map&&F.map.invalidateSize(),0);
  if(F.lay)F.lay.remove();F.lay=L.layerGroup().addTo(F.map);const pts=[];
- if(F.outros)(F.d.outros||[]).forEach(c=>{L.marker([c.lat,c.lng],{icon:L.divIcon({className:'',html:`<div class="fout${c.dirigindo?' mov':''}"></div>`,iconSize:[12,12],iconAnchor:[6,6]})}).bindTooltip(esc(c.placa)+' · '+esc(fMod(c))+(c.motorista?'<br>'+esc(c.motorista):'')+'<br>'+(c.dirigindo?c.velocidade+' km/h':'parado')+' · '+fIdade(c.posicao_em)).addTo(F.lay)});
+ if(F.outros)(F.d.outros||[]).forEach(c=>{L.marker([c.lat,c.lng],{icon:L.divIcon({className:'',html:`<div class="fout2" style="transform:rotate(${fDir(c)}deg)">${fCarSvg(c.dirigindo?'#c9a35c':'#9a8f94',12,20)}</div>`,iconSize:[20,20],iconAnchor:[10,10]})}).bindTooltip(esc(c.placa)+' · '+esc(fMod(c))+(c.motorista?'<br>'+esc(c.motorista):'')+'<br>'+(c.dirigindo?c.velocidade+' km/h':'parado')+' · '+fIdade(c.posicao_em)).addTo(F.lay)});
  (F.d.rotas||[]).forEach(r=>{const c=r.carro;if(!c||c.lat==null)return;const st=fSit(r);
   const tip=`<b>${esc(r.veiculo)}</b> · ${esc(c.placa)}<br>${esc(r.medicos.join(', '))}<br>Mot. ${esc(r.motorista)}<br>${st[0]} · ${r.feitas}/${r.total} visitas<br>${c.comunicando===false?'sem sinal':c.dirigindo?c.velocidade+' km/h':'parado'} · ${fIdade(c.posicao_em)}`;
-  L.marker([c.lat,c.lng],{zIndexOffset:500,icon:L.divIcon({className:'',html:`<div class="fcar${c.comunicando===false?' off':c.dirigindo?' mov':''}">${esc(fNum(r.veiculo))}</div>`,iconSize:[30,30],iconAnchor:[15,15]})}).bindTooltip(tip).on('click',()=>{F.sel=r.route_id;render()}).addTo(F.lay);pts.push([c.lat,c.lng]);
+  L.marker([c.lat,c.lng],{zIndexOffset:500,icon:L.divIcon({className:'',html:`<div class="fcar2${F.sel===r.route_id?' sel':''}"><div class="frot" style="transform:rotate(${fDir(c)}deg)">${fCarSvg(c.comunicando===false?'#9a8f94':c.dirigindo?'#f5a623':'#5f0040',20,34)}</div><span class="fnum${c.comunicando===false?' off':c.dirigindo?' mov':''}">${esc(fNum(r.veiculo))}</span></div>`,iconSize:[36,36],iconAnchor:[18,18]})}).bindTooltip(tip).on('click',()=>{F.sel=r.route_id;render()}).addTo(F.lay);pts.push([c.lat,c.lng]);
   if(r.prox&&r.prox.lat&&st[1]!=='ok'&&(F.sel===r.route_id||!F.sel)){L.polyline([[c.lat,c.lng],[r.prox.lat,r.prox.lng]],{color:'#5f0040',weight:2,opacity:.6,dashArray:'5 6'}).addTo(F.lay);L.marker([r.prox.lat,r.prox.lng],{icon:L.divIcon({className:'',html:'<div class="fnx"></div>',iconSize:[14,14],iconAnchor:[7,7]})}).bindTooltip('Próxima visita de '+esc(r.veiculo)+(r.prox.hora?' · prev. '+esc(r.prox.hora):'')+(r.prox.bairro?' · '+esc(r.prox.bairro):'')).addTo(F.lay)}});
  const sel=(F.d.rotas||[]).find(r=>r.route_id===F.sel);
  if(sel&&sel.carro&&sel.carro.lat!=null){if(F.fly){F.map.flyTo([sel.carro.lat,sel.carro.lng],14,{duration:.6});F.fly=false}}
