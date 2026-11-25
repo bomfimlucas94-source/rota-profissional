@@ -426,7 +426,8 @@ function fParadas(r){const P=r.pontos||[];if(!P.length)return'';const prox=P.fin
   h+=`<li class="${cls}"><i>${p.o}</i><div><b>${esc(p.nome||'—')}</b><small>${p.bairro?esc(p.bairro)+' · ':''}prev. ${esc(p.prev||'—')}${p.jan?` · janela ${esc(p.jan.de)}–${esc(p.jan.ate)}`:''}</small></div>${sit}</li>`});
  return h+'</ol></div>'}
 const hmSP=t=>t?new Date(t).toLocaleTimeString('pt-BR',{timeZone:'America/Sao_Paulo',hour:'2-digit',minute:'2-digit'}):'';
-function carregaLeafletC(){if(window.L)return Promise.resolve();return new Promise((ok,no)=>{const c=document.createElement('link');c.rel='stylesheet';c.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';document.head.appendChild(c);const j=document.createElement('script');j.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';j.onload=ok;j.onerror=no;document.head.appendChild(j)})}
+/* uma carga só: duas cópias do Leaflet na página quebram as linhas do mapa */
+let _lfP=null;function carregaLeafletC(){if(window.L)return Promise.resolve();if(_lfP)return _lfP;return _lfP=new Promise((ok,no)=>{const c=document.createElement('link');c.rel='stylesheet';c.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';document.head.appendChild(c);const j=document.createElement('script');j.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';j.onload=ok;j.onerror=e=>{_lfP=null;j.remove();no(e)};document.head.appendChild(j)})}
 async function desenhaFrota(){const slot=document.getElementById('fmapa-slot');if(!slot||!F.d)return;
  if(!F.el){F.el=document.createElement('div');F.el.id='fmapa'}
  slot.replaceWith(F.el);
@@ -764,10 +765,12 @@ const rtFora=r=>(r.visitas||[]).filter(v=>!v.feita&&v.ate&&v.eta&&ajMin(v.eta)>a
 function rtUlt(id){const r=((RT.plano&&RT.plano.rotas)||[]).find(x=>x.id===id);const u=RT.plano&&RT.plano.ult&&RT.plano.ult[id];
  if(!r||!u||r.equipe!=='medica')return null;if(+u.iguais<Math.max(2,Math.ceil(+u.total/2)))return null;return u}
 function rtUltTxt(u){if(!u)return '';const d=String(u.data);return `${d.slice(8,10)}/${d.slice(5,7)} · ${String(u.profissional||'').split(' ').slice(0,3).join(' ')} · ${u.iguais} de ${u.total} pacientes iguais${u.fonte==='enviada'?' (ordem enviada no Minha Rota)':' (ordem em que foram atendidos)'}`}
-async function rtCarregar(){RT.busy=true;RT.err='';render();
- try{const r=await ajApi('plano',{data:RT.data});if(!r.ok)throw new Error(r.erro||'Não consegui ler o plano no SimpliRoute.');RT.plano=r;RT.at=Date.now();RT.fit=true;
-  if(RT.sel&&!r.rotas.some(x=>x.id===RT.sel)){RT.sel=null;AJ.route='';AJ.d=null}}
- catch(e){if(e.message!=='sessao')RT.err=e.message}RT.busy=false;render()}
+async function rtCarregar(fresco){const dia=RT.data,tem=!!RT.plano;RT.busy=tem&&fresco?'bg':true;RT.err='';render();
+ try{const r=await ajApi('plano',{data:dia,cache:!fresco});if(RT.data!==dia)return;if(!r.ok)throw new Error(r.erro||'Não consegui ler o plano no SimpliRoute.');
+  const prim=!RT.plano;RT.plano=r;RT.at=r.cache?new Date(r.cache).getTime():Date.now();if(prim)RT.fit=true;
+  if(RT.sel&&!r.rotas.some(x=>x.id===RT.sel)){RT.sel=null;AJ.route='';AJ.d=null}
+  if(r.cache){RT.busy=false;render();return rtCarregar(true)}}
+ catch(e){if(e.message!=='sessao')RT.err=e.message}if(RT.data===dia){RT.busy=false;render()}}
 function rtAbrir(id){const r=((RT.plano&&RT.plano.rotas)||[]).find(x=>x.id===id);if(!r)return;
  if(RT.sel&&RT.sel!==id&&ajMudou()&&!confirm('Há mudanças nesta rota que não foram enviadas ao SimpliRoute. Abrir outra mesmo assim?'))return;
  RT.sel=id;RT.fit=true;RT.edJ=null;RT.topo=true;AJ.data=RT.data;AJ.route=id;AJ.d=null;AJ.sols=AJ.pre?AJ.sols:[];AJ.nolst=[];ajMexeu();render();ajCarregar()}
@@ -817,7 +820,8 @@ function rtCards(){const R=AJ.d.rota,P=AJ.d.pedidos||[],sim=AJ.sim,sv=sim?new Ma
   </div>`}).join('')+'</div>'}
 function rtDetalhe(){const r=((RT.plano&&RT.plano.rotas)||[]).find(x=>x.id===RT.sel);const cor=rtCor(RT.sel);
  let h=`<div class="rtdh" style="border-top-color:${cor}"><div><b>${esc(rtNome(r))}</b><small>${esc(r?r.veiculo:'')}${r&&r.motorista?' · mot. '+esc(String(r.motorista).split(' ').slice(0,2).join(' ')):''}</small>`;
- if(!AJ.d){h+=`</div><button type="button" class="rtx" data-rt="fechar" aria-label="Fechar a rota">×</button></div>`;if(AJ.err)h+=`<p class="err" role="alert">${esc(AJ.err)}</p>`;return h+`<div class="empty">${AJ.busy?'Abrindo a rota no SimpliRoute…':'—'}</div>`}
+ if(!AJ.d){h+=`</div><button type="button" class="rtx" data-rt="fechar" aria-label="Fechar a rota">×</button></div>`;if(AJ.err)h+=`<p class="err" role="alert">${esc(AJ.err)}</p>`;
+  h+=`<p class="rtdica" style="padding-top:8px">${AJ.busy?'Abrindo a rota para editar (janelas, histórico e pedidos)…':''}</p><div class="rtvs">`+(r?r.visitas:[]).map((v,i)=>`<div class="rtv${v.feita?' feita':''}" style="cursor:default"><span class="rtn" style="background:${cor}">${i+1}</span><div class="rtb"><div class="rtt"><b>${esc(v.titulo)}</b></div><div class="rta">${v.bairro?esc(v.bairro)+' · ':''}${v.feita?'já atendida':'prev. <b>'+esc(v.eta||'—')+'</b>'}${v.de||v.ate?' · janela '+esc(v.de||'…')+'–'+esc(v.ate||'…'):''}</div></div></div>`).join('')+'</div>';return h}
  const R=AJ.d.rota,sim=AJ.sim,mud=ajMudou(),fin=R.status==='finished',P=ajPend(),u=rtUlt(RT.sel),nj=P.filter(ajDifCad).length;
  h+=`<small>${R.status==='started'?'em andamento':R.status==='finished'?'finalizada':'não iniciada'} · saída ${esc(R.inicio)}${R.fim?' · volta '+esc(R.fim):''}${AJ.d.enviada?' · no Minha Rota':''}</small></div><button type="button" class="rtx" data-rt="fechar" aria-label="Fechar a rota">×</button></div>`;
  if(AJ.err)h+=`<p class="err" role="alert">${esc(AJ.err)}</p>`;
@@ -831,7 +835,7 @@ function renderRot(){const L0=(RT.plano&&RT.plano.rotas)||[];const n=k=>L0.filte
  if(!RT.plano&&!RT.busy&&!RT.err&&!RT._q){RT._q=1;setTimeout(()=>{RT._q=0;if(!RT.plano&&!RT.busy)rtCarregar()},0)}
  let h=`<div class="bar rtbar"><label class="ck">Dia <select id="rtdia">${[0,1,2].map(k=>{const s=hojeSP(k);return `<option value="${s}"${RT.data===s?' selected':''}>${k===0?'Hoje':k===1?'Amanhã':dExt(s)} · ${dm(s)}</option>`}).join('')}</select></label>
   <div class="rteq" role="tablist" aria-label="Equipe">${[['medica','Visita médica'],['enfermagem','Visita de enfermagem']].map(([k,t])=>`<button type="button" role="tab" data-rteq="${k}" aria-selected="${RT.eq===k}" class="${RT.eq===k?'on':''}">${t}${RT.plano?` <b>${n(k)}</b>`:''}</button>`).join('')}</div>
-  <span class="sp"></span><span class="upd">${RT.at?'SimpliRoute lido às '+hh(RT.at):''}</span><button class="btn ghost sm" type="button" data-rt="atualizar"${RT.busy?' disabled':''}>${RT.busy?'Lendo o SimpliRoute…':'Atualizar'}</button></div>`;
+  <span class="sp"></span><span class="upd">${RT.busy==='bg'?'Atualizando com o SimpliRoute…':RT.at?'SimpliRoute lido às '+hh(RT.at):''}</span><button class="btn ghost sm" type="button" data-rt="atualizar"${RT.busy?' disabled':''}>${RT.busy===true?'Lendo o SimpliRoute…':RT.busy==='bg'?'Atualizando…':'Atualizar'}</button></div>`;
  if(RT.err)h+=`<p class="err" role="alert">${esc(RT.err)}</p>`;
  const L=rtRotas();
  h+=`<div class="rtwrap${RT.sel?' sel':''}"><section class="rtrs" aria-label="Rotas">`;
@@ -862,15 +866,15 @@ async function rtDesenha(soMapa){const slot=document.getElementById('rtmapa-slot
  if(!RT.map){RT.map=L.map(RT.el,{scrollWheelZoom:true});L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap'}).addTo(RT.map);RT.map.setView([-22.93,-43.3],10)}
  RT.map.invalidateSize(false);
  if(RT.lay)RT.lay.remove();RT.lay=L.layerGroup().addTo(RT.map);const pts=[];
- rtRotas().forEach(r=>{const cor=rtCor(r.id),on=!RT.sel||RT.sel===r.id,ehSel=RT.sel===r.id;if(!on&&RT.ocultar)return;
+ rtRotas().forEach(r=>{try{const cor=rtCor(r.id),on=!RT.sel||RT.sel===r.id,ehSel=RT.sel===r.id;if(!on&&RT.ocultar)return;
   let vis=r.visitas;if(ehSel&&AJ.d&&AJ.route===r.id)vis=AJ.ord.map(o=>ajV(o.id)).filter(Boolean);
   const ok=vis.filter(v=>v&&isFinite(v.lat)&&isFinite(v.lng)&&v.lat);
-  if(ok.length>1){const g=RT.geo[rtChave(ok)];if(g&&g.length)L.polyline(g,{color:cor,weight:ehSel?5:3,opacity:on?(RT.sel?.9:.65):.15}).addTo(RT.lay);
-   else{L.polyline(ok.map(v=>[v.lat,v.lng]),{color:cor,weight:ehSel?3:2,opacity:on?.5:.12,dashArray:'6 8'}).addTo(RT.lay);if(on)rtPedeGeo(ok)}}
+  if(ok.length>1){const g=RT.geo[rtChave(ok)];if(g&&g.length)L.polyline(g,{noClip:true,color:cor,weight:ehSel?5:3,opacity:on?(RT.sel?.9:.65):.15}).addTo(RT.lay);
+   else{L.polyline(ok.map(v=>[v.lat,v.lng]),{noClip:true,color:cor,weight:ehSel?3:2,opacity:on?.5:.12,dashArray:'6 8'}).addTo(RT.lay);if(on)rtPedeGeo(ok)}}
   vis.forEach((v,i)=>{if(!v||!isFinite(v.lat)||!v.lat)return;const sz=ehSel?26:20;
    L.marker([v.lat,v.lng],{zIndexOffset:ehSel?500:0,icon:L.divIcon({className:'',html:`<div class="rtpin${v.feita?' f':''}" style="background:${cor};width:${sz}px;height:${sz}px;opacity:${on?1:.3}">${i+1}</div>`,iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]})})
     .bindTooltip(`<b>${esc(rtNome(r))}</b> · ${esc(r.veiculo)}<br>${i+1}ª ${esc(v.titulo)}${v.bairro?' · '+esc(v.bairro):''}<br>prev. ${esc(v.eta||'—')}${v.de||v.ate?' · janela '+esc(v.de||'…')+'–'+esc(v.ate||'…'):''}${v.feita?' · já atendida':''}`)
-    .on('click',()=>{if(RT.sel!==r.id)rtAbrir(r.id);else rtVaiCard(v.id)}).addTo(RT.lay);if(on)pts.push([v.lat,v.lng])})});
+    .on('click',()=>{if(RT.sel!==r.id)rtAbrir(r.id);else rtVaiCard(v.id)}).addTo(RT.lay);if(on)pts.push([v.lat,v.lng])})}catch(e){console.warn('rota no mapa',r.id,e)}});
  if(!soMapa&&RT.fit&&pts.length){RT.fit=false;const enq=()=>{if(!RT.map)return;RT.map.invalidateSize(false);RT.map.fitBounds(pts,{padding:[34,34],maxZoom:14})};enq();setTimeout(enq,60)}}
 function rtAltura(){const w=document.querySelector('.rtwrap');if(!w||innerWidth<=760){if(w)w.style.height='';return}const t=w.getBoundingClientRect().top+window.scrollY;w.style.height=Math.max(560,innerHeight-Math.min(t,innerHeight-560)-14)+'px';if(RT.map)RT.map.invalidateSize(false)}
 window.addEventListener('resize',()=>{if(S.tab==='aju')rtAltura()});
@@ -880,7 +884,7 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
  if(d.rtsel){rtAbrir(d.rtsel);return}
  if(d.rteq){if(RT.eq===d.rteq)return;RT.eq=d.rteq;try{localStorage.setItem('lg-rteq',RT.eq)}catch(x){}rtFechar();return}
  if(d.rt==='fechar'){if(ajMudou()&&!confirm('Há mudanças nesta rota que não foram enviadas ao SimpliRoute. Sair mesmo assim?'))return;rtFechar();return}
- if(d.rt==='atualizar'){rtCarregar();if(RT.sel)ajCarregar();return}
+ if(d.rt==='atualizar'){rtCarregar(true);if(RT.sel)ajCarregar();return}
  if(d.rt==='repetir'){rtRepetir();return}});
 document.addEventListener('change',e=>{const t=e.target;if(!t)return;
  if(t.id==='rtdia'){if(RT.sel&&ajMudou()&&!confirm('Há mudanças nesta rota que não foram enviadas. Trocar de dia mesmo assim?')){t.value=RT.data;return}RT.data=t.value;RT.plano=null;RT.sel=null;AJ.route='';AJ.d=null;render();rtCarregar();return}
