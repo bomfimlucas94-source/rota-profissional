@@ -209,22 +209,35 @@ tr.crit td{background:#fdf1f2}
 .ajt input[type=number]{font:inherit;font-size:13.5px;padding:5px 6px;border:1px solid var(--line);border-radius:8px}
 .larga main,.larga .topin{max-width:none}
 .rtbar{gap:10px}.rteq{display:inline-flex;gap:4px;background:var(--off);border:1px solid var(--line);border-radius:999px;padding:4px}.rteq button{all:unset;cursor:pointer;padding:7px 14px;border-radius:999px;font-size:13px;font-weight:700;color:var(--ink)}.rteq button b{font-size:11px;background:#fff;border-radius:999px;padding:1px 7px;margin-left:4px;color:var(--muted)}.rteq button.on{background:var(--wine);color:#fff}.rteq button.on b{background:rgba(255,255,255,.2);color:#fff}.rteq button:focus-visible{outline:2px solid var(--sun)}
-.rtlay{display:grid;grid-template-columns:minmax(380px,480px) minmax(0,1fr);gap:14px;align-items:start}@media(max-width:980px){.rtlay{grid-template-columns:1fr}}
-.rtl{display:flex;flex-direction:column;gap:8px;max-height:calc(100vh - 190px);min-height:520px;overflow:auto;padding-right:4px}
-.rtm{position:sticky;top:10px}.rtmapa{height:calc(100vh - 190px);min-height:520px;border-radius:14px;border:1px solid var(--line);overflow:hidden;background:var(--off)}@media(max-width:980px){.rtl{max-height:none}.rtmapa{height:420px}}
+.rtwrap{display:grid;grid-template-columns:400px minmax(0,1fr);height:calc(100vh - 186px);min-height:560px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--surface)}
+.rtwrap.sel{grid-template-columns:170px 380px minmax(0,1fr)}
+.rtrs{min-height:0;overflow:auto;border-right:1px solid var(--line);padding:10px;display:flex;flex-direction:column;gap:8px;background:var(--off)}
+.rtwrap.sel .rtrs{padding:6px;gap:4px}
+.rtd{min-height:0;overflow:auto;border-right:1px solid var(--line);display:flex;flex-direction:column;background:var(--surface)}
+.rtm{position:relative;min-height:0}.rtmapa{position:absolute;inset:0;background:var(--off)}
+@media(max-width:1180px){.rtwrap.sel{grid-template-columns:380px minmax(0,1fr)}.rtwrap.sel .rtrs{display:none}}
+@media(max-width:760px){.rtwrap,.rtwrap.sel{grid-template-columns:1fr;height:auto}.rtrs,.rtd{overflow:visible}.rtm{height:380px}}
 .rtoc{position:absolute;right:10px;top:10px;z-index:500;background:#fff;border-radius:10px;padding:7px 11px;box-shadow:0 1px 4px rgba(0,0,0,.18);font-size:12.5px;font-weight:600;display:flex;gap:6px;align-items:center}
 .rtres{margin:0;font-size:12.5px;color:var(--muted)}
-.rtc{all:unset;box-sizing:border-box;display:flex;gap:10px;align-items:flex-start;width:100%;padding:11px 13px;background:var(--surface);border:1px solid var(--line);border-radius:12px;cursor:pointer}.rtc:hover{border-color:var(--wine)}.rtc:focus-visible{outline:2px solid var(--sun)}
-.rtdot{flex:none;width:12px;height:12px;border-radius:50%;margin-top:4px}.rtcb{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.rtct{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.rtct b{font-size:14px}.rtcb small{font-size:12px;color:var(--muted)}.rtcb small b{color:var(--ink)}.rtar{align-self:center;color:var(--wine);font-size:18px}
-.rtback{align-self:flex-start}.rthead{background:var(--surface);border:1px solid var(--line);border-top:5px solid var(--wine);border-radius:12px;padding:10px 13px;display:flex;flex-direction:column;gap:3px}.rthead b{font-size:16px}.rthead small{font-size:12px;color:var(--muted)}
-.rttools{display:flex;flex-wrap:wrap;gap:8px}.rtrep{flex-direction:column;align-items:flex-start;width:100%;min-height:50px;text-align:left;gap:1px}.rtrep small{font-weight:500;color:var(--muted);font-size:11.5px}.rtrep span,.rtrep small{display:block}.btn.rtrep{display:flex}
-.rtdica{margin:0;font-size:11.5px;color:var(--muted)}
-.rtvs{display:flex;flex-direction:column;gap:6px}.rtv{display:flex;gap:8px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:9px 10px;cursor:grab}.rtv.feita{cursor:default;background:var(--off);opacity:.85}.rtv.mud{border-color:#e9b965;background:#fffaf0}.rtv.over{box-shadow:inset 0 3px 0 var(--wine)}.rtv.arr{opacity:.45}
-.rtg{flex:none;width:12px;color:#b3a6ad;font-weight:800;letter-spacing:-2px;padding-top:3px}.rtn{flex:none;width:24px;height:24px;border-radius:50%;color:#fff;font-weight:800;font-size:11.5px;display:flex;align-items:center;justify-content:center}
-.rtb{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}.rtt{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:baseline}.rtt b{font-size:13.5px}.rtt small{font-size:12px;color:var(--muted)}.rtl2{font-size:12.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px;align-items:center}.rtl2 b{color:var(--ink)}
-.rtj input[type=time]{font:inherit;font-size:12.5px;padding:3px 5px;border:1px solid var(--line);border-radius:7px;width:96px}.rtj input[type=number]{font:inherit;font-size:12.5px;padding:3px 5px;border:1px solid var(--line);border-radius:7px}
+.rtc{all:unset;box-sizing:border-box;display:flex;gap:10px;width:100%;padding:10px 12px;background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--wine);border-radius:10px;cursor:pointer}.rtc:hover{border-color:var(--wine)}.rtc:focus-visible,.rtc2:focus-visible{outline:2px solid var(--sun)}
+.rtcb{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.rtct{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.rtct b{font-size:13.5px}.rtcb small{font-size:12px;color:var(--muted)}.rtcb small b{color:var(--ink)}
+.rtc2{all:unset;box-sizing:border-box;display:flex;flex-direction:column;gap:1px;width:100%;padding:7px 8px;background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--wine);border-radius:8px;cursor:pointer}.rtc2 b{font-size:12px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.rtc2 small{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rtc2:hover{border-color:var(--wine)}.rtc2.on{background:#fff7ea;border-color:var(--wine);box-shadow:inset 0 0 0 1px var(--wine)}
+.rtdh{position:sticky;top:0;z-index:3;background:var(--surface);border-top:4px solid var(--wine);border-bottom:1px solid var(--line);padding:8px 10px;display:flex;gap:8px;align-items:flex-start}.rtdh>div{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}.rtdh b{font-size:14px}.rtdh small{font-size:11.5px;color:var(--muted)}
+.rtx{all:unset;cursor:pointer;font-size:20px;line-height:1;padding:2px 6px;border-radius:6px;color:var(--muted)}.rtx:hover{background:var(--off)}.rtx:focus-visible{outline:2px solid var(--sun)}
+.rttools{display:flex;gap:6px;padding:8px 10px 4px;flex-wrap:wrap}.rtb2{font:inherit;cursor:pointer;font-size:12px;font-weight:700;padding:6px 9px;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--ink);display:inline-flex;gap:4px;align-items:center}.rtb2:hover:not(:disabled){border-color:var(--wine)}.rtb2:disabled{opacity:.45;cursor:default}
+.rtdica{margin:0;padding:0 10px 4px;font-size:11px;color:var(--muted)}
+.rtver{margin:4px 10px 6px;border:1px solid var(--line);border-radius:8px;padding:5px 9px;font-size:12px;background:#fff}.rtver summary{cursor:pointer;color:var(--muted)}.rtver summary b{color:var(--wine)}.rtver ul{list-style:none;margin:6px 0 2px;padding:0;display:flex;flex-direction:column;gap:3px}.rtver li{padding:4px 7px;border-radius:6px;background:var(--off);line-height:1.35}.rtver li.bad{background:var(--bad-bg);color:var(--bad)}.rtver li.warn{background:var(--pend-bg);color:var(--pend)}.rtok{color:var(--ok);font-weight:700}
+.rtvs{display:flex;flex-direction:column;padding:0 6px 6px}
+.rtv{display:flex;gap:8px;align-items:flex-start;padding:7px 6px;border-bottom:1px solid var(--line);cursor:grab;background:var(--surface)}.rtv:hover{background:#fbf8f4}.rtv.feita{cursor:default;opacity:.7}.rtv.mud{background:#fffaf0}.rtv.over{box-shadow:inset 0 3px 0 var(--wine)}.rtv.arr{opacity:.4}.rtv.pisca{background:#ffefc9;transition:background .3s}
+.rtn{flex:none;width:22px;height:22px;border-radius:50%;color:#fff;font-weight:800;font-size:11px;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.rtb{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.rtt{display:flex;gap:6px;align-items:baseline}.rtt b{font-size:12.5px;line-height:1.3}.rtt i{font-style:normal;font-size:10.5px;color:var(--pend);white-space:nowrap}
+.rta{font-size:11.5px;color:var(--muted)}.rta b{color:var(--ink)}
+.rtks{display:flex;flex-wrap:wrap;gap:3px}.rtk{font:inherit;font-size:10.5px;font-weight:600;line-height:1.5;border-radius:6px;padding:0 6px;background:var(--off);color:var(--muted);border:0;display:inline-flex;align-items:center;gap:3px}
+button.rtk{cursor:pointer}button.rtk:hover{background:#efe6dc}.rtk.mud{background:#fff0d6;color:var(--pend)}.rtk.bad{background:var(--bad-bg);color:var(--bad)}.rtk.dif{background:#e8f0fb;color:#1f4e79}.rtk.ped{background:#f2e8f0;color:var(--wine)}.rtsv input{margin:0}
+.rted{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;background:var(--off);border-radius:8px;padding:6px 8px;margin-top:3px;font-size:11.5px}.rted label{display:flex;gap:4px;align-items:center}.rted input[type=time]{font:inherit;font-size:12px;padding:2px 4px;border:1px solid var(--line);border-radius:6px;width:92px}.rted input[type=number]{font:inherit;font-size:12px;padding:2px 4px;border:1px solid var(--line);border-radius:6px;width:54px}.rted small{color:var(--muted)}
+.rtv .ajmv{display:flex;flex-direction:column;gap:2px}.rtv .ajmv button{width:24px;height:20px;font-size:11px;line-height:1;padding:0;color:var(--ink)}
 .rtst.ok{color:var(--ok);font-weight:700}.rtst.fa{color:var(--bad);font-weight:700}
-.rtfoot{position:sticky;bottom:0;background:var(--bg);padding:8px 0 2px;display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--line)}
+.rtfoot{position:sticky;bottom:0;margin-top:auto;background:var(--surface);border-top:1px solid var(--line);padding:7px 10px;display:flex;flex-direction:column;gap:6px;z-index:3}.rtres2{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:var(--muted)}.rtres2 b{color:var(--ink)}.rtbt{display:flex;gap:6px;flex-wrap:wrap}
 .rtpin{border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35);color:#fff;font:800 11px/1 system-ui,sans-serif;display:flex;align-items:center;justify-content:center}.rtpin.f{filter:grayscale(.5);opacity:.7}
 .chip{display:inline-flex;align-items:center;font-size:11px;font-weight:700;border-radius:999px;padding:1px 8px;background:var(--off);color:var(--muted)}.chip.bad{background:var(--bad-bg);color:var(--bad)}.chip.warn{background:var(--pend-bg);color:var(--pend)}
 .ajtools{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 10px}.ajtools .btn{gap:6px}.ajn{background:var(--sun);color:var(--wine-d);border-radius:999px;padding:0 7px;font-size:11px}
@@ -704,8 +717,8 @@ document.addEventListener('change',e=>{const t=e.target;if(!t)return;
  if(t.id==='ajdia'){AJ.data=t.value;AJ.route='';AJ.d=null;AJ.rotas=null;AJ.sols=[];ajMexeu();render();ajRotas();return}
  if(t.id==='ajrota'){AJ.route=t.value;AJ.d=null;AJ.sols=[];ajMexeu();render();ajCarregar();return}
  const d=t.dataset||{};
- if(d.ajde||d.ajate){const o=ajO(d.ajde||d.ajate);if(o){if(d.ajde)o.de=t.value;else o.ate=t.value;ajMexeu();render()}return}
- if(d.ajdur){const o=ajO(d.ajdur);if(o){o.duracao=Math.max(5,Math.min(240,+t.value||30));ajMexeu();render()}}});
+ if(d.ajde||d.ajate){const o=ajO(d.ajde||d.ajate);if(o){if(d.ajde)o.de=t.value;else o.ate=t.value;ajMexeu();render();if(S.tab==='aju'&&RT.sel)rtSimLogo()}return}
+ if(d.ajdur){const o=ajO(d.ajdur);if(o){o.duracao=Math.max(5,Math.min(240,+t.value||30));ajMexeu();render();if(S.tab==='aju'&&RT.sel)rtSimLogo()}}});
 document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.closest('[data-aj],[data-ajup],[data-ajdn],[data-ajlist],[data-ajped],[data-ajlimpa],[data-ajr]');if(!b)return;const d=b.dataset;
  if(d.ajr){const r=(S.itens||[]).find(x=>String(x.id)===String(d.ajr));if(!r)return;AJ.data=r.data_rota;AJ.route='';AJ.d=null;AJ.sols=[];AJ.pre={id:r.id,paciente:r.paciente,tipo:r.tipo,de:r.horario_de?String(r.horario_de).slice(0,5):'',ate:r.horario_ate?String(r.horario_ate).slice(0,5):''};ajMexeu();
   S.tab='aju';SUBULT.rot='aju';try{localStorage.setItem('lg-tab','aju');localStorage.setItem('lg-sub',JSON.stringify(SUBULT))}catch(x){}
@@ -737,8 +750,8 @@ document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.c
    if(AJ.d.enviada){try{E.data=AJ.data;await carregarEnv(true,true);const x=(E.sr||[]).find(z=>String(z.route_id)===String(R.id));if(x)await enviarRota(chave(x),true);toast('Rota do profissional atualizada no Minha Rota.')}catch(x){toast('A rota mudou no SimpliRoute, mas não consegui reenviar ao profissional: '+x.message)}}
    AJ.sols=[];AJ.busy='';carregar(true);rtCarregar();return ajCarregar()}catch(x){if(x.message!=='sessao')AJ.err=x.message}AJ.busy='';render()}});
 
-/* ===== Roteador: plano do dia (lista de rotas + mapa), médica e enfermagem separadas ===== */
-const RT={data:hojeSP(),eq:'medica',plano:null,busy:false,err:'',sel:null,ocultar:true,map:null,el:null,lay:null,fit:true,at:0,drag:null};
+/* ===== Roteador: plano do dia, encaixado como no SimpliRoute (rotas | visitas | mapa), médica e enfermagem separadas ===== */
+const RT={data:hojeSP(),eq:'medica',plano:null,busy:false,err:'',sel:null,ocultar:true,map:null,el:null,lay:null,fit:true,at:0,drag:null,geo:{},fila:[],buscando:false,edJ:null};
 try{if(localStorage.getItem('lg-rteq')==='enfermagem')RT.eq='enfermagem'}catch(e){}
 const RT_CORES=['#2f5fd0','#c2362f','#2e7d32','#d4700a','#7b3fa0','#13838a','#b8326f','#5b6b00','#8a5a00','#1f4e79','#a23e00','#4a2a8a','#00796b','#6d4c41'];
 const rtNome=r=>r&&r.profs&&r.profs.length?r.profs.join(' / '):(r?r.veiculo:'');
@@ -750,13 +763,15 @@ const rtFora=r=>(r.visitas||[]).filter(v=>!v.feita&&v.ate&&v.eta&&ajMin(v.eta)>a
 /* última rota com os mesmos pacientes: vale com pelo menos metade dos pacientes em comum (enfermagem ainda não tem histórico) */
 function rtUlt(id){const r=((RT.plano&&RT.plano.rotas)||[]).find(x=>x.id===id);const u=RT.plano&&RT.plano.ult&&RT.plano.ult[id];
  if(!r||!u||r.equipe!=='medica')return null;if(+u.iguais<Math.max(2,Math.ceil(+u.total/2)))return null;return u}
-function rtUltTxt(u){if(!u)return '';const d=String(u.data);return `${d.slice(8,10)}/${d.slice(5,7)} · ${esc(String(u.profissional||'').split(' ').slice(0,3).join(' '))} · ${u.iguais} de ${u.total} pacientes iguais${u.fonte==='enviada'?' (ordem enviada no Minha Rota)':' (ordem em que foram atendidos)'}`}
+function rtUltTxt(u){if(!u)return '';const d=String(u.data);return `${d.slice(8,10)}/${d.slice(5,7)} · ${String(u.profissional||'').split(' ').slice(0,3).join(' ')} · ${u.iguais} de ${u.total} pacientes iguais${u.fonte==='enviada'?' (ordem enviada no Minha Rota)':' (ordem em que foram atendidos)'}`}
 async function rtCarregar(){RT.busy=true;RT.err='';render();
  try{const r=await ajApi('plano',{data:RT.data});if(!r.ok)throw new Error(r.erro||'Não consegui ler o plano no SimpliRoute.');RT.plano=r;RT.at=Date.now();RT.fit=true;
   if(RT.sel&&!r.rotas.some(x=>x.id===RT.sel)){RT.sel=null;AJ.route='';AJ.d=null}}
  catch(e){if(e.message!=='sessao')RT.err=e.message}RT.busy=false;render()}
-function rtAbrir(id){const r=((RT.plano&&RT.plano.rotas)||[]).find(x=>x.id===id);if(!r)return;RT.sel=id;RT.fit=true;AJ.data=RT.data;AJ.route=id;AJ.d=null;AJ.sols=AJ.pre?AJ.sols:[];AJ.nolst=[];ajMexeu();render();ajCarregar()}
-function rtFechar(){RT.sel=null;RT.fit=true;AJ.route='';AJ.d=null;AJ.sols=[];ajMexeu();render()}
+function rtAbrir(id){const r=((RT.plano&&RT.plano.rotas)||[]).find(x=>x.id===id);if(!r)return;
+ if(RT.sel&&RT.sel!==id&&ajMudou()&&!confirm('Há mudanças nesta rota que não foram enviadas ao SimpliRoute. Abrir outra mesmo assim?'))return;
+ RT.sel=id;RT.fit=true;RT.edJ=null;RT.topo=true;AJ.data=RT.data;AJ.route=id;AJ.d=null;AJ.sols=AJ.pre?AJ.sols:[];AJ.nolst=[];ajMexeu();render();ajCarregar()}
+function rtFechar(){RT.sel=null;RT.fit=true;RT.edJ=null;AJ.route='';AJ.d=null;AJ.sols=[];ajMexeu();render()}
 let rtSimT=null;function rtSimLogo(){clearTimeout(rtSimT);rtSimT=setTimeout(()=>{if(AJ.d&&!AJ.busy)ajSimular()},700)}
 function rtRepetir(){const u=rtUlt(RT.sel);if(!u||!AJ.d){toast('Não há rota anterior com a maioria destes pacientes.');return}
  const ord=(u.ordem||[]).map(String);const P=ajPend();const ini=AJ.ord.length-P.length;
@@ -765,38 +780,52 @@ function rtRepetir(){const u=rtUlt(RT.sel);if(!u||!AJ.d){toast('Não há rota an
  achados.sort((a,b)=>a.k-b.k);const nova=P.slice();slots.forEach((s,j)=>{nova[s]=achados[j].o});
  if(nova.every((o,i)=>o===P[i])){toast('A rota já está na mesma ordem da última.');return}
  AJ.ord=AJ.ord.slice(0,ini).concat(nova);ajMexeu();render();toast(`Ordem de ${String(u.data).slice(8,10)}/${String(u.data).slice(5,7)} repetida para ${achados.length} pacientes. Os outros ficaram onde estavam.`);ajSimular()}
+/* verificação compacta: problemas da rota em uma lista que abre e fecha */
+function rtVerif(){const sim=AJ.sim,sv=sim?new Map((sim.visitas||[]).map(x=>[String(x.id),x])):new Map();const pos=id=>AJ.ord.findIndex(o=>String(o.id)===String(id))+1;const nome=id=>{const v=ajV(id);return v?v.titulo:'—'};
+ const P=ajPend();if(!P.length)return'';const it=[];
+ P.forEach(o=>{const x=sv.get(String(o.id));if(x&&x.atraso)it.push(['bad',`${pos(o.id)}ª ${esc(nome(o.id))}: chega ${esc(x.inicio)}, janela ${esc(o.de||'…')}–${esc(o.ate||'…')} · atrasa ${x.atraso} min`])});
+ P.forEach(o=>{const x=sv.get(String(o.id));if(x&&x.espera>=30)it.push(['warn',`${pos(o.id)}ª ${esc(nome(o.id))}: espera ${x.espera} min pela janela (${esc(o.de)})`])});
+ const dif=P.filter(ajDifCad);if(dif.length)it.push(['warn',`${dif.length} com janela diferente do cadastro: ${dif.map(o=>`${pos(o.id)}ª ${esc(nome(o.id))}`).join(', ')}`]);
+ const var_=P.filter(o=>ajJans(o.id).length>1);if(var_.length)it.push(['info',`Mais de uma janela no cadastro: ${var_.map(o=>esc(nome(o.id))).join(', ')}`]);
+ if(RT.eq==='medica'){const novo=P.filter(o=>!ajCad(o.id).hist);if(novo.length)it.push(['info',`Sem visita anterior: ${novo.map(o=>esc(nome(o.id))).join(', ')}`])}
+ const bad=it.filter(x=>x[0]==='bad').length,warn=it.filter(x=>x[0]==='warn').length;
+ const resumo=AJ.busy==='simular'?'calculando…':!sim?'faça a pré-visualização':!it.length?'tudo certo':[bad?`${bad} fora da janela`:'',warn?`${warn} ${warn===1?'aviso':'avisos'}`:'',!bad&&!warn?`${it.length} ${it.length===1?'observação':'observações'}`:''].filter(Boolean).join(' · ');
+ return `<details class="rtver"${RT.verAb||bad?' open':''}><summary><b>Verificação</b> <span class="${bad?'ajbad':!it.length&&sim?'rtok':''}">${resumo}</span></summary>${it.length?'<ul>'+it.map(([c,t])=>`<li class="${c}">${t}</li>`).join('')+'</ul>':''}</details>`}
 function rtCards(){const R=AJ.d.rota,P=AJ.d.pedidos||[],sim=AJ.sim,sv=sim?new Map((sim.visitas||[]).map(x=>[String(x.id),x])):new Map();const cor=rtCor(RT.sel);const eq=RT.eq;
  return '<div class="rtvs">'+AJ.ord.map((o,i)=>{const v=ajV(o.id);if(!v)return'';const x=sv.get(String(v.id));const lw=ajJans(v.id),cd=ajCad(v.id);
   const ps=P.filter(p=>normP(p.paciente)===normP(v.titulo)||normP(v.titulo).includes(normP(p.paciente)));
-  const mudJ=v.de!==o.de||v.ate!==o.ate,mudO=String(R.visitas[i].id)!==String(o.id);const daCad=lw.some(w=>(w.de||'')===(o.de||'')&&(w.ate||'')===(o.ate||''));
-  let prev=v.feita?`<span class="rtst ${v.status==='completed'?'ok':'fa'}">${v.status==='completed'?'✓ atendida':'✗ não atendida'}</span>`:x?`prev. <b>${esc(x.chegada)}</b>${x.espera?` <span class="chip warn">espera ${x.espera} min → ${esc(x.inicio)}</span>`:''}${x.atraso?` <span class="chip bad">atrasa ${x.atraso} min</span>`:''}`:`prev. <b>${esc(v.eta||'—')}</b>`;
+  const mudJ=v.de!==o.de||v.ate!==o.ate,iAnt=R.visitas.findIndex(z=>String(z.id)===String(o.id)),mudO=iAnt!==i;const daCad=lw.some(w=>(w.de||'')===(o.de||'')&&(w.ate||'')===(o.ate||''));
+  const hora=v.feita?(v.status==='completed'?'<span class="rtst ok">✓ atendida</span>':'<span class="rtst fa">✗ não atendida</span>'):`prev. <b>${esc(x?x.chegada:(v.eta||'—'))}</b>${x&&x.espera?` · espera ${x.espera} min`:''}`;
+  const jtxt=o.de||o.ate?`${esc(o.de||'…')}–${esc(o.ate||'…')}`:'sem janela';
+  const ed=RT.edJ===String(v.id)&&!v.feita;
+  let chips=v.feita?(v.de||v.ate?`<span class="rtk">🕑 ${esc(v.de)}–${esc(v.ate)}</span>`:''):`<button type="button" class="rtk rtkj${mudJ?' mud':''}" data-rtjan="${v.id}" aria-expanded="${ed}" title="Editar janela e duração">🕑 ${jtxt}${+o.duracao!==30?` · ${o.duracao} min`:''} ✎</button>`;
+  if(x&&x.atraso)chips+=`<span class="rtk bad">atrasa ${x.atraso} min</span>`;
+  if(!v.feita&&ajDifCad(o)){const w=ajJan1(v.id);chips+=`<button type="button" class="rtk dif" data-ajlist="${v.id}:0" title="Usar a janela do cadastro">📋 cadastro ${esc((w.de||'?')+'–'+(w.ate||'?'))} · usar</button>`}
+  else if(!v.feita&&lw.length>1)chips+=lw.map((w,k)=>`<button type="button" class="rtk dif" data-ajlist="${v.id}:${k}">📋 ${esc((w.de||'?')+'–'+(w.ate||'?'))} · usar</button>`).join('');
+  else if(!v.feita&&!lw.length)chips+=`<span class="rtk" title="Paciente sem janela na lista de ${eq==='medica'?'visita médica':'visita de enfermagem'}">📋 sem cadastro</span>`;
+  if(eq==='medica'&&cd.hist)chips+=`<span class="rtk" title="Última visita: ${esc(ajHistTxt(cd.hist).replace(/<[^>]+>/g,''))}">🕘 ${cd.hist.pos}ª em ${String(cd.hist.data).slice(8,10)}/${String(cd.hist.data).slice(5,7)}</span>`;
+  ps.forEach(p=>{chips+=`<span class="rtk ped" title="Pedido do profissional · ${esc(STN[p.status]||p.status)}">💬 ${esc(TIPOS[p.tipo]||p.tipo)}${p.de||p.ate?' '+esc(jan({tipo:p.tipo,horario_de:p.de,horario_ate:p.ate})):''}${!v.feita&&(p.tipo==='horario_fixo'||p.tipo==='nao_antes')?` <button type="button" class="lnk" data-ajped="${v.id}:${p.id}">usar</button>`:''}${AJ.sols.includes(p.id)?' ✓':''}</span>`});
+  if(mudJ&&!v.feita&&!daCad)chips+=`<label class="rtk rtsv"><input type="checkbox" data-ajlst="${v.id}"${AJ.nolst.includes(String(v.id))?'':' checked'}> salvar na lista</label>`;
   return `<div class="rtv${v.feita?' feita':''}${mudO||mudJ?' mud':''}" data-rti="${i}"${v.feita?'':' draggable="true"'}>
-   ${v.feita?'<span class="rtg"></span>':'<span class="rtg" aria-hidden="true" title="Arraste para mudar a ordem">⋮⋮</span>'}<span class="rtn" style="background:${cor}">${i+1}</span>
-   <div class="rtb"><div class="rtt"><b>${esc(v.titulo)}</b><small>${esc(v.bairro||'')}</small>${mudO?`<small class="ajw">antes ${R.visitas.findIndex(z=>String(z.id)===String(o.id))+1}º</small>`:''}</div>
-    <div class="rtl2">${prev}</div>
-    ${v.feita?(v.de||v.ate?`<div class="rtl2"><small>janela ${esc(v.de)}–${esc(v.ate)}</small></div>`:''):`<div class="rtl2 rtj"><span>Janela</span><input type="time" data-ajde="${v.id}" value="${esc(o.de)}" aria-label="Janela de ${esc(v.titulo)} a partir de"><span>até</span><input type="time" data-ajate="${v.id}" value="${esc(o.ate)}" aria-label="Janela de ${esc(v.titulo)} até">${o.de||o.ate?`<button type="button" class="lnk" data-ajlimpa="${v.id}" title="Tirar a janela">×</button>`:''}<span>·</span><input type="number" min="5" max="240" step="5" data-ajdur="${v.id}" value="${o.duracao}" aria-label="Duração de ${esc(v.titulo)} em minutos" style="width:58px"><span>min</span></div>`}
-    ${mudJ&&!v.feita?(daCad?`<small class="ajw">antes: ${esc(v.de||v.ate?(v.de||'…')+'–'+(v.ate||'…'):'sem janela')} · veio do cadastro</small>`:`<small class="ajw">antes: ${esc(v.de||v.ate?(v.de||'…')+'–'+(v.ate||'…'):'sem janela')}</small><label class="ajlst"><input type="checkbox" data-ajlst="${v.id}"${AJ.nolst.includes(String(v.id))?'':' checked'}> Salvar na lista de ${eq==='medica'?'visita médica':'visita de enfermagem'} <small>(desmarque se for só deste dia)</small></label>`):''}
-    ${lw.length?`<div class="ajchip${!v.feita&&ajDifCad(o)?' dif':''}">📋 Janela cadastrada${cd.por_ref?' (pelo ID da consulta)':''}: ${lw.map((w,k)=>`${esc((w.de||'?')+'–'+(w.ate||'?'))}${!v.feita&&((w.de||'')!==(o.de||'')||(w.ate||'')!==(o.ate||''))?` <button type="button" class="lnk" data-ajlist="${v.id}:${k}">usar</button>`:''}`).join(' ou ')}</div>`:(!v.feita?'<div class="ajchip">📋 Sem janela no cadastro</div>':'')}
-    ${eq==='medica'&&cd.hist?`<div class="ajchip">🕘 Última visita: ${ajHistTxt(cd.hist)}</div>`:''}
-    ${ps.map(p=>`<div class="ajchip ped">💬 ${esc(TIPOS[p.tipo]||p.tipo)}${p.de||p.ate?' '+esc(jan({tipo:p.tipo,horario_de:p.de,horario_ate:p.ate})):''} · ${esc(STN[p.status]||p.status)}${!v.feita&&(p.tipo==='horario_fixo'||p.tipo==='nao_antes')?` <button type="button" class="lnk" data-ajped="${v.id}:${p.id}">usar</button>`:''}${AJ.sols.includes(p.id)?' ✓':''}</div>`).join('')}
+   <span class="rtn" style="background:${cor}">${i+1}</span>
+   <div class="rtb"><div class="rtt"><b>${esc(v.titulo)}</b>${mudO?`<i>era ${iAnt+1}º</i>`:''}</div>
+    <div class="rta">${v.bairro?esc(v.bairro)+' · ':''}${hora}</div>
+    <div class="rtks">${chips}</div>
+    ${ed?`<div class="rted"><label>De <input type="time" data-ajde="${v.id}" value="${esc(o.de)}"></label><label>até <input type="time" data-ajate="${v.id}" value="${esc(o.ate)}"></label><label>Duração <input type="number" min="5" max="240" step="5" data-ajdur="${v.id}" value="${o.duracao}"> min</label>${o.de||o.ate?`<button type="button" class="lnk" data-ajlimpa="${v.id}">tirar janela</button>`:''}${mudJ?`<small>antes: ${esc(v.de||v.ate?(v.de||'…')+'–'+(v.ate||'…'):'sem janela')}</small>`:''}<button type="button" class="lnk" data-rtjan="${v.id}">fechar</button></div>`:''}
    </div>
    ${v.feita?'':`<div class="ajmv"><button type="button" data-ajup="${i}" aria-label="Subir ${esc(v.titulo)}"${i===0||ajV(AJ.ord[i-1].id).feita?' disabled':''}>▲</button><button type="button" data-ajdn="${i}" aria-label="Descer ${esc(v.titulo)}"${i===AJ.ord.length-1?' disabled':''}>▼</button></div>`}
   </div>`}).join('')+'</div>'}
-function rtDetalhe(){const r=((RT.plano&&RT.plano.rotas)||[]).find(x=>x.id===RT.sel);let h=`<button type="button" class="lnk rtback" data-rt="fechar">← Todas as rotas</button>`;
+function rtDetalhe(){const r=((RT.plano&&RT.plano.rotas)||[]).find(x=>x.id===RT.sel);const cor=rtCor(RT.sel);
+ let h=`<div class="rtdh" style="border-top-color:${cor}"><div><b>${esc(rtNome(r))}</b><small>${esc(r?r.veiculo:'')}${r&&r.motorista?' · mot. '+esc(String(r.motorista).split(' ').slice(0,2).join(' ')):''}</small>`;
+ if(!AJ.d){h+=`</div><button type="button" class="rtx" data-rt="fechar" aria-label="Fechar a rota">×</button></div>`;if(AJ.err)h+=`<p class="err" role="alert">${esc(AJ.err)}</p>`;return h+`<div class="empty">${AJ.busy?'Abrindo a rota no SimpliRoute…':'—'}</div>`}
+ const R=AJ.d.rota,sim=AJ.sim,mud=ajMudou(),fin=R.status==='finished',P=ajPend(),u=rtUlt(RT.sel),nj=P.filter(ajDifCad).length;
+ h+=`<small>${R.status==='started'?'em andamento':R.status==='finished'?'finalizada':'não iniciada'} · saída ${esc(R.inicio)}${R.fim?' · volta '+esc(R.fim):''}${AJ.d.enviada?' · no Minha Rota':''}</small></div><button type="button" class="rtx" data-rt="fechar" aria-label="Fechar a rota">×</button></div>`;
  if(AJ.err)h+=`<p class="err" role="alert">${esc(AJ.err)}</p>`;
- if(!AJ.d)return h+`<div class="empty">${AJ.busy?'Abrindo a rota no SimpliRoute…':'—'}</div>`;
- const R=AJ.d.rota,sim=AJ.sim,mud=ajMudou(),fin=R.status==='finished',P=ajPend(),u=rtUlt(RT.sel);
- const nj=P.filter(ajDifCad).length;
- h+=`<div class="rthead" style="border-top-color:${rtCor(RT.sel)}"><b>${esc(rtNome(r)||R.veiculo)}</b><small>${esc(R.veiculo)} · mot. ${esc(R.motorista||'—')} · ${R.status==='started'?'em andamento':R.status==='finished'?'finalizada':'não iniciada'} · saída ${esc(R.inicio)}${R.fim?' · volta prevista '+esc(R.fim):''}</small>
-  <small>${AJ.d.enviada?`No Minha Rota com <b>${esc(AJ.d.enviada.profissional)}</b>: ao confirmar, a rota dele é atualizada.`:(RT.eq==='medica'?'Ainda não enviada no Minha Rota.':'')}${(AJ.d.pedidos||[]).length?` · <b>${AJ.d.pedidos.length}</b> pedido(s) do profissional`:''}</small></div>
- <div class="rttools"><button class="btn ghost sm rtrep" type="button" data-rt="repetir"${!u||AJ.busy||fin||P.length<2?' disabled':''}><span>🕘 Repetir a ordem da última rota</span><small>${u?rtUltTxt(u):(RT.eq==='enfermagem'?'Sem histórico de rotas de enfermagem ainda':'Nenhuma rota anterior com a maioria destes pacientes')}</small></button>
-  <button class="btn ghost sm" type="button" data-aj="jancad"${!nj||AJ.busy||fin?' disabled':''} title="Usa a lista de ${RT.eq==='medica'?'visita médica':'visita de enfermagem'} das Janelas dos pacientes">📋 Aplicar janelas · ${RT.eq==='medica'?'visita médica':'visita de enfermagem'}${nj?` <b class="ajn">${nj}</b>`:''}</button>
-  <button class="btn ghost sm" type="button" data-aj="otimizar"${AJ.busy||P.length<2||fin?' disabled':''} title="O otimizador do SimpliRoute propõe a ordem que cumpre as janelas">✨ Sugerir melhor ordem</button></div>`;
- h+=ajVerif();
- h+=`<p class="rtdica">Arraste os cards (⋮⋮) para mudar a ordem. O mapa e os horários acompanham.</p>`+rtCards();
- h+=`<div class="rtfoot">${sim?`<div class="ajres"><span>Volta: <b>${esc(sim.atual?sim.atual.fim:'—')}</b> → <b>${esc(sim.fim)}</b></span><span>Atrasos: <b class="${sim.atrasos?'ajbad':''}">${sim.atrasos||0}</b></span><span>Espera: <b>${sim.espera_total||0} min</b></span>${sim.sem_encaixe&&sim.sem_encaixe.length?`<span class="ajbad">${sim.sem_encaixe.length} não couberam nas janelas</span>`:''}</div>`:`<div class="ajres"><span class="lsinfo">${mud?`<b>${mud}</b> visita(s) alterada(s). `:''}${AJ.busy==='simular'?'Calculando os horários…':'Faça a pré-visualização para ver os horários.'}</span></div>`}
-  <div class="ajbtns"><button class="btn ghost sm" type="button" data-aj="desfazer"${!mud||AJ.busy?' disabled':''}>Desfazer</button><button class="btn ghost sm" type="button" data-aj="simular"${AJ.busy||!P.length?' disabled':''}>${AJ.busy==='simular'?'Calculando…':'Pré-visualizar'}</button>
-  <button class="btn wine sm" type="button" data-aj="aplicar"${AJ.busy||!AJ.ok||!mud||fin?' disabled':''} title="${!AJ.ok?'Faça a pré-visualização primeiro':''}">${AJ.busy==='aplicar'?'Enviando…':'OK, enviar ao SimpliRoute'}</button></div></div>`;
+ h+=`<div class="rttools"><button class="rtb2" type="button" data-rt="repetir"${!u||AJ.busy||fin||P.length<2?' disabled':''} title="${esc(u?rtUltTxt(u):(RT.eq==='enfermagem'?'Sem histórico de rotas de enfermagem ainda':'Nenhuma rota anterior com a maioria destes pacientes'))}">🕘 Última ordem</button><button class="rtb2" type="button" data-aj="jancad"${!nj||AJ.busy||fin?' disabled':''} title="Aplicar as janelas da lista de ${RT.eq==='medica'?'visita médica':'visita de enfermagem'}">📋 Janelas${nj?` <b class="ajn">${nj}</b>`:''}</button><button class="rtb2" type="button" data-aj="otimizar"${AJ.busy||P.length<2||fin?' disabled':''} title="O otimizador do SimpliRoute propõe a ordem que cumpre as janelas">✨ Melhor ordem</button></div>`;
+ if(u)h+=`<p class="rtdica">Última rota com estes pacientes: ${esc(rtUltTxt(u))}</p>`;
+ h+=rtVerif()+rtCards();
+ h+=`<div class="rtfoot">${sim?`<div class="rtres2"><span>Volta <b>${esc(sim.atual?sim.atual.fim:'—')}</b> → <b>${esc(sim.fim)}</b></span><span>Atrasos <b class="${sim.atrasos?'ajbad':''}">${sim.atrasos||0}</b></span><span>Espera <b>${sim.espera_total||0} min</b></span></div>`:`<div class="rtres2"><span>${mud?`<b>${mud}</b> alterada(s) · `:''}${AJ.busy==='simular'?'calculando…':'sem pré-visualização'}</span></div>`}
+  <div class="rtbt"><button class="btn ghost sm" type="button" data-aj="desfazer"${!mud||AJ.busy?' disabled':''}>Desfazer</button><button class="btn ghost sm" type="button" data-aj="simular"${AJ.busy||!P.length?' disabled':''}>${AJ.busy==='simular'?'Calculando…':'Pré-visualizar'}</button><button class="btn wine sm" type="button" data-aj="aplicar"${AJ.busy||!AJ.ok||!mud||fin?' disabled':''} title="${!AJ.ok?'Faça a pré-visualização primeiro':''}">${AJ.busy==='aplicar'?'Enviando…':'OK, enviar'}</button></div></div>`;
  return h}
 function renderRot(){const L0=(RT.plano&&RT.plano.rotas)||[];const n=k=>L0.filter(r=>r.equipe===k).length;
  if(!RT.plano&&!RT.busy&&!RT.err&&!RT._q){RT._q=1;setTimeout(()=>{RT._q=0;if(!RT.plano&&!RT.busy)rtCarregar()},0)}
@@ -804,32 +833,50 @@ function renderRot(){const L0=(RT.plano&&RT.plano.rotas)||[];const n=k=>L0.filte
   <div class="rteq" role="tablist" aria-label="Equipe">${[['medica','Visita médica'],['enfermagem','Visita de enfermagem']].map(([k,t])=>`<button type="button" role="tab" data-rteq="${k}" aria-selected="${RT.eq===k}" class="${RT.eq===k?'on':''}">${t}${RT.plano?` <b>${n(k)}</b>`:''}</button>`).join('')}</div>
   <span class="sp"></span><span class="upd">${RT.at?'SimpliRoute lido às '+hh(RT.at):''}</span><button class="btn ghost sm" type="button" data-rt="atualizar"${RT.busy?' disabled':''}>${RT.busy?'Lendo o SimpliRoute…':'Atualizar'}</button></div>`;
  if(RT.err)h+=`<p class="err" role="alert">${esc(RT.err)}</p>`;
- h+='<div class="rtlay"><section class="rtl" aria-label="Rotas">';
- if(RT.sel)h+=rtDetalhe();
- else if(!RT.plano)h+=`<div class="empty">${RT.busy?'Lendo as rotas do dia no SimpliRoute…':'—'}</div>`;
- else{const L=rtRotas();if(!L.length)h+=`<div class="empty">Nenhuma rota de ${RT.eq==='medica'?'visita médica':'visita de enfermagem'} no SimpliRoute para ${dm(RT.data)}.</div>`;
-  else{const vis=L.reduce((a,r)=>a+r.total,0),fora=L.reduce((a,r)=>a+rtFora(r),0);
-   h+=`<p class="rtres"><b>${L.length}</b> rotas · <b>${vis}</b> visitas${fora?` · <b class="ajbad">${fora}</b> fora da janela no SimpliRoute`:''}</p>`;
-   h+=L.map(r=>{const f=rtFora(r);return `<button type="button" class="rtc" data-rtsel="${esc(r.id)}"><span class="rtdot" style="background:${rtCor(r.id)}"></span><span class="rtcb"><span class="rtct"><b>${esc(rtNome(r))}</b>${f?`<span class="chip bad">${f} fora da janela</span>`:''}${r.status==='started'?'<span class="chip warn">em andamento</span>':r.status==='finished'?'<span class="chip">finalizada</span>':''}</span><small>${esc(r.veiculo)}${r.motorista?' · mot. '+esc(String(r.motorista).split(' ').slice(0,2).join(' ')):''}</small><small><b>${r.total}</b> visitas${r.feitas?` (${r.feitas} feitas)`:''} · ${rtDur(r)} h · ${rtKm(r)} km · volta ${esc(r.fim||'—')}</small></span><span class="rtar" aria-hidden="true">›</span></button>`}).join('')}}
- h+=`</section><section class="rtm" aria-label="Mapa das rotas"><div id="rtmapa-slot" class="rtmapa"></div>${RT.sel?`<label class="rtoc"><input type="checkbox" id="rtoc"${RT.ocultar?' checked':''}> Ocultar os outros carros</label>`:''}</section></div>`;
+ const L=rtRotas();
+ h+=`<div class="rtwrap${RT.sel?' sel':''}"><section class="rtrs" aria-label="Rotas">`;
+ if(!RT.plano)h+=`<div class="empty">${RT.busy?'Lendo as rotas do dia no SimpliRoute…':'—'}</div>`;
+ else if(!L.length)h+=`<div class="empty">Nenhuma rota de ${RT.eq==='medica'?'visita médica':'visita de enfermagem'} no SimpliRoute para ${dm(RT.data)}.</div>`;
+ else if(RT.sel)h+=L.map(r=>{const f=rtFora(r);return `<button type="button" class="rtc2${r.id===RT.sel?' on':''}" data-rtsel="${esc(r.id)}" style="border-left-color:${rtCor(r.id)}"${r.id===RT.sel?' aria-current="true"':''}><b>${esc(rtNome(r))}</b><small>${esc(r.veiculo)}</small><small>${r.total} visitas${f?` · <span class="ajbad">${f} fora</span>`:''}</small></button>`}).join('');
+ else{const vis=L.reduce((a,r)=>a+r.total,0),fora=L.reduce((a,r)=>a+rtFora(r),0);
+  h+=`<p class="rtres"><b>${L.length}</b> rotas · <b>${vis}</b> visitas${fora?` · <b class="ajbad">${fora}</b> fora da janela no SimpliRoute`:''}</p>`;
+  h+=L.map(r=>{const f=rtFora(r);return `<button type="button" class="rtc" data-rtsel="${esc(r.id)}" style="border-left-color:${rtCor(r.id)}"><span class="rtcb"><span class="rtct"><b>${esc(rtNome(r))}</b>${f?`<span class="chip bad">${f} fora da janela</span>`:''}${r.status==='started'?'<span class="chip warn">em andamento</span>':r.status==='finished'?'<span class="chip">finalizada</span>':''}</span><small>${esc(r.veiculo)}${r.motorista?' · mot. '+esc(String(r.motorista).split(' ').slice(0,2).join(' ')):''}</small><small><b>${r.total}</b> visitas${r.feitas?` (${r.feitas} feitas)`:''} · ${rtDur(r)} h · ${rtKm(r)} km · volta ${esc(r.fim||'—')}</small></span></button>`}).join('')}
+ h+='</section>';
+ if(RT.sel)h+=`<section class="rtd" aria-label="Visitas da rota">${rtDetalhe()}</section>`;
+ h+=`<section class="rtm" aria-label="Mapa das rotas"><div id="rtmapa-slot" class="rtmapa"></div>${RT.sel?`<label class="rtoc"><input type="checkbox" id="rtoc"${RT.ocultar?' checked':''}> Ocultar os outros carros</label>`:''}</section></div>`;
  return h}
-async function rtDesenha(){const slot=document.getElementById('rtmapa-slot');if(!slot)return;
- if(!RT.el){RT.el=document.createElement('div');RT.el.id='rtmapa';RT.el.className='rtmapa'}
- slot.replaceWith(RT.el);
+/* caminho pelas ruas (OSRM), guardado por rota e ordem; enquanto não chega, linha reta tracejada */
+const rtChave=vs=>vs.map(v=>v.lat.toFixed(5)+','+v.lng.toFixed(5)).join(';');
+function rtPedeGeo(vs){const k=rtChave(vs);if(RT.geo[k]!==undefined||RT.fila.includes(k)||vs.length<2||vs.length>90)return;RT.fila.push(k);rtFila()}
+async function rtFila(){if(RT.buscando)return;RT.buscando=true;
+ while(RT.fila.length){const k=RT.fila.shift();if(RT.geo[k]!==undefined)continue;
+  try{const q=k.split(';').map(p=>{const [la,lo]=p.split(',');return lo+','+la}).join(';');
+   const r=await fetch('https://router.project-osrm.org/route/v1/driving/'+q+'?overview=full&geometries=geojson',{cache:'force-cache'}).then(x=>x.ok?x.json():null);
+   RT.geo[k]=r&&r.routes&&r.routes[0]?r.routes[0].geometry.coordinates.map(c=>[c[1],c[0]]):null}catch(e){RT.geo[k]=null}
+  if(S.tab==='aju')rtDesenha(true);await new Promise(ok=>setTimeout(ok,350))}
+ RT.buscando=false}
+async function rtDesenha(soMapa){const slot=document.getElementById('rtmapa-slot');
+ if(slot){if(!RT.el){RT.el=document.createElement('div');RT.el.id='rtmapa';RT.el.className='rtmapa'}slot.replaceWith(RT.el)}
+ else if(!RT.el||!document.body.contains(RT.el))return;
  try{await carregaLeafletC()}catch(e){RT.el.textContent='Mapa indisponível agora.';return}
  if(!RT.map){RT.map=L.map(RT.el,{scrollWheelZoom:true});L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap'}).addTo(RT.map);RT.map.setView([-22.93,-43.3],10)}
- setTimeout(()=>RT.map&&RT.map.invalidateSize(),0);
+ RT.map.invalidateSize(false);
  if(RT.lay)RT.lay.remove();RT.lay=L.layerGroup().addTo(RT.map);const pts=[];
- rtRotas().forEach(r=>{const cor=rtCor(r.id),on=!RT.sel||RT.sel===r.id;if(!on&&RT.ocultar)return;
-  let vis=r.visitas;if(RT.sel===r.id&&AJ.d&&AJ.route===r.id)vis=AJ.ord.map(o=>ajV(o.id)).filter(Boolean);
+ rtRotas().forEach(r=>{const cor=rtCor(r.id),on=!RT.sel||RT.sel===r.id,ehSel=RT.sel===r.id;if(!on&&RT.ocultar)return;
+  let vis=r.visitas;if(ehSel&&AJ.d&&AJ.route===r.id)vis=AJ.ord.map(o=>ajV(o.id)).filter(Boolean);
   const ok=vis.filter(v=>v&&isFinite(v.lat)&&isFinite(v.lng)&&v.lat);
-  if(ok.length>1)L.polyline(ok.map(v=>[v.lat,v.lng]),{color:cor,weight:RT.sel===r.id?4:3,opacity:on?(RT.sel?.85:.55):.15}).addTo(RT.lay);
-  vis.forEach((v,i)=>{if(!v||!isFinite(v.lat)||!v.lat)return;const sz=RT.sel===r.id?26:20;
-   L.marker([v.lat,v.lng],{zIndexOffset:RT.sel===r.id?500:0,icon:L.divIcon({className:'',html:`<div class="rtpin${v.feita?' f':''}" style="background:${cor};width:${sz}px;height:${sz}px;opacity:${on?1:.3}">${i+1}</div>`,iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]})})
+  if(ok.length>1){const g=RT.geo[rtChave(ok)];if(g&&g.length)L.polyline(g,{color:cor,weight:ehSel?5:3,opacity:on?(RT.sel?.9:.65):.15}).addTo(RT.lay);
+   else{L.polyline(ok.map(v=>[v.lat,v.lng]),{color:cor,weight:ehSel?3:2,opacity:on?.5:.12,dashArray:'6 8'}).addTo(RT.lay);if(on)rtPedeGeo(ok)}}
+  vis.forEach((v,i)=>{if(!v||!isFinite(v.lat)||!v.lat)return;const sz=ehSel?26:20;
+   L.marker([v.lat,v.lng],{zIndexOffset:ehSel?500:0,icon:L.divIcon({className:'',html:`<div class="rtpin${v.feita?' f':''}" style="background:${cor};width:${sz}px;height:${sz}px;opacity:${on?1:.3}">${i+1}</div>`,iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]})})
     .bindTooltip(`<b>${esc(rtNome(r))}</b> · ${esc(r.veiculo)}<br>${i+1}ª ${esc(v.titulo)}${v.bairro?' · '+esc(v.bairro):''}<br>prev. ${esc(v.eta||'—')}${v.de||v.ate?' · janela '+esc(v.de||'…')+'–'+esc(v.ate||'…'):''}${v.feita?' · já atendida':''}`)
-    .on('click',()=>{if(RT.sel!==r.id)rtAbrir(r.id)}).addTo(RT.lay);if(on)pts.push([v.lat,v.lng])})});
- if(RT.fit&&pts.length){RT.map.fitBounds(pts,{padding:[30,30],maxZoom:14});RT.fit=false}}
-document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-rt],[data-rteq],[data-rtsel]');if(!b)return;const d=b.dataset;
+    .on('click',()=>{if(RT.sel!==r.id)rtAbrir(r.id);else rtVaiCard(v.id)}).addTo(RT.lay);if(on)pts.push([v.lat,v.lng])})});
+ if(!soMapa&&RT.fit&&pts.length){RT.fit=false;const enq=()=>{if(!RT.map)return;RT.map.invalidateSize(false);RT.map.fitBounds(pts,{padding:[34,34],maxZoom:14})};enq();setTimeout(enq,60)}}
+function rtAltura(){const w=document.querySelector('.rtwrap');if(!w||innerWidth<=760){if(w)w.style.height='';return}const t=w.getBoundingClientRect().top+window.scrollY;w.style.height=Math.max(560,innerHeight-Math.min(t,innerHeight-560)-14)+'px';if(RT.map)RT.map.invalidateSize(false)}
+window.addEventListener('resize',()=>{if(S.tab==='aju')rtAltura()});
+function rtVaiCard(id){const i=AJ.ord.findIndex(o=>String(o.id)===String(id));const c=document.querySelector(`.rtv[data-rti="${i}"]`);if(c){c.scrollIntoView({block:'center',behavior:'smooth'});c.classList.add('pisca');setTimeout(()=>c.classList.remove('pisca'),1200)}}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-rt],[data-rteq],[data-rtsel],[data-rtjan]');if(!b)return;const d=b.dataset;
+ if(d.rtjan){RT.edJ=RT.edJ===String(d.rtjan)?null:String(d.rtjan);render();return}
  if(d.rtsel){rtAbrir(d.rtsel);return}
  if(d.rteq){if(RT.eq===d.rteq)return;RT.eq=d.rteq;try{localStorage.setItem('lg-rteq',RT.eq)}catch(x){}rtFechar();return}
  if(d.rt==='fechar'){if(ajMudou()&&!confirm('Há mudanças nesta rota que não foram enviadas ao SimpliRoute. Sair mesmo assim?'))return;rtFechar();return}
@@ -838,6 +885,7 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
 document.addEventListener('change',e=>{const t=e.target;if(!t)return;
  if(t.id==='rtdia'){if(RT.sel&&ajMudou()&&!confirm('Há mudanças nesta rota que não foram enviadas. Trocar de dia mesmo assim?')){t.value=RT.data;return}RT.data=t.value;RT.plano=null;RT.sel=null;AJ.route='';AJ.d=null;render();rtCarregar();return}
  if(t.id==='rtoc'){RT.ocultar=t.checked;rtDesenha();return}});
+document.addEventListener('toggle',e=>{if(e.target&&e.target.classList&&e.target.classList.contains('rtver'))RT.verAb=e.target.open},true);
 document.addEventListener('dragstart',e=>{const c=e.target.closest&&e.target.closest('.rtv[draggable="true"]');if(!c)return;RT.drag=+c.dataset.rti;try{e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',c.dataset.rti)}catch(x){}c.classList.add('arr')});
 document.addEventListener('dragover',e=>{const c=e.target.closest&&e.target.closest('.rtv');if(!c||RT.drag==null||c.classList.contains('feita'))return;e.preventDefault();document.querySelectorAll('.rtv.over').forEach(x=>x!==c&&x.classList.remove('over'));c.classList.add('over')});
 document.addEventListener('dragend',()=>{RT.drag=null;document.querySelectorAll('.rtv.over,.rtv.arr').forEach(x=>x.classList.remove('over','arr'))});
@@ -1086,7 +1134,11 @@ function render(){
  let h=`<header class="top"><div class="topin"><div><h2>Central de Solicitações</h2><small>${perfilNome(S.perfil)} · Solar Cuidados</small></div>${navGrupos()}<span class="sp"></span>${menuCfg()}<span class="who">${esc(S.nome)}</span><button class="out" type="button" data-a="sair">Sair</button></div></header><main>`+avisoBar()+subNav();
  if(!LOGI()&&!podeTab(S.tab))S.tab=ADM_TABS()[0];
  if(S.tab==='env'){app.innerHTML=h+(LOGI()?renderEnv():renderEnvAdm())+'</main>';return}
- if(S.tab==='aju'){app.innerHTML=h+renderRot()+'</main>';rtDesenha();return}
+ if(S.tab==='aju'){const q=c=>{const e=document.querySelector(c);return e?e.scrollTop:0};const sd=q('.rtd'),sr=q('.rtrs'),wy=window.scrollY,ae=document.activeElement,aid=ae&&ae.dataset?(ae.dataset.ajde?'[data-ajde="'+ae.dataset.ajde+'"]':ae.dataset.ajate?'[data-ajate="'+ae.dataset.ajate+'"]':ae.dataset.ajdur?'[data-ajdur="'+ae.dataset.ajdur+'"]':''):'';
+  app.innerHTML=h+renderRot()+'</main>';
+  const d=document.querySelector('.rtd'),r=document.querySelector('.rtrs');if(d)d.scrollTop=RT.topo?0:sd;if(r)r.scrollTop=sr;RT.topo=false;if(window.scrollY!==wy)window.scrollTo(0,wy);rtAltura();
+  if(aid){const n=document.querySelector(aid);if(n)n.focus()}
+  rtDesenha();return}
  if(S.tab==='jan'){app.innerHTML=h+renderJan()+'</main>';const q=$('#jnq');if(q)q.oninput=()=>{JN.q=q.value;const p=q.selectionStart;render();const n=$('#jnq');n.focus();n.setSelectionRange(p,p)};return}
  if(S.tab==='cad'){app.innerHTML=h+renderCad()+'</main>';return}
  if(S.tab==='can'){const fo=document.activeElement&&document.activeElement.id;app.innerHTML=h+renderCanal()+'</main>';const m=document.querySelector('.kms');if(m)m.scrollTop=m.scrollHeight;if(fo){const n=document.getElementById(fo);if(n&&(n.tagName==='TEXTAREA'||n.tagName==='INPUT')){n.focus();try{n.setSelectionRange(n.value.length,n.value.length)}catch(x){}}}return}
