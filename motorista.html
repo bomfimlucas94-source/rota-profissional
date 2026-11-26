@@ -87,6 +87,7 @@ dialog .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .seg button{min-height:52px;border-radius:12px;border:1px solid var(--warm);background:#fff;font-weight:800;font-size:15px;color:var(--ink);cursor:pointer}
 .seg button[aria-pressed=true].c{background:var(--ok);border-color:var(--ok);color:#fff}.seg button[aria-pressed=true].f{background:var(--bad);border-color:var(--bad);color:#fff}
 .mot{display:flex;flex-direction:column;gap:6px}
+.frm{display:flex;flex-direction:column;gap:12px}.frm label{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:700;color:var(--ink)}.frm label i{font-style:normal;font-weight:500;color:var(--muted);font-size:12px}.frm select,.frm input{font:inherit;font-size:16px;border:1px solid var(--warm);border-radius:10px;padding:0 12px;min-height:48px;background:#fff;color:var(--ink);width:100%}.frm select:focus-visible,.frm input:focus-visible{outline:3px solid var(--sun);outline-offset:1px}.frm .falta select,.frm .falta input{border-color:#c0392b}
 .mot label{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;padding:0 12px;min-height:46px;font-size:14.5px;cursor:pointer}
 .mot input{width:20px;height:20px;accent-color:var(--wine)}
 .ass{border:1px solid var(--warm);border-radius:12px;background:#fff;touch-action:none;width:100%;height:160px;display:block}
@@ -175,7 +176,18 @@ function fotoComp(file){return new Promise((ok,no)=>{const u=URL.createObjectURL
  im.onerror=()=>{URL.revokeObjectURL(u);no(new Error('Não consegui ler a foto.'))};im.src=u})}
 const fotoCampo=(chave,foto)=>foto?`<div class="thumb"><img src="${foto}" alt="Foto anexada"><button type="button" data-a="tirafoto" data-k="${esc(chave)}">Remover foto</button></div>`
  :`<label class="fotobtn"><input type="file" accept="image/*" capture="environment" data-foto="${esc(chave)}">📷 Tirar foto (opcional)</label>`;
-async function carregaRota(){S.rotaErr='';try{const r=await api('rota');if(!r.ok){S.rotaErr=r.erro;S.rotas=[]}else{S.rotas=r.rotas||[];S.motivos=r.motivos||[]}}
+/* formulário de check-out do SimpliRoute: os mesmos campos do app do SimpliRoute, por tipo de visita */
+async function carregaCampos(){if(S.campos&&S.campos.length)return;try{const r=await api('campos',{},'checkout-form');if(r.ok)S.campos=r.campos||[]}catch(e){}}
+const nzP=t=>String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/^\s*(dra?|enfa?|enf\.?a|fisio|ft)\.?\s+/,'').replace(/\s+/g,' ').trim();
+function profDaVisita(v){const f=(S.campos||[]).find(x=>x.key==='nome_profissional');const n=String(v.obs||'').split('|')[1]||'';return f?(f.options.find(o=>nzP(o)===nzP(n))||''):''}
+function tipoVisita(v){if(v.tipo)return v.tipo;const p=profDaVisita(v);return /^\s*dra?\b/i.test(p)?'med_visit':/^\s*enf/i.test(p)?'enf_visit':''}
+function camposVisita(v,st){if(!st)return[];const t=tipoVisita(v);return (S.campos||[]).filter(f=>f.tipos.includes(t)&&(f.quando==='S&F'||(st==='completed'?f.quando==='OK':f.quando==='NOK')))}
+const obrig=f=>f.type!=='NUM';
+/* motivo da falha do formulário → motivo do check-out (lista do app) */
+function motivoDe(txt){const t=nzP(txt),M=S.motivos||[],ach=re=>M.find(m=>re.test(nzP(m.nome)));
+ const m=/ausente/.test(t)?ach(/ausente/):/endereco/.test(t)?ach(/endereco/):/recusa/.test(t)?ach(/recus/):/hospital|internad|instabilidade/.test(t)?ach(/internad|hospital/):/conflito|policial/.test(t)?ach(/acesso|bloque/):null;
+ return m||ach(/outro/)||M[M.length-1]}
+async function carregaRota(){S.rotaErr='';carregaCampos();try{const r=await api('rota');if(!r.ok){S.rotaErr=r.erro;S.rotas=[]}else{S.rotas=r.rotas||[];S.motivos=r.motivos||[]}}
  catch(e){if(e.message==='sessao')return;S.rotaErr=e.message;S.rotas=[]}if(S.etapa==='pronto')render()}
 async function carregaTicket(){try{const r=await rpc('mot_ticket',{p_token:S.token});if(r&&r.ok){S.tk=r;if(S.etapa==='pronto'&&S.aba==='hoje')render()}}catch(e){}}
 setInterval(()=>{if(S.token&&S.etapa==='pronto'&&!document.hidden)carregaTicket()},10*60000);
@@ -283,15 +295,17 @@ function amanhaHtml(){const A=S.am;if(!A.at&&!A.busy)setTimeout(()=>carregaAmanh
  if(A.rotas==null)h+='<p class="carregando">Buscando no SimpliRoute…</p>';
  else if(A.err)h+=`<p class="err">${esc(A.err)}</p>`;
  else if(!A.rotas.length)h+='<p class="meta">A rota de amanhã ainda não foi montada pela Logística. Volte mais tarde.</p>';
- else A.rotas.forEach((r,ri)=>{const vs=r.visitas||[];h+=`<p class="meta" style="margin-top:6px"><b>Rota${A.rotas.length>1?' '+(ri+1):''}</b>${r.prev_inicio?' · saída prevista '+esc(r.prev_inicio):''}${r.prev_fim?' · volta prevista '+esc(r.prev_fim):''} · ${vs.length} visitas</p><ol class="dl" style="padding-left:0;list-style:none">${vs.map(v=>`<li><span class="chk" style="background:var(--off);color:var(--ink)">${v.ordem}</span><span><b>${esc(v.titulo)}</b>${v.prev?' · '+esc(v.prev):''}${v.janela?' · janela '+esc(v.janela):''}<br><small class="meta">${esc(v.endereco)}</small></span></li>`).join('')}</ol>`});
+ else{const pa=(S.chat.rotas||[]).filter(x=>x.amanha);pa.forEach(x=>{h+=`<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:6px;padding:10px 12px;background:var(--off);border-radius:12px"><span><small class="meta">${esc(x.especialidade||'Profissional')} · ${esc(dlong(x.data).toLowerCase())}</small><br><b style="font-size:16px">${esc(x.profissional)}</b></span><button class="btn wine" type="button" data-crota="${x.id}" data-aba="chat" style="width:auto;padding:0 16px;flex:none">Conversa${+x.nao_lidas?' · '+x.nao_lidas:''}</button></div>`});
+  if(!pa.length)h+='<p class="meta" style="margin-top:6px">O profissional aparece aqui quando a Logística enviar a rota de amanhã pelo Minha Rota.</p>'}
+ if(A.rotas&&A.rotas.length&&!A.err)A.rotas.forEach((r,ri)=>{const vs=r.visitas||[];h+=`<p class="meta" style="margin-top:6px"><b>Rota${A.rotas.length>1?' '+(ri+1):''}</b>${r.prev_inicio?' · saída prevista '+esc(r.prev_inicio):''}${r.prev_fim?' · volta prevista '+esc(r.prev_fim):''} · ${vs.length} visitas</p><ol class="dl" style="padding-left:0;list-style:none">${vs.map(v=>`<li><span class="chk" style="background:var(--off);color:var(--ink)">${v.ordem}</span><span><b>${esc(v.titulo)}</b>${v.prev?' · '+esc(v.prev):''}${v.janela?' · janela '+esc(v.janela):''}<br><small class="meta">${esc(v.endereco)}</small></span></li>`).join('')}</ol>`});
  h+='<p class="meta">Só para consulta: a rota pode mudar até a saída. Iniciar e finalizar continuam no dia.</p><button class="btn line" type="button" data-a="amrec">Atualizar</button></details>';return h}
 function renderChat(){const C=S.chat;if(S.alvo==='log')return renderLog();let h=topo('Conversa com o profissional');h+='<main>'+alvoSw();
  if(C.rotas==null)return h+'<p class="carregando">Abrindo a conversa…</p></main>';
  if(C.err)h+=`<p class="err" role="alert">${esc(C.err)}</p>`;
- if(!C.rotas.length)return h+'<div class="card"><h2>Sem conversa com profissional hoje</h2><p class="meta">A conversa abre no dia da rota, quando a logística envia a rota ao profissional pelo Minha Rota. Para falar com a Logística, toque em <b>Logística</b> acima.</p></div></main>';
+ if(!C.rotas.length)return h+'<div class="card"><h2>Sem conversa com profissional</h2><p class="meta">A conversa abre quando a logística envia a rota ao profissional pelo Minha Rota: na véspera e no dia da rota. Para falar com a Logística, toque em <b>Logística</b> acima.</p></div></main>';
  const ro=C.rotas.find(x=>x.id===C.rota)||C.rotas[0];
- if(C.rotas.length>1)h+=`<div class="chips" role="group" aria-label="Escolher conversa">${C.rotas.map(x=>`<button type="button" data-crota="${x.id}"${x.id===ro.id?' style="background:var(--wine);color:#fff;border-color:var(--wine)"':''}>${esc(x.profissional.split(' ').slice(0,2).join(' '))}${+x.nao_lidas?' · '+x.nao_lidas:''}</button>`).join('')}</div>`;
- h+=`<div class="card" style="gap:4px"><h2>${esc(ro.especialidade||'Profissional')}</h2><span style="font-size:18px;font-weight:800">${esc(ro.profissional)}</span><p class="meta">Rota de hoje${ro.prev_inicio?' · saída prevista '+esc(ro.prev_inicio):''} · a Central acompanha a conversa</p></div>`;
+ if(C.rotas.length>1)h+=`<div class="chips" role="group" aria-label="Escolher conversa">${C.rotas.map(x=>`<button type="button" data-crota="${x.id}"${x.id===ro.id?' style="background:var(--wine);color:#fff;border-color:var(--wine)"':''}>${esc(x.profissional.split(' ').slice(0,2).join(' '))}${x.amanha?' · '+esc(ddm(x.data)):''}${+x.nao_lidas?' · '+x.nao_lidas:''}</button>`).join('')}</div>`;
+ h+=`<div class="card" style="gap:4px"><h2>${esc(ro.especialidade||'Profissional')}</h2><span style="font-size:18px;font-weight:800">${esc(ro.profissional)}</span><p class="meta">Rota de ${ro.amanha?esc(dlong(ro.data).toLowerCase()):'hoje'}${ro.prev_inicio?' · saída prevista '+esc(ro.prev_inicio):''} · a Central acompanha a conversa</p></div>`;
  h+='<div class="bubs" aria-live="polite">';
  if(!C.msgs.length)h+='<p class="meta" style="text-align:center">Nenhuma mensagem ainda. Use uma resposta pronta para avisar que está saindo.</p>';
  C.msgs.forEach(m=>{const eu=m.de==='motorista';h+=`<div class="bub${eu?' eu':m.de==='central'?' cen':''}">${m.de==='central'?`<small style="margin:0 0 2px;font-weight:700">${esc(m.autor)}</small>`:''}${esc(m.texto)}<small>${hm(m.em)}${eu?(m.lida_med?' · lida':' · enviada'):m.de==='medico'?' · '+esc(String(m.autor).split(' ').slice(0,2).join(' ')):''}</small></div>`});
@@ -442,7 +456,7 @@ function render(){
    <li><span class="chk${def.length?' w':''}">${def.length?'!':'✓'}</span><span><b>Inspeção às ${hm(t.inspecao_em)}</b> · ${def.length?def.length+(def.length>1?' problemas registrados':' problema registrado'):'tudo OK'}</span></li></ul>
    ${def.length?`<ul class="dl">${def.map(d=>`<li><span class="chk ${d.critico?'r':'w'}">!</span><span><b>${esc(d.nome)}</b>${d.critico?' (crítico)':''} · ${esc(d.obs)}${d.foto?` · <a href="${esc(d.foto)}" target="_blank" rel="noopener">ver foto</a>`:''}</span></li>`).join('')}</ul><p class="meta">A logística e a manutenção veem esses problemas no Geotab.</p>`:''}</div>`;
   h+=`   ${TERC()?'':tkHtml()}
-   ${(S.chat.rotas||[]).map(x=>`<div class="card" style="gap:6px"><h2>Profissional de hoje</h2><span style="font-size:18px;font-weight:800">${esc(x.profissional)}</span><p class="meta">${esc(x.especialidade||'')}${x.prev_inicio?' · saída prevista '+esc(x.prev_inicio):''}</p><button class="btn wine" type="button" data-aba="chat">Conversa${+x.nao_lidas?' · '+x.nao_lidas+(+x.nao_lidas>1?' novas':' nova'):''}</button></div>`).join('')}
+   ${(S.chat.rotas||[]).filter(x=>!x.amanha).map(x=>`<div class="card" style="gap:6px"><h2>Profissional de hoje</h2><span style="font-size:18px;font-weight:800">${esc(x.profissional)}</span><p class="meta">${esc(x.especialidade||'')}${x.prev_inicio?' · saída prevista '+esc(x.prev_inicio):''}</p><button class="btn wine" type="button" data-aba="chat">Conversa${+x.nao_lidas?' · '+x.nao_lidas+(+x.nao_lidas>1?' novas':' nova'):''}</button></div>`).join('')}
    ${rotaHtml(t)}
    ${amanhaHtml()}
    <button class="btn line" type="button" data-a="encerrar">${TERC()?'Encerrar plantão':'Encerrar plantão e sair do carro'}</button></main>`;
@@ -452,15 +466,25 @@ function render(){
   h=topo(v.titulo||'Visita '+v.ordem);h+=`<main><p class="meta">${esc(v.endereco)}</p>`;
   if(S.err)h+=`<p class="err" role="alert">${esc(S.err)}</p>`;
   h+=`<div class="card"><h2>Como foi a visita?</h2><div class="seg" role="group" aria-label="Resultado da visita"><button type="button" class="c" data-a="cost" data-s="completed" aria-pressed="${c.status==='completed'}">Realizada</button><button type="button" class="f" data-a="cost" data-s="failed" aria-pressed="${falhou}">Não realizada</button></div></div>`;
-  if(falhou)h+=`<fieldset class="card" style="margin:0"><legend class="sr">Motivo</legend><h2>Motivo</h2><div class="mot">${mot.map(m=>`<label><input type="radio" name="mot" value="${esc(m.id)}"${c.motivo===m.id?' checked':''}>${esc(m.nome)}</label>`).join('')}</div></fieldset>`;
+  const fs=camposVisita(v,c.status),motF=fs.find(f=>f.quando==='NOK'&&f.type==='DDW');
+  if(fs.length){if(c.ex.nome_profissional===undefined){const p=profDaVisita(v);if(p)c.ex.nome_profissional=p}
+   fs.forEach(f=>{if(f.type==='DDW'&&f.options.length===1&&!c.ex[f.key])c.ex[f.key]=f.options[0]});
+   h+=`<div class="card"><h2>Formulário de check-out</h2><div class="frm">${fs.map(f=>{const val=c.ex[f.key]??'',falta=c.tentou&&obrig(f)&&!String(val).trim();const lb=esc(f.label.replace(/^Motivo do check-out.*$/,'Motivo')).replace(/\?$/,'?');
+    const id='fx_'+f.key;let inp;
+    if(f.type==='DDW')inp=`<select id="${id}" data-fx="${esc(f.key)}"${falta?' aria-invalid="true"':''}><option value="">Escolha…</option>${f.options.map(o=>`<option${o===val?' selected':''}>${esc(o)}</option>`).join('')}</select>`;
+    else if(f.type==='NUM')inp=`<input id="${id}" data-fx="${esc(f.key)}" inputmode="decimal" value="${esc(val)}" placeholder="0,00">`;
+    else inp=`<input id="${id}" data-fx="${esc(f.key)}" value="${esc(val)}" maxlength="200" autocomplete="off">`;
+    return `<label class="${falta?'falta':''}" for="${id}">${lb}${obrig(f)?'':' <i>(se houver)</i>'}${inp}</label>`}).join('')}</div></div>`}
+  if(falhou&&!motF)h+=`<fieldset class="card" style="margin:0"><legend class="sr">Motivo</legend><h2>Motivo</h2><div class="mot">${mot.map(m=>`<label><input type="radio" name="mot" value="${esc(m.id)}"${c.motivo===m.id?' checked':''}>${esc(m.nome)}</label>`).join('')}</div></fieldset>`;
   h+=`<div class="card"><label class="obs">Comentário${falhou&&c.motivo&&/outro/i.test((mot.find(m=>m.id===c.motivo)||{}).nome||'')?' (conte o que houve)':' (opcional)'}<textarea id="coment" maxlength="400" placeholder="Algo que a logística precise saber">${esc(c.comentario)}</textarea></label>${fotoCampo('v',c.foto)}</div>`;
   if(!falhou&&c.status)h+=`<div class="card"><h2>Assinatura (opcional)</h2><canvas class="ass" id="ass" aria-label="Espaço para assinatura do paciente ou responsável"></canvas><button class="link" type="button" data-a="limpass" style="align-self:flex-start">Limpar assinatura</button></div>`;
   h+='</main>';
-  const pode=c.status&&(!falhou||c.motivo);
+  const pode=c.status&&(!falhou||c.motivo||motF);
   h+=`<div class="foot"><div style="display:grid;grid-template-columns:1fr 2fr;gap:8px"><button class="btn line" type="button" data-a="vvoltar">Voltar</button><button class="btn sun" type="button" data-a="venviar"${!pode||S.busy?' disabled':''}>${S.busy?'Enviando…':'Enviar'}</button></div></div>`;
   app.innerHTML=h;
   const tx=$('#coment');if(tx)tx.oninput=()=>{c.comentario=tx.value};
   document.querySelectorAll('input[name=mot]').forEach(i=>i.onchange=()=>{c.motivo=i.value;S.err='';render()});
+  document.querySelectorAll('[data-fx]').forEach(i=>{const k=i.dataset.fx;i.oninput=i.onchange=()=>{c.ex[k]=i.value;if(i.tagName==='SELECT'){S.err='';const y=scrollY;render();scrollTo(0,y)}}});
   const cv=$('#ass');if(cv)assinatura(cv);return}
 }
 function assinatura(cv){const r=cv.getBoundingClientRect(),k=devicePixelRatio||1;cv.width=r.width*k;cv.height=r.height*k;const g=cv.getContext('2d');g.scale(k,k);g.lineWidth=2.2;g.lineCap='round';g.strokeStyle='#2b0a1f';
@@ -490,7 +514,7 @@ document.addEventListener('click',async e=>{
  const x=e.target.closest('[data-alvo],[data-aba],[data-crota],[data-pronta],[data-otipo],[data-rup],[data-rdel],[data-rsug]');
  if(x){const d=x.dataset;
   if(d.alvo){S.alvo=d.alvo;render();if(d.alvo==='log')carregaLog();else{S.chat.n=-1;carregaChat()}return}
-  if(d.aba){if(d.aba==='chat'&&!S.alvo)S.alvo=(S.chat.rotas&&S.chat.rotas.length&&!(S.lg.nl>0))?'prof':(S.chat.rotas&&S.chat.rotas.length?'log':'log');S.aba=d.aba;S.err='';render();scrollTo(0,0);if(d.aba==='chat'){S.chat.n=-1;carregaChat();if(S.alvo==='log')carregaLog()}if(d.aba==='ocor'){carregaOcor();if(S.chat.rotas==null)contaRotas()}if(d.aba==='folga')carregaFolga();return}
+  if(d.aba){if(d.aba==='chat'&&d.crota){S.chat.rota=+d.crota;S.alvo='prof'}if(d.aba==='chat'&&!S.alvo)S.alvo=(S.chat.rotas&&S.chat.rotas.length&&!(S.lg.nl>0))?'prof':(S.chat.rotas&&S.chat.rotas.length?'log':'log');S.aba=d.aba;S.err='';render();scrollTo(0,0);if(d.aba==='chat'){S.chat.n=-1;carregaChat();if(S.alvo==='log')carregaLog()}if(d.aba==='ocor'){carregaOcor();if(S.chat.rotas==null)contaRotas()}if(d.aba==='folga')carregaFolga();return}
   if(d.crota){S.chat.rota=+d.crota;S.chat.n=-1;carregaChat();return}
   if(d.pronta!=null){enviaChat(S.chat.resp[+d.pronta],true);return}
   if(d.otipo){S.oc.tipo=d.otipo;S.oc.avisar=d.otipo==='Atraso';S.oc.err='';render();const t=$(comValor(d.otipo)?'#ovalor':'#otexto');if(t)t.focus();return}
@@ -533,13 +557,20 @@ document.addEventListener('click',async e=>{
  if(a==='rfinalizar'){const r=(S.rotas||[]).find(x=>x.id===b.dataset.r);const falta=r?r.visitas.filter(v=>v.status!=='completed'&&v.status!=='failed').length:0;
   if(!(await confirma('Finalizar a rota?',falta?'Ainda há '+falta+(falta>1?' visitas abertas':' visita aberta')+'. Finalize mesmo assim só se a Logística tiver combinado. Só é possível finalizar com o carro na base.':'Todas as visitas foram finalizadas. Só é possível finalizar com o carro de volta na base.','Finalizar rota')))return;await acaoRota('rota_finalizar',{rota:b.dataset.r},'Rota finalizada.');return}
  if(a==='checkin'){await acaoRota('checkin',{visita:b.dataset.v},'Chegada registrada.');return}
- if(a==='fvisita'){const v=(S.rotas||[]).flatMap(r=>r.visitas).find(x=>String(x.id)===b.dataset.v);if(!v)return;S.vis=v;S.co={status:'',motivo:'',comentario:'',foto:null,assImg:null,assinou:false};S.err='';S.etapa='visita';render();scrollTo(0,0);return}
+ if(a==='fvisita'){const v=(S.rotas||[]).flatMap(r=>r.visitas).find(x=>String(x.id)===b.dataset.v);if(!v)return;S.vis=v;S.co={status:'',motivo:'',comentario:'',foto:null,assImg:null,assinou:false,ex:{},tentou:false};carregaCampos().then(()=>{if(S.etapa==='visita')render()});S.err='';S.etapa='visita';render();scrollTo(0,0);return}
  if(a==='cost'){S.co.status=b.dataset.s;if(S.co.status!=='failed')S.co.motivo='';S.err='';render();return}
  if(a==='limpass'){S.co.assImg=null;S.co.assinou=false;render();return}
  if(a==='vvoltar'){S.etapa='pronto';S.vis=null;S.err='';render();return}
- if(a==='venviar'){const c=S.co;if(!c.status||(c.status==='failed'&&!c.motivo))return;
-  const mo=S.motivos.find(m=>m.id===c.motivo);if(c.status==='failed'&&mo&&/outro/i.test(mo.nome)&&!c.comentario.trim()){S.err='Conte no comentário o que houve.';render();return}
-  const r=await acaoRota('checkout',{visita:S.vis.id,status:c.status,motivo:c.motivo||undefined,comentario:c.comentario,foto:c.foto||undefined,assinatura:c.status==='completed'&&c.assImg?c.assImg:undefined});
+ if(a==='venviar'){const c=S.co;if(!c.status||(c.status==='failed'&&!c.motivo&&!camposVisita(S.vis,'failed').some(f=>f.quando==='NOK'&&f.type==='DDW')))return;
+  const fs=camposVisita(S.vis,c.status),motF=fs.find(f=>f.quando==='NOK'&&f.type==='DDW');
+  if(fs.some(f=>obrig(f)&&!String(c.ex[f.key]??'').trim())){c.tentou=true;S.err='Preencha o formulário de check-out.';render();const q=document.querySelector('.frm .falta select,.frm .falta input');if(q)q.focus();return}
+  const ex={};fs.forEach(f=>{const x=c.ex[f.key];if(x!==undefined&&String(x).trim()!=='')ex[f.key]=x});
+  let motivo=c.motivo,coment=c.comentario;
+  if(c.status==='failed'&&motF){const mo=motivoDe(ex[motF.key]);motivo=mo?mo.id:'';if(mo&&/outro/i.test(mo.nome))coment=ex[motF.key]+(coment.trim()?' · '+coment:'')}
+  const mo=S.motivos.find(m=>m.id===motivo);if(c.status==='failed'&&!motF&&mo&&/outro/i.test(mo.nome)&&!coment.trim()){S.err='Conte no comentário o que houve.';render();return}
+  const r=await acaoRota('checkout',{visita:S.vis.id,status:c.status,motivo:motivo||undefined,comentario:coment,foto:c.foto||undefined,assinatura:c.status==='completed'&&c.assImg?c.assImg:undefined});
+  if(r&&Object.keys(ex).length){let f=null;for(let k=0;k<2&&!(f&&f.ok);k++){try{f=await api('salvar',{visita:S.vis.id,extras:ex},'checkout-form')}catch(e){f={ok:false,erro:e.message}}}
+   if(!f||!f.ok)toast('A visita foi finalizada, mas o formulário não foi salvo no SimpliRoute. Avise a logística.')}
   if(r){toast(c.status==='completed'?'Visita finalizada.':'Visita registrada como não realizada.');if(c.foto&&r.foto===false)toast('A foto não foi enviada. Avise a logística se ela for importante.');S.etapa='pronto';S.vis=null;S.co=null;render();scrollTo(0,0)}return}
  if(a==='ok'){S.resp[b.dataset.id]={ok:true};S.err='';render();return}
  if(a==='prob'){S.resp[b.dataset.id]={ok:false,obs:(S.resp[b.dataset.id]&&S.resp[b.dataset.id].obs)||''};render();const t=document.querySelector(`[data-obs="${CSS.escape(b.dataset.id)}"]`);if(t)t.focus();return}

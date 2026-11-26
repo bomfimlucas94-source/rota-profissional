@@ -204,6 +204,10 @@ function toast(t){const d=document.createElement('div');d.className='toast';d.se
 const dExt=k=>{const d=new Date(k+'T12:00:00');const s=d.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'2-digit'});return s[0].toUpperCase()+s.slice(1)};
 const hm=t=>t?new Date(t).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'';
 const hoje=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const amanhaD=()=>{const d=new Date();d.setDate(d.getDate()+1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+/* conversa com o motorista: aberta na véspera e no dia da rota */
+const chatAberto=ro=>ro.data===hoje()||ro.data===amanhaD();
+const dDM=k=>{const d=new Date(String(k).slice(0,10)+'T12:00:00');return ['dom','seg','ter','qua','qui','sex','sáb'][d.getDay()]+', '+String(k).slice(8,10)+'/'+String(k).slice(5,7)};
 function sair(msg){if(S.leitura){try{sessionStorage.removeItem('rp-ver');if(S.token)rpc('app_sair',{p_token:S.token}).catch(()=>{})}catch(e){}S.leitura=false;S.token=null;S.rotas=[];S.evo=null;S.err=msg&&/expir/.test(msg)?'A visualização terminou (vale 30 minutos). Abra de novo pela Central.':'Visualização encerrada. Você pode fechar esta aba.';render();return}
  try{if(S.token)rpc('app_sair',{p_token:S.token}).catch(()=>{});localStorage.removeItem('rp-token');localStorage.removeItem('rp-trocar')}catch(e){}S.trocar=false;PIN_TMP='';S.token=null;S.rotas=[];S.evo=null;S.evoAberto=false;S.err=msg||'';render()}
 async function carregar(silencioso){
@@ -337,7 +341,7 @@ async function desenhaMapa(ro){const el=document.getElementById('mapa');if(!el)r
  const ll=pts.map(p=>[+p.lat,+p.lng]);L.polyline(ll,{color:'#5f0040',weight:3,opacity:.7,dashArray:'6 6'}).addTo(m);
  pts.forEach(p=>L.marker([+p.lat,+p.lng],{icon:L.divIcon({className:'',html:'<div class="mk">'+esc(p.ordem)+'</div>',iconSize:[26,26],iconAnchor:[13,13]}),title:p.ordem+'. '+p.nome}).addTo(m));
  m.fitBounds(L.latLngBounds(ll).pad(.15),{maxZoom:15})}
-/* ===== Conversa com o motorista (só no dia da rota; a Central acompanha) ===== */
+/* ===== Conversa com o motorista (na véspera e no dia da rota; a Central acompanha) ===== */
 const CH={d:null,rota:null,txt:'',busy:false,ed:null,res:{},n:-1};
 async function carregaResumo(){if(!S.token||S.trocar)return;try{const r=await rpc('app_chat_resumo',{p_token:S.token});if(r&&r.ok){const a=JSON.stringify(CH.res);CH.res={};(r.rotas||[]).forEach(x=>CH.res[x.id]=x);if(a!==JSON.stringify(CH.res)&&S.tela==='rota')render()}}catch(e){}}
 async function carregaChat(sil){const ro=rotaAtual();if(!ro)return;
@@ -346,15 +350,15 @@ async function carregaChat(sil){const ro=rotaAtual();if(!ro)return;
   if(S.tela==='chat'&&mud){render();fimChat()}}catch(e){if(!sil)toast(e.message)}}
 function fimChat(){const l=document.querySelector('.bub:last-child');if(l)l.scrollIntoView({block:'end'});scrollBy(0,400)}
 function chatBotao(ro){const x=CH.res[ro.id]||{},n=+x.nao_lidas||0;
- return `<button class="chatb${n?' novo':''}" type="button" data-a="chat"><span class="ci" aria-hidden="true">💬</span><span class="t"><b>${n?(n===1?'Nova mensagem':n+' mensagens novas'):'Conversar com o motorista'}</b><small>${x.msgs?'Abrir a conversa de hoje':'Combine o ponto de encontro. A logística acompanha.'}</small></span>${n?`<span class="nb2">${n}</span>`:'<span aria-hidden="true">›</span>'}</button>`}
+ return `<button class="chatb${n?' novo':''}" type="button" data-a="chat"><span class="ci" aria-hidden="true">💬</span><span class="t"><b>${n?(n===1?'Nova mensagem':n+' mensagens novas'):'Conversar com o motorista'}</b><small>${x.msgs?'Abrir a conversa '+(ro.data===hoje()?'de hoje':'da rota de '+dDM(ro.data)):'Combine o ponto de encontro. A logística acompanha.'}</small></span>${n?`<span class="nb2">${n}</span>`:'<span aria-hidden="true">›</span>'}</button>`}
 function chatTela(ro){const d=CH.d&&CH.rota===ro.id?CH.d:null;let h=`<button class="back" type="button" data-a="rota">‹ Voltar para a rota</button>`;
  if(!d)return h+'<p class="empty">Abrindo a conversa…</p>';
- h+=`<div class="card" style="padding:14px;display:flex;flex-direction:column;gap:4px"><b style="font-size:17px">${esc(d.motorista||'Motorista')}${d.placa?' · '+esc(d.placa):''}</b><small style="color:var(--muted);font-size:12.5px">${d.motorista_app?'Conversa da rota de hoje · a logística acompanha':'O motorista ainda não usa o Minha Rota. A logística lê e responde por aqui.'}</small></div>`;
+ h+=`<div class="card" style="padding:14px;display:flex;flex-direction:column;gap:4px"><b style="font-size:17px">${esc(d.motorista||'Motorista')}${d.placa?' · '+esc(d.placa):''}</b><small style="color:var(--muted);font-size:12.5px">${d.motorista_app?'Conversa da rota '+(ro.data===hoje()?'de hoje':'de '+dDM(ro.data))+' · a logística acompanha':'O motorista ainda não usa o Minha Rota. A logística lê e responde por aqui.'}</small></div>`;
  h+='<div class="bubs" aria-live="polite">';
  if(!d.msgs.length)h+='<p class="empty" style="padding:16px">Nenhuma mensagem ainda.</p>';
  d.msgs.forEach(m=>{const eu=m.de==='medico';h+=`<div class="bub${eu?' eu':m.de==='central'?' cen':''}">${m.de==='central'?`<small style="margin:0 0 2px;font-weight:700">${esc(m.autor)}</small>`:''}${esc(m.texto)}<small>${hm(m.em)}${eu?(m.lida_mot?' · lida':' · enviada'):m.de==='motorista'?' · '+esc(String(m.autor).split(' ')[0]):''}</small></div>`});
  h+='</div>';
- if(!d.aberta)return h+'<p class="note pend">A conversa fica aberta só no dia da rota.</p>';
+ if(!d.aberta)return h+'<p class="note pend">A conversa fica aberta na véspera e no dia da rota.</p>';
  if(S.leitura)return h;
  h+=`<div class="chatfoot"><div class="chips" role="group" aria-label="Respostas prontas">${(d.respostas||[]).map((t,i)=>`<button type="button" data-pronta="${i}">${esc(t)}</button>`).join('')}<button type="button" class="ed" data-a="chatresp">Editar</button></div>
   <form class="envia" id="fchat"><label for="ctxt" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Mensagem</label><input id="ctxt" maxlength="500" autocomplete="off" placeholder="Mensagem" value="${esc(CH.txt)}"><button type="submit"${CH.busy?' disabled':''}>Enviar</button></form></div>`;
@@ -410,7 +414,7 @@ function render(){
     else if(!ro.motorista&&ro.data>=hoje()&&!embarcado(ro.id))h+=`<div class="card trk"><div class="trkh"><b>Seu motorista</b><span>Ainda não definido</span></div><div class="trki"><small>Assim que a logística definir o motorista no SimpliRoute, o nome dele aparece aqui${ro.data===hoje()?' e você acompanha o carro chegando':''}.</small></div></div>`;
     else if(ro.motorista&&ro.data===hoje())h+=`<div class="card trk"><div class="trkh"><b>Seu motorista hoje</b><span>${esc(ro.motorista)}</span></div><div class="trki"><small>${ro.sr_inicio?'Saiu às '+esc(hm(ro.sr_inicio))+'. Boa rota!':'Você já está no carro. Boa rota!'}</small></div></div>`;
     else if(ro.motorista&&ro.data>hoje())h+=`<div class="card trk"><div class="trkh"><b>Seu motorista</b><span>${esc(ro.motorista)}</span></div><div class="trki"><small>O acompanhamento do carro aparece aqui no dia da rota (${esc(ro.data.slice(8,10)+'/'+ro.data.slice(5,7))}), com a distância até você e a previsão de chegada.</small></div></div>`;
-    if(ro.data===hoje()&&ro.motorista)h+=chatBotao(ro);
+    if(chatAberto(ro)&&ro.motorista)h+=chatBotao(ro);
     const gm=gmaps(ro);
     h+=`<div class="card">${temGeo(ro)?'<div class="mapa" id="mapa" role="img" aria-label="Mapa com os pacientes na ordem da rota"></div>':ro.print?`<button class="print" type="button" data-a="zoom" aria-label="Ampliar o print da rota"><img src="${esc(ro.print)}" alt="Print da rota de ${esc(dExt(ro.data))}"></button>`:'<div class="noprint">Print da rota ainda não enviado</div>'}
       <div class="cardf"><span>${ro.pacientes.length} ${ro.pacientes.length===1?'paciente':'pacientes'}</span>${gm?`<a href="${esc(gm)}" target="_blank" rel="noopener">Abrir trajeto no Google Maps ›</a>`:ro.print?'<button type="button" data-a="zoom">Ampliar print</button>':''}</div></div>
