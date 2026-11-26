@@ -169,6 +169,12 @@ function sair(msg){if(S.leitura){try{sessionStorage.removeItem('rm-ver');rpc('mo
 function gps1(o,ms){return new Promise(ok=>{if(!navigator.geolocation)return ok(null);let fim=false;const t=setTimeout(()=>{if(!fim){fim=true;ok(null)}},ms);
  navigator.geolocation.getCurrentPosition(p=>{if(!fim){fim=true;clearTimeout(t);ok({lat:p.coords.latitude,lng:p.coords.longitude,prec:Math.round(p.coords.accuracy||0)||null})}},()=>{if(!fim){fim=true;clearTimeout(t);ok(null)}},o)})}
 /* sem GPS (ex.: estacionamento subterrâneo): tenta a posição por Wi-Fi/rede e, por último, a última posição guardada (até 15 min) */
+/* GPS na tela de localização: fica ouvindo e guarda a melhor precisão por até 30 s */
+function abreLoc(v,aviso){S.vis=v;S.loc={g:null,nota:'',aviso:aviso||'',buscando:true,w:null};S.err='';S.etapa='loc';render();scrollTo(0,0);buscaLoc()}
+function buscaLoc(){const L=S.loc;if(!L)return;paraLoc();L.buscando=true;render();if(!navigator.geolocation){L.buscando=false;render();return}
+ L.w=navigator.geolocation.watchPosition(p=>{const g={lat:p.coords.latitude,lng:p.coords.longitude,prec:Math.round(p.coords.accuracy||0)||null};if(!L.g||!g.prec||!L.g.prec||g.prec<=L.g.prec)L.g=g;L.buscando=false;if(S.etapa==='loc'&&document.activeElement?.id!=='locnota')render()},()=>{L.buscando=false;if(S.etapa==='loc')render()},{enableHighAccuracy:true,maximumAge:0,timeout:20000});
+ L.t=setTimeout(paraLoc,30000)}
+function paraLoc(){const L=S.loc;if(L&&L.w!=null){navigator.geolocation.clearWatch(L.w);L.w=null}if(L&&L.t){clearTimeout(L.t);L.t=null}}
 function distM(a,b,c,d){const R=6371000,r=x=>x*Math.PI/180,dl=r(c-a),dg=r(d-b),h=Math.sin(dl/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(dg/2)**2;return Math.round(2*R*Math.asin(Math.sqrt(h)))}
 async function pegaGps(){return (await gps1({enableHighAccuracy:true,timeout:8000,maximumAge:60000},9000))||(await gps1({enableHighAccuracy:false,timeout:5000,maximumAge:900000},6000))}
 function fotoComp(file){return new Promise((ok,no)=>{const u=URL.createObjectURL(file);const im=new Image();
@@ -188,7 +194,11 @@ const obrig=f=>f.type!=='NUM';
 function motivoDe(txt){const t=nzP(txt),M=S.motivos||[],ach=re=>M.find(m=>re.test(nzP(m.nome)));
  const m=/ausente/.test(t)?ach(/ausente/):/endereco/.test(t)?ach(/endereco/):/recusa/.test(t)?ach(/recus/):/hospital|internad|instabilidade/.test(t)?ach(/internad|hospital/):/conflito|policial/.test(t)?ach(/acesso|bloque/):null;
  return m||ach(/outro/)||M[M.length-1]}
-async function carregaRota(){S.rotaErr='';carregaCampos();try{const r=await api('rota');if(!r.ok){S.rotaErr=r.erro;S.rotas=[]}else{S.rotas=r.rotas||[];S.motivos=r.motivos||[]}}
+/* localização da casa: o que o motorista já enviou e as casas com localização confirmada pela Central */
+async function carregaLocs(){const it=(S.rotas||[]).flatMap(r=>(r.visitas||[]).map(v=>({id:String(v.id),titulo:v.titulo})));if(!it.length)return;
+ try{const r=await rpc('mot_locs',{p_token:S.token,p_itens:it});if(r&&r.ok){S.locs={enviados:r.enviados||{},locais:r.locais||{}};if(S.etapa==='pronto')render()}}catch(e){}}
+const locConf=v=>{const l=S.locs&&S.locs.locais[String(v.id)];return l&&(v.lat==null||distM(v.lat,v.lng,l.lat,l.lng)>150)?l:null};
+async function carregaRota(){S.rotaErr='';carregaCampos();try{const r=await api('rota');if(!r.ok){S.rotaErr=r.erro;S.rotas=[]}else{S.rotas=r.rotas||[];S.motivos=r.motivos||[];carregaLocs()}}
  catch(e){if(e.message==='sessao')return;S.rotaErr=e.message;S.rotas=[]}if(S.etapa==='pronto')render()}
 async function carregaTicket(){try{const r=await rpc('mot_ticket',{p_token:S.token});if(r&&r.ok){S.tk=r;if(S.etapa==='pronto'&&S.aba==='hoje')render()}}catch(e){}}
 setInterval(()=>{if(S.token&&S.etapa==='pronto'&&!document.hidden)carregaTicket()},10*60000);
@@ -383,8 +393,13 @@ function rotaHtml(t){
    h+=`<div class="vis${at?' atual':''}"><div class="l"><span class="o ${k}">${k==='ok'?'✓':k==='bad'?'✕':v.ordem}</span><span class="t"><b>${esc(v.titulo||'Visita '+v.ordem)}</b><small>${esc(v.endereco)}</small>
     <small>${v.checkout?(k==='ok'?'Realizada':'Não realizada')+' às '+hm(v.checkout):v.checkin?'Chegou às '+hm(v.checkin):[v.prev?'Previsão '+v.prev:'',v.janela?'janela '+v.janela:''].filter(Boolean).join(' · ')}</small></span></div>`;
    if(r.status==='started'&&!k){
-    const nav=v.lat!=null?`https://www.google.com/maps/dir/?api=1&destination=${v.lat},${v.lng}`:'https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(v.endereco);
-    h+=`<div class="acts"><a class="btn line" href="${esc(nav)}" target="_blank" rel="noopener">Navegar</a>${v.checkin?`<button class="btn wine" type="button" data-a="fvisita" data-v="${esc(v.id)}">Finalizar visita</button>`:at?`<button class="btn wine" type="button" data-a="checkin" data-v="${esc(v.id)}"${S.busy?' disabled':''}>Cheguei</button>`:`<button class="link" type="button" data-a="checkin" data-fora="1" data-v="${esc(v.id)}"${S.busy?' disabled':''} style="align-self:center">Atender fora da ordem</button>`}</div>`}
+    const lc=locConf(v),dst=lc||(v.lat!=null?v:null);
+    const nav=dst?`https://www.google.com/maps/dir/?api=1&destination=${dst.lat},${dst.lng}`:'https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(v.endereco);
+    if(lc)h+=`<p class="msg ok" style="margin:0;font-size:13px">📍 A Central corrigiu a localização desta casa. O Navegar já leva ao ponto certo.${lc.nota?'<br>Referência: '+esc(lc.nota):''}</p>`;
+    h+=`<div class="acts"><a class="btn line" href="${esc(nav)}" target="_blank" rel="noopener">Navegar</a>${v.checkin?`<button class="btn wine" type="button" data-a="fvisita" data-v="${esc(v.id)}">Finalizar visita</button>`:at?`<button class="btn wine" type="button" data-a="checkin" data-v="${esc(v.id)}"${S.busy?' disabled':''}>Cheguei</button>`:`<button class="link" type="button" data-a="checkin" data-fora="1" data-v="${esc(v.id)}"${S.busy?' disabled':''} style="align-self:center">Atender fora da ordem</button>`}</div>`;
+    if(v.checkin){const en=S.locs&&S.locs.enviados[String(v.id)];
+     h+=en?`<p class="msg pend" style="margin:0;font-size:13px">📍 Localização enviada às ${hm(en.em)} · ${en.status==='aplicada'?'corrigida pela Central':en.status==='recusada'?'a Central manteve o endereço':'aguardando a Central'}</p>`
+      :`<button class="link" type="button" data-a="locabrir" data-v="${esc(v.id)}" style="align-self:flex-start;text-align:left">📍 O endereço está errado? Enviar a localização da casa</button>`}}
    h+='</div>'});
   if(r.status==='started')h+=`<button class="btn ${feitas===vs.length?'sun':'line'}" type="button" data-a="rfinalizar" data-r="${esc(r.id)}"${S.busy?' disabled':''}>Finalizar rota</button>`;
   return h+'</div>'}).join('')+'<button class="link" type="button" data-a="rotarec" style="align-self:center">Atualizar rota</button>';
@@ -464,6 +479,22 @@ function render(){
    ${amanhaHtml()}
    <button class="btn line" type="button" data-a="encerrar">${TERC()?'Encerrar atendimento':'Encerrar plantão e sair do carro'}</button></main>`;
   app.innerHTML=h+nav();return}
+ if(S.etapa==='loc'){const v=S.vis,L=S.loc;h=topo('Localização da casa');
+  h+=`<main><p class="meta" style="margin:0"><b>${esc(v.titulo)}</b><br>${esc(v.endereco)}</p>`;
+  if(L.aviso)h+=`<p class="msg pend" style="margin:0">${esc(L.aviso)}</p>`;
+  if(S.err)h+=`<p class="err" role="alert">${esc(S.err)}</p>`;
+  h+='<div class="card"><h2>Onde você está agora</h2>';
+  if(!L.g)h+=`<p class="carregando">${L.buscando?'Procurando o GPS do celular…':'Não consegui o GPS. Ligue a localização do celular e toque em Tentar de novo.'}</p>`;
+  else{const d=v.lat!=null?distM(L.g.lat,L.g.lng,v.lat,v.lng):null;
+   if(d!=null){const W=300,H=150,ang=Math.atan2(v.lat-L.g.lat,(v.lng-L.g.lng)*Math.cos(L.g.lat*Math.PI/180)),R=Math.min(90,30+Math.log10(1+d)*20),x2=W/2-Math.cos(ang)*R/2,y2=H/2+Math.sin(ang)*R/2,x1=W/2+Math.cos(ang)*R/2,y1=H/2-Math.sin(ang)*R/2;
+    h+=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;background:#e9efe6;border-radius:12px" aria-hidden="true"><line x1="${x2}" y1="${y2}" x2="${x1}" y2="${y1}" stroke="#8f1d2b" stroke-width="2" stroke-dasharray="5 5"/><circle cx="${x2}" cy="${y2}" r="9" fill="#1d6b3a" stroke="#fff" stroke-width="3"/><text x="${x2}" y="${y2-15}" text-anchor="middle" font-size="12" font-weight="800" fill="#2b0a1f">Você</text><circle cx="${x1}" cy="${y1}" r="9" fill="#8f1d2b" stroke="#fff" stroke-width="3"/><text x="${x1}" y="${y1-15}" text-anchor="middle" font-size="12" font-weight="800" fill="#2b0a1f">SimpliRoute</text></svg>`;
+    h+=`<p class="meta" style="display:flex;justify-content:space-between;margin:0">Distância do pin atual<b style="color:var(--ink)">${d<1000?d+' m':(d/1000).toFixed(1).replace('.',',')+' km'}</b></p>`}
+   h+=`<p class="meta" style="display:flex;justify-content:space-between;margin:0">Precisão do GPS<b style="color:var(--ink)">± ${L.g.prec||'?'} m</b></p>`;
+   h+=(L.g.prec&&L.g.prec<=50)?'<p class="msg ok" style="margin:0">✓ Boa precisão. Envie de frente para a casa do paciente.</p>':'<p class="msg pend" style="margin:0">Precisão ainda baixa. Espere alguns segundos ou vá para fora, de frente para a casa.</p>'}
+  h+=`<label class="obs">Referência para achar a casa (opcional)<textarea id="locnota" maxlength="300" placeholder="Ex.: portão azul, entrada pela rua de trás">${esc(L.nota||'')}</textarea></label>
+   <button class="btn sun" type="button" data-a="locenviar"${!L.g||S.busy?' disabled':''}>${S.busy?'Enviando…':'Enviar para a Central'}</button>
+   ${L.g?'':'<button class="btn line" type="button" data-a="locgps">Tentar de novo</button>'}<button class="btn line" type="button" data-a="locsair">Cancelar</button></div></main>`;
+  app.innerHTML=h;const tn=$('#locnota');if(tn)tn.oninput=()=>{L.nota=tn.value};return}
  if(S.etapa==='visita'){const v=S.vis,c=S.co;const falhou=c.status==='failed';
   const mot=S.motivos.filter(m=>!m.tipo||m.tipo==='failed');
   h=topo(v.titulo||'Visita '+v.ordem);h+=`<main><p class="meta">${esc(v.endereco)}</p>`;
@@ -566,8 +597,17 @@ document.addEventListener('click',async e=>{
   if(b.dataset.fora&&nx&&nx.id!==v.id&&!(await confirma('Atender fora da ordem?',`O próximo da sua rota é ${nx.ordem}º · ${nx.titulo}. Só atenda ${v.ordem}º · ${v.titulo} antes se a Logística ou o profissional mudou a ordem.`,'Sim, cheguei em '+String(v.titulo).split(' ')[0])))return;
   if(v.lat!=null&&v.lng!=null){S.busy=true;render();const g=await pegaGps();S.busy=false;render();
    if(g){const m=distM(g.lat,g.lng,v.lat,v.lng)-Math.min(g.prec||0,300);
-    if(m>400&&!(await confirma('Longe do endereço',`Você está a ${m<1000?Math.round(m/10)*10+' m':(m/1000).toFixed(1).replace('.',',')+' km'} do endereço de ${v.titulo}. Confira se chegou no paciente certo.`,'Estou no paciente certo')))return}}
+    if(m>400){if(!(await confirma('Longe do endereço',`Você está a ${m<1000?Math.round(m/10)*10+' m':(m/1000).toFixed(1).replace('.',',')+' km'} do endereço de ${v.titulo}. Confira se chegou no paciente certo.`,'Estou no paciente certo')))return;
+     const r=await acaoRota('checkin',{visita:b.dataset.v},'Chegada registrada.');
+     if(r&&!(S.locs&&S.locs.enviados[String(v.id)])){const v2=(S.rotas||[]).flatMap(x=>x.visitas).find(x=>String(x.id)===String(v.id))||v;abreLoc(v2,'O pin do SimpliRoute parece estar no lugar errado. Envie a localização da casa para a Central corrigir.')}return}}}
   await acaoRota('checkin',{visita:b.dataset.v},'Chegada registrada.');return}
+ if(a==='locabrir'){const v=(S.rotas||[]).flatMap(r=>r.visitas).find(x=>String(x.id)===b.dataset.v);if(v)abreLoc(v);return}
+ if(a==='locgps'){buscaLoc();return}
+ if(a==='locsair'){paraLoc();S.etapa='pronto';S.vis=null;S.err='';render();scrollTo(0,0);return}
+ if(a==='locenviar'){const L=S.loc;if(!L.g)return;S.busy=true;render();
+  try{const r=await api('enviar',{visita:S.vis.id,lat:L.g.lat,lng:L.g.lng,prec:L.g.prec,nota:L.nota||''},'localizacoes');S.busy=false;
+   if(!r.ok){S.err=r.erro;render();return}paraLoc();S.locs=S.locs||{enviados:{},locais:{}};S.locs.enviados[String(S.vis.id)]={em:new Date().toISOString(),status:'pendente'};
+   toast('📍 Localização enviada. A Central vai conferir e corrigir o endereço.');S.etapa='pronto';S.vis=null;render();scrollTo(0,0)}catch(e){S.busy=false;if(e.message!=='sessao'){S.err=e.message;render()}}return}
  if(a==='fvisita'){const v=(S.rotas||[]).flatMap(r=>r.visitas).find(x=>String(x.id)===b.dataset.v);if(!v)return;S.vis=v;S.co={status:'',motivo:'',comentario:'',foto:null,assImg:null,assinou:false,ex:{},tentou:false};carregaCampos().then(()=>{if(S.etapa==='visita')render()});S.err='';S.etapa='visita';render();scrollTo(0,0);return}
  if(a==='cost'){S.co.status=b.dataset.s;if(S.co.status!=='failed')S.co.motivo='';S.err='';render();return}
  if(a==='limpass'){S.co.assImg=null;S.co.assinou=false;render();return}
