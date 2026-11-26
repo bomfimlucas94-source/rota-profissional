@@ -203,9 +203,11 @@ async function carregaRota(){S.rotaErr='';carregaCampos();try{const r=await api(
 async function carregaTicket(){try{const r=await rpc('mot_ticket',{p_token:S.token});if(r&&r.ok){S.tk=r;if(S.etapa==='pronto'&&S.aba==='hoje')render()}}catch(e){}}
 setInterval(()=>{if(S.token&&S.etapa==='pronto'&&!document.hidden)carregaTicket()},10*60000);
 /* item crítico na inspeção: o carro fica bloqueado até a Logística liberar pela Central */
-const BLOQ=t=>!!(t&&t.critico&&!t.liberado_em);
+const BLOQ=t=>!!(t&&(t.critico||t.inspecao_id==='local')&&!t.liberado_em);
 async function verLib(){try{const r=await api('estado');if(r&&r.turno){const era=BLOQ(S.turno);S.turno=r.turno;if(era&&!BLOQ(S.turno)){toast('Carro liberado pela Logística.');return true}return !BLOQ(S.turno)}}catch(e){}return false}
 setInterval(async()=>{if(!S.token||S.etapa!=='pronto'||document.hidden||!BLOQ(S.turno)||S.busy)return;if(await verLib())render()},20000);
+// na tela de inspeção: se a Logística liberar pela Central, o app segue sozinho
+setInterval(async()=>{if(!S.token||S.leitura||S.etapa!=='inspecao'||document.hidden||S.busy||TERC())return;try{const r=await api('estado');if(r&&r.ok&&r.turno&&r.turno.inspecao_id){S.turno=r.turno;S.etapa='pronto';toast('Liberado pela Logística.');render();scrollTo(0,0);carregaRota();carregaTicket()}}catch(e){}},20000);
 const brl=v=>'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
 function tkHtml(){const k=S.tk;if(!k||!k.cartao)return'';
  const at=new Date(k.atualizado_em),hj=at.toLocaleDateString('sv-SE',{timeZone:'America/Sao_Paulo'})===new Date().toLocaleDateString('sv-SE',{timeZone:'America/Sao_Paulo'});
@@ -392,7 +394,7 @@ function rotaHtml(t){
   const prox=r.status==='started'?vs.find(v=>v.status!=='completed'&&v.status!=='failed'):null;
   let h=`<div class="card rota"><div class="rhead"><h2>Rota${S.rotas.length>1?' '+(ri+1):''} · ${feitas} de ${vs.length} visitas</h2><span class="pill ${st}">${esc(stT)}</span><button type="button" class="aa" data-a="letra" aria-pressed="${LETRA}" title="${LETRA?'Voltar a letra ao normal':'Aumentar a letra'}">${LETRA?'A−':'A+'}</button></div>`;
   if(r.prev_inicio&&r.status!=='finished')h+=`<p class="meta">Previsto: ${esc(r.prev_inicio)}${r.prev_fim?' às '+esc(r.prev_fim):''}</p>`;
-  if(r.status!=='started'&&r.status!=='finished')h+=BLOQ(t)?'<p class="msg bad" style="margin:0">Resolva o item crítico com a logística antes de iniciar. Quando a Logística liberar o carro, o botão aparece aqui.</p><button class="btn line" type="button" data-a="verlib"'+(S.busy?' disabled':'')+'>Verificar liberação</button>':`<button class="btn sun" type="button" data-a="riniciar" data-r="${esc(r.id)}"${S.busy?' disabled':''}>Iniciar rota</button>`;
+  if(r.status!=='started'&&r.status!=='finished')h+=BLOQ(t)?'<p class="msg bad" style="margin:0">'+(t.critico?'Resolva o item crítico com a logística antes de iniciar.':'Aguardando a Logística liberar o carro.')+' Quando liberar, o botão Iniciar rota aparece aqui.</p><button class="btn line" type="button" data-a="verlib"'+(S.busy?' disabled':'')+'>Verificar liberação</button>':`<button class="btn sun" type="button" data-a="riniciar" data-r="${esc(r.id)}"${S.busy?' disabled':''}>Iniciar rota</button>`;
   vs.forEach(v=>{const k=visStatus(v),at=prox&&prox.id===v.id;
    h+=`<div class="vis${at?' atual':''}"><div class="l"><span class="o ${k}">${k==='ok'?'✓':k==='bad'?'✕':v.ordem}</span><span class="t"><b>${esc(v.titulo||'Visita '+v.ordem)}</b><small>${esc(v.endereco)}</small>
     <small>${v.checkout?(k==='ok'?'Realizada':'Não realizada')+' às '+hm(v.checkout):v.checkin?'Chegou às '+hm(v.checkin):[v.prev?'Previsão '+v.prev:'',v.janela?'janela '+v.janela:''].filter(Boolean).join(' · ')}</small></span></div>`;
@@ -471,12 +473,12 @@ function render(){
   document.querySelectorAll('[data-obs]').forEach(t=>t.oninput=()=>{S.resp[t.dataset.obs].obs=t.value;const b=document.querySelector('.foot .btn.sun');if(b)b.disabled=!secCompleta(S.sec)||S.busy});return}
  if(S.etapa==='pronto'){const t=S.turno||{};const def=t.defeitos||[];
   h=topo(PT('Plantão iniciado às ')+hm(t.entrou_em));h+='<main>'+pushCard();
-  if(BLOQ(t))h+=`<div class="msg bad" role="alert"><b>Item crítico com problema.</b> Não saia com o carro antes de falar com a logística. Se a Logística liberar, o app atualiza sozinho.</div>`;
-  else if(t.critico&&t.liberado_em)h+=`<div class="msg ok" role="status"><b>Liberado pela Logística</b>${t.liberado_por?' · '+esc(String(t.liberado_por).split(' ')[0]):''} às ${hm(t.liberado_em)}. Pode seguir a rota.${t.liberacao_obs?' '+esc(t.liberacao_obs):''} O problema continua registrado para a manutenção.</div>`;
+  if(BLOQ(t))h+=t.critico?`<div class="msg bad" role="alert"><b>Item crítico com problema.</b> Não saia com o carro antes de falar com a logística. Se a Logística liberar, o app atualiza sozinho.</div>`:`<div class="msg pend" role="alert"><b>Aguardando a Logística.</b> O Geotab não aceitou a inspeção deste carro (defeito de inspeção anterior sem reparo). Sua inspeção ficou salva; quando a Logística liberar, o app atualiza sozinho.</div>`;
+  else if(t.liberado_em)h+=`<div class="msg ok" role="status"><b>Liberado pela Logística</b>${t.liberado_por?' · '+esc(String(t.liberado_por).split(' ')[0]):''} às ${hm(t.liberado_em)}. Pode seguir a rota.${t.liberacao_obs?' '+esc(t.liberacao_obs):''} O problema continua registrado para a manutenção.</div>`;
   if(TERC())h+=`<div class="card"><h2>Seu carro</h2><span style="font-size:24px;font-weight:800;letter-spacing:.04em">${esc(t.placa||'')}</span><ul class="dl"><li><span class="chk">✓</span><span><b>${PT('Plantão iniciado às ')}${hm(t.entrou_em)}</b> · carro próprio${S.empresa?' · '+esc(S.empresa):''}</span></li></ul></div>${gpsCard()}`;
   else h+=`<div class="card"><h2>Seu carro</h2><span style="font-size:24px;font-weight:800;letter-spacing:.04em">${esc(t.placa||'')}</span>
    <ul class="dl"><li><span class="chk">✓</span><span><b>Entrou no carro às ${hm(t.entrou_em)}</b> · registrado no Geotab pelo app</span></li>
-   <li><span class="chk${def.length?' w':''}">${def.length?'!':'✓'}</span><span><b>Inspeção às ${hm(t.inspecao_em)}</b> · ${def.length?def.length+(def.length>1?' problemas registrados':' problema registrado'):'tudo OK'}</span></li></ul>
+   <li><span class="chk${def.length?' w':''}">${def.length?'!':'✓'}</span><span><b>Inspeção às ${hm(t.inspecao_em)}</b>${t.inspecao_id==='local'?' · salva no Minha Rota (Geotab não aceitou)':t.inspecao_id==='central'?' · liberada pela Logística':''} · ${def.length?def.length+(def.length>1?' problemas registrados':' problema registrado'):'tudo OK'}</span></li></ul>
    ${def.length?`<ul class="dl">${def.map(d=>`<li><span class="chk ${d.critico?'r':'w'}">!</span><span><b>${esc(d.nome)}</b>${d.critico?' (crítico)':''} · ${esc(d.obs)}${d.foto?` · <a href="${esc(d.foto)}" target="_blank" rel="noopener">ver foto</a>`:''}</span></li>`).join('')}</ul><p class="meta">A logística e a manutenção veem esses problemas no Geotab.</p>`:''}</div>`;
   h+=`   ${TERC()?'':tkHtml()}
    ${(S.chat.rotas||[]).filter(x=>!x.amanha).map(x=>`<div class="card" style="gap:6px"><h2>Profissional de hoje</h2><span style="font-size:18px;font-weight:800">${esc(x.profissional)}</span><p class="meta">${esc(x.especialidade||'')}${x.prev_inicio?' · saída prevista '+esc(x.prev_inicio):''}</p><button class="btn wine" type="button" data-aba="chat">Conversa${+x.nao_lidas?' · '+x.nao_lidas+(+x.nao_lidas>1?' novas':' nova'):''}</button></div>`).join('')}
@@ -637,7 +639,12 @@ document.addEventListener('click',async e=>{
   const np=Object.values(S.resp).filter(r=>r.ok===false).length;
   if(!(await confirma('Enviar inspeção?',np?'Você marcou '+np+(np>1?' problemas':' problema')+'. A logística e a manutenção vão ver no Geotab.':'Todos os itens OK.','Enviar')))return;
   S.busy=true;S.err='';render();
-  try{const r=await api('inspecao',{respostas:S.resp});S.busy=false;if(!r.ok){S.err=r.erro;render();return}
+  try{let r=await api('inspecao',{respostas:S.resp});
+   // Geotab recusou (ex.: defeito da inspeção anterior sem reparo): salva a inspeção no Minha Rota e a Logística libera pela Central
+   if(!r.ok&&/geotab/i.test(String(r.erro||''))){const def=[];(S.lista||[]).forEach(sc=>(sc.itens||[]).forEach(it=>{const x=S.resp[it.id];if(x&&x.ok===false)def.push({id:it.id,nome:it.nome,secao:sc.nome,critico:!!it.critico,obs:String(x.obs||'').trim()})}));
+    const l=await rpc('mot_inspecao_local',{p_token:S.token,p_defeitos:def,p_erro:r.erro});if(l&&l.ok){S.busy=false;S.turno=l.turno;S.etapa='pronto';render();scrollTo(0,0);carregaRota();carregaTicket();
+     await confirma('Inspeção salva','O Geotab não aceitou a inspeção deste carro (há defeito de uma inspeção anterior ainda sem reparo). Sua inspeção ficou salva no Minha Rota e a Logística foi avisada. Aguarde a liberação para iniciar a rota.','Entendi');return}}
+   S.busy=false;if(!r.ok){S.err=r.erro;render();return}
    S.turno=r.turno;S.etapa='pronto';toast('Inspeção registrada no Geotab.');if(r.fotos_falharam&&r.fotos_falharam.length)setTimeout(()=>toast('Não consegui enviar a foto de: '+r.fotos_falharam.join(', ')+'. O problema foi registrado mesmo assim.'),3400);render();scrollTo(0,0);carregaRota();carregaTicket()}
   catch(x){S.busy=false;if(x.message!=='sessao'){S.err=x.message;render()}}return}
  if(a==='tiniciar'){const pl=String(S.tplaca||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(!S.placaP&&!/^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/.test(pl)){S.err='Informe a placa do carro no formato ABC1D23 ou ABC1234.';render();return}
