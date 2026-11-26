@@ -202,6 +202,10 @@ async function carregaRota(){S.rotaErr='';carregaCampos();try{const r=await api(
  catch(e){if(e.message==='sessao')return;S.rotaErr=e.message;S.rotas=[]}if(S.etapa==='pronto')render()}
 async function carregaTicket(){try{const r=await rpc('mot_ticket',{p_token:S.token});if(r&&r.ok){S.tk=r;if(S.etapa==='pronto'&&S.aba==='hoje')render()}}catch(e){}}
 setInterval(()=>{if(S.token&&S.etapa==='pronto'&&!document.hidden)carregaTicket()},10*60000);
+/* item crítico na inspeção: o carro fica bloqueado até a Logística liberar pela Central */
+const BLOQ=t=>!!(t&&t.critico&&!t.liberado_em);
+async function verLib(){try{const r=await api('estado');if(r&&r.turno){const era=BLOQ(S.turno);S.turno=r.turno;if(era&&!BLOQ(S.turno)){toast('Carro liberado pela Logística.');return true}return !BLOQ(S.turno)}}catch(e){}return false}
+setInterval(async()=>{if(!S.token||S.etapa!=='pronto'||document.hidden||!BLOQ(S.turno)||S.busy)return;if(await verLib())render()},20000);
 const brl=v=>'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
 function tkHtml(){const k=S.tk;if(!k||!k.cartao)return'';
  const at=new Date(k.atualizado_em),hj=at.toLocaleDateString('sv-SE',{timeZone:'America/Sao_Paulo'})===new Date().toLocaleDateString('sv-SE',{timeZone:'America/Sao_Paulo'});
@@ -388,7 +392,7 @@ function rotaHtml(t){
   const prox=r.status==='started'?vs.find(v=>v.status!=='completed'&&v.status!=='failed'):null;
   let h=`<div class="card rota"><div class="rhead"><h2>Rota${S.rotas.length>1?' '+(ri+1):''} · ${feitas} de ${vs.length} visitas</h2><span class="pill ${st}">${esc(stT)}</span><button type="button" class="aa" data-a="letra" aria-pressed="${LETRA}" title="${LETRA?'Voltar a letra ao normal':'Aumentar a letra'}">${LETRA?'A−':'A+'}</button></div>`;
   if(r.prev_inicio&&r.status!=='finished')h+=`<p class="meta">Previsto: ${esc(r.prev_inicio)}${r.prev_fim?' às '+esc(r.prev_fim):''}</p>`;
-  if(r.status!=='started'&&r.status!=='finished')h+=t.critico?'<p class="msg bad" style="margin:0">Resolva o item crítico com a logística antes de iniciar.</p>':`<button class="btn sun" type="button" data-a="riniciar" data-r="${esc(r.id)}"${S.busy?' disabled':''}>Iniciar rota</button>`;
+  if(r.status!=='started'&&r.status!=='finished')h+=BLOQ(t)?'<p class="msg bad" style="margin:0">Resolva o item crítico com a logística antes de iniciar. Quando a Logística liberar o carro, o botão aparece aqui.</p><button class="btn line" type="button" data-a="verlib"'+(S.busy?' disabled':'')+'>Verificar liberação</button>':`<button class="btn sun" type="button" data-a="riniciar" data-r="${esc(r.id)}"${S.busy?' disabled':''}>Iniciar rota</button>`;
   vs.forEach(v=>{const k=visStatus(v),at=prox&&prox.id===v.id;
    h+=`<div class="vis${at?' atual':''}"><div class="l"><span class="o ${k}">${k==='ok'?'✓':k==='bad'?'✕':v.ordem}</span><span class="t"><b>${esc(v.titulo||'Visita '+v.ordem)}</b><small>${esc(v.endereco)}</small>
     <small>${v.checkout?(k==='ok'?'Realizada':'Não realizada')+' às '+hm(v.checkout):v.checkin?'Chegou às '+hm(v.checkin):[v.prev?'Previsão '+v.prev:'',v.janela?'janela '+v.janela:''].filter(Boolean).join(' · ')}</small></span></div>`;
@@ -467,7 +471,8 @@ function render(){
   document.querySelectorAll('[data-obs]').forEach(t=>t.oninput=()=>{S.resp[t.dataset.obs].obs=t.value;const b=document.querySelector('.foot .btn.sun');if(b)b.disabled=!secCompleta(S.sec)||S.busy});return}
  if(S.etapa==='pronto'){const t=S.turno||{};const def=t.defeitos||[];
   h=topo(PT('Plantão iniciado às ')+hm(t.entrou_em));h+='<main>'+pushCard();
-  if(t.critico)h+=`<div class="msg bad" role="alert"><b>Item crítico com problema.</b> Não saia com o carro antes de falar com a logística.</div>`;
+  if(BLOQ(t))h+=`<div class="msg bad" role="alert"><b>Item crítico com problema.</b> Não saia com o carro antes de falar com a logística. Se a Logística liberar, o app atualiza sozinho.</div>`;
+  else if(t.critico&&t.liberado_em)h+=`<div class="msg ok" role="status"><b>Carro liberado pela Logística</b>${t.liberado_por?' · '+esc(String(t.liberado_por).split(' ')[0]):''} às ${hm(t.liberado_em)}.${t.liberacao_obs?' '+esc(t.liberacao_obs):''} O problema continua registrado para a manutenção.</div>`;
   if(TERC())h+=`<div class="card"><h2>Seu carro</h2><span style="font-size:24px;font-weight:800;letter-spacing:.04em">${esc(t.placa||'')}</span><ul class="dl"><li><span class="chk">✓</span><span><b>${PT('Plantão iniciado às ')}${hm(t.entrou_em)}</b> · carro próprio${S.empresa?' · '+esc(S.empresa):''}</span></li></ul></div>${gpsCard()}`;
   else h+=`<div class="card"><h2>Seu carro</h2><span style="font-size:24px;font-weight:800;letter-spacing:.04em">${esc(t.placa||'')}</span>
    <ul class="dl"><li><span class="chk">✓</span><span><b>Entrou no carro às ${hm(t.entrou_em)}</b> · registrado no Geotab pelo app</span></li>
@@ -586,6 +591,7 @@ document.addEventListener('click',async e=>{
   catch(x){S.busy=false;if(x.message!=='sessao'){S.err=x.message;render()}}return}
  if(a==='tirafoto'){const k=b.dataset.k;if(k==='o')S.oc.foto=null;else if(k==='v')S.co.foto=null;else if(S.resp[k.slice(2)])delete S.resp[k.slice(2)].foto;render();return}
  if(a==='rotarec'){S.rotas=null;render();carregaRota();return}
+ if(a==='verlib'){S.busy=true;render();const ok=await verLib();S.busy=false;render();if(!ok)toast('Ainda não foi liberado. Fale com a logística.');return}
  if(a==='amrec'){S.am.rotas=null;S.am.aberto=true;render();carregaAmanha(true);return}
  if(a==='riniciar'){if(!(await confirma('Iniciar a rota?','O app avisa o SimpliRoute que você saiu para a rota.','Iniciar')))return;await acaoRota('rota_iniciar',{rota:b.dataset.r},'Rota iniciada. Boa rota!');return}
  if(a==='rfinalizar'){const r=(S.rotas||[]).find(x=>x.id===b.dataset.r);const falta=r?r.visitas.filter(v=>v.status!=='completed'&&v.status!=='failed').length:0;
@@ -715,7 +721,7 @@ function endHtml(e){if(!e)return'';const x=partesEnd(e);return `<span class="ven
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-a="letra"]');if(!b)return;e.stopImmediatePropagation();LETRA=!LETRA;try{localStorage.setItem('rm-letra',LETRA?'1':'0')}catch(x){}document.documentElement.classList.toggle('letra',LETRA);render()},true);
 
 /* visualização: só navegar e ver; qualquer ação que muda algo é bloqueada aqui (e também no servidor) */
-const VER_OK=new Set(['amrec','rotarec','recarregar','letra','logout','voltar','vvoltar','gpsver','copia','pushx']);
+const VER_OK=new Set(['verlib','amrec','rotarec','recarregar','letra','logout','voltar','vvoltar','gpsver','copia','pushx']);
 document.addEventListener('click',e=>{if(!S.leitura)return;const b=e.target.closest&&e.target.closest('[data-a]');if(!b||VER_OK.has(b.dataset.a))return;e.preventDefault();e.stopImmediatePropagation();toast('Visualização da Logística: aqui só dá para ver.')},true);
 document.addEventListener('submit',e=>{if(!S.leitura)return;e.preventDefault();e.stopImmediatePropagation();toast('Visualização da Logística: aqui só dá para ver.')},true);
 </script>
