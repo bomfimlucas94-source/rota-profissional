@@ -156,6 +156,7 @@ table.rel td.at{font-weight:800;color:#b4232b}table.rel tr.ex td{background:var(
 .crow .cbox{flex-basis:100%;display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;background:var(--off);border-radius:10px;padding:8px 10px}
 .crow .cbox label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700;color:var(--muted)}
 .pinbox{flex-basis:100%;background:var(--ok-bg);color:#12432a;border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.5;display:flex;flex-wrap:wrap;gap:8px;align-items:center}.pinbox b.pin{font-size:20px;letter-spacing:.2em;color:var(--ink)}
+.rsp{font-size:12.5px;border-radius:8px;padding:4px 9px;margin:4px 0;display:inline-block}.rsp.ag{background:#fff4e0;color:#6a4300}.rsp.ok{background:#e6f4ec;color:#12432a}.rsp.no{background:#fdf1f2;color:#6d1420}
 .mnk{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:10px 0}.mnk div{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px}.mnk b{display:block;font-size:22px}.mnk span{font-size:12px;color:var(--muted)}
 .mnf{flex-wrap:wrap;gap:8px;padding:0 0 10px}.mnf select,.mnf input[type=search]{padding:6px 8px;border:1px solid var(--line);border-radius:8px;font:inherit}.mnc{border:1px solid var(--line);border-radius:12px;margin:0 0 12px;background:#fff;overflow:hidden}.mnh{display:flex;gap:10px;align-items:center;padding:9px 12px;background:var(--off);flex-wrap:wrap}.mnh code{font-size:15px;font-weight:800}.mnh span{font-size:12.5px;color:var(--muted)}.mnh .bd{color:inherit}
 .mnt{min-width:900px}.mnt .cr{color:var(--bad);font-weight:700}.mna{white-space:nowrap}.mna input{padding:4px 6px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:12.5px;margin-right:4px}.mna .btn{margin-right:4px}
@@ -288,7 +289,7 @@ const STN={pendente:'Pendente',questionada:'Aguardando justificativa',aprovada:'
 const LOGI=()=>S.perfil!=='adm_medico'&&S.perfil!=='adm_enfermagem';
 /* administrativo médico / de enfermagem: só a própria equipe (o banco também trava) */
 const AREA=()=>S.perfil==='adm_enfermagem'?'enfermagem':S.perfil==='adm_medico'?'medica':null;
-const ADM_TABS=()=>S.perfil==='adm_medico'?['jan','env','can','evo','fro']:['jan','env','can','fro'];
+const ADM_TABS=()=>S.perfil==='adm_medico'?['sol','jan','env','can','evo','fro']:['sol','jan','env','can','fro'];
 const podeTab=t=>LOGI()||ADM_TABS().includes(t);
 const perfilNome=p=>p==='adm_medico'?'Administrativo médico':p==='adm_enfermagem'?'Administrativo de enfermagem':'Logística';
 const S={token:null,nome:'',perfil:'logistica',itens:null,err:'',busy:false,f:{st:'',esp:'',dia:''},open:{},draft:{},at:0,tab:'sol'};
@@ -315,7 +316,7 @@ const hm=t=>t?new Date(t).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',
 const jan=r=>r.tipo==='horario_fixo'?(r.horario_de||'?')+' – '+(r.horario_ate||'?'):r.tipo==='nao_antes'?'a partir de '+(r.horario_de||'?'):'';
 function sair(msg){if(EMBED){S.token=null;S.itens=null;avisaPainel({tipo:'central-sair',msg:msg||''});render();return}S.trocar=false;PIN_TMP='';try{if(S.token)rpc('eq_sair',{p_token:S.token}).catch(()=>{});sessionStorage.removeItem('lg-token');sessionStorage.removeItem('lg-nome');sessionStorage.removeItem('lg-perfil')}catch(e){}S.token=null;S.perfil='logistica';S.itens=null;S.err=msg||'';render()}
 async function carregar(sil){if(!S.token||S.trocar)return;
- if(!LOGI()){try{const r=await rpc('eq_check',{p_token:S.token});if(!r.ok)return sair('Sua sessão expirou. Entre de novo.');S.nome=r.nome;S.perfil=r.perfil||'adm_medico';try{sessionStorage.setItem('lg-perfil',S.perfil)}catch(x){}if(LOGI())return carregar(sil);if(!podeTab(S.tab))S.tab=ADM_TABS()[0];if(S.tab==='fro'&&!F.d)carregarFrota();if(S.tab==='evo'&&!V.d)carregarEvoC();if(S.tab==='env'&&!E.db)carregarEnv(false);if(S.tab==='jan'&&JN.itens===null)carregarJan(true);if(!K.d||S.tab==='can')carregarCanal(true);render()}catch(e){}return}
+ if(!LOGI()){try{const r=await rpc('eq_check',{p_token:S.token});if(!r.ok)return sair('Sua sessão expirou. Entre de novo.');S.nome=r.nome;S.perfil=r.perfil||'adm_medico';try{sessionStorage.setItem('lg-perfil',S.perfil)}catch(x){}if(LOGI())return carregar(sil);if(!podeTab(S.tab))S.tab=ADM_TABS()[0];if(S.tab==='fro'&&!F.d)carregarFrota();if(S.tab==='evo'&&!V.d)carregarEvoC();if(S.tab==='env'&&!E.db)carregarEnv(false);if(S.tab==='jan'&&JN.itens===null)carregarJan(true);if(!K.d||S.tab==='can')carregarCanal(true);carregarConf(true);render()}catch(e){}return}
  try{const r=await rpc('eq_solicitacoes',{p_token:S.token});if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');throw new Error(r.erro)}
   S.nome=r.nome;S.itens=r.itens||[];S.lists=r.lists||null;S.err='';S.at=Date.now();render()}catch(e){if(!sil){S.err=e.message;render()}}}
 
@@ -359,6 +360,7 @@ function renderEnv(){
  const F=[['','Todas',c.tot],['nao','Não enviadas',c.nao],['mud','Mudaram no SimpliRoute',c.mud],['env','Aguardando ver',c.env],['vis','Vistas',c.vis],['conf','Confirmadas',c.conf],['ped','Com pedido pendente',c.ped],['sem','Médico não cadastrado',c.sem]];
  const prontas=L.filter(x=>x.pid&&(x.e.k==='nao'||x.e.k==='mud'));
  h+=`<div class="bar"><div class="chips" role="group" aria-label="Filtrar rotas">${F.filter(f=>!f[0]||f[2]).map(f=>`<button type="button" data-ef="${f[0]}" class="${E.f===f[0]?'on':''}">${f[1]}<b>${f[2]}</b></button>`).join('')}</div><span class="sp"></span>${prontas.length?`<button class="btn sun sm" type="button" data-a="envtodas"${E.busy?' disabled':''}>Enviar ${prontas.length} ${prontas.length===1?'rota pronta':'rotas prontas'}</button>`:''}</div>`;
+ h+=`<p class="upd">🔄 Rotas já enviadas se atualizam sozinhas no app do profissional a cada 5 minutos (pacientes, ordem, janelas e endereço), com aviso no celular. Se o médico da rota mudar, use <b>Reenviar atualizada</b>.</p>`;
  if(E.semRota)h+=`<p class="upd">${E.semRota} ${E.semRota===1?'visita médica ainda não está':'visitas médicas ainda não estão'} em nenhuma rota no SimpliRoute.</p>`;
  const V=L.filter(x=>!E.f||(E.f==='sem'?!x.pid:E.f==='ped'?x.ped>0:x.e.k===E.f));
  if(!E.f)V.sort((a,b)=>(b.e.d?1:0)-(a.e.d?1:0)); // em Todas, as já enviadas primeiro
@@ -371,7 +373,7 @@ function renderEnv(){
    <div class="inf"><span><b>${pac.length}</b> ${pac.length===1?'paciente':'pacientes'}</span>${ini?`<span>1ª visita <b>${esc(ini.hora)}</b></span>`:''}<span>${esc((r.tipos||[]).map(t=>TPV[t]||t).join(', '))}</span>${r.compartilhada&&r.compartilhada.length?`<span>carro dividido com ${esc(r.compartilhada.join(', '))}</span>`:''}</div>`;
   if(!x.auto){h+=`<div class="pick"><span>${r.skill?`<b>“${esc(r.skill)}”</b> não está cadastrado no Minha Rota. Cadastre em <b>Cadastros › Profissionais</b> com o mesmo nome do SimpliRoute para liberar o envio.`:'Rota sem médico no SimpliRoute: inclua o médico (skill) nas visitas para liberar o envio.'}</span></div>`}
   h+=`<details class="pl"><summary>Ver pacientes na ordem da rota</summary><ol>${pac.map(v=>`<li><i>${v.ordem}</i><em>${esc(v.hora&&v.hora!=='00:00'?v.hora:'—')}</em><span><b>${esc(E.ini?iniciais(v.nome):v.nome)}</b>${v.bairro?' · '+esc(v.bairro):''}</span></li>`).join('')}</ol></details>
-   <div class="ena">${x.pid?`<button class="btn ghost sm" type="button" data-ver="${x.pid}">👁 Ver app</button>`:''}<small>${d?`Enviada por ${esc(d.publicado_por||'painel')} em ${hm(d.publicado_em)}${d.atualizado_em?' · reenviada '+hm(d.atualizado_em):''}`:'Ainda não está no app do profissional.'}</small>${st==='nao'||st==='mud'||(d&&+d.profissional_id!==+x.pid)?`<button class="btn ${st==='nao'?'wine':'sun'} sm" type="button" data-env="${esc(k)}"${x.pid?'':' disabled title="Médico não cadastrado no Minha Rota"'}>${st==='nao'?'Enviar para o Minha Rota':'Reenviar atualizada'}</button>`:'<span class="bd aprovada">Em dia com o SimpliRoute</span>'}</div></article>`});
+   <div class="ena">${x.pid?`<button class="btn ghost sm" type="button" data-ver="${x.pid}">👁 Ver app</button>`:''}<small>${d?`Enviada por ${esc(d.publicado_por||'painel')} em ${hm(d.publicado_em)}${d.auto_em&&d.auto_em===d.atualizado_em?' · atualizada automaticamente '+hm(d.auto_em)+(d.auto_resumo?' ('+esc(d.auto_resumo)+')':''):d.atualizado_em?' · reenviada '+hm(d.atualizado_em):''}`:'Ainda não está no app do profissional.'}</small>${st==='nao'||st==='mud'||(d&&+d.profissional_id!==+x.pid)?`<button class="btn ${st==='nao'?'wine':'sun'} sm" type="button" data-env="${esc(k)}"${x.pid?'':' disabled title="Médico não cadastrado no Minha Rota"'}>${st==='nao'?'Enviar para o Minha Rota':'Reenviar atualizada'}</button>`:'<span class="bd aprovada">Em dia com o SimpliRoute</span>'}</div></article>`});
   h+='</div>'}
  return h+manuais(E.sr.map(chave))}
 function manuais(ks){const M=Object.values(E.db||{}).filter(d=>!ks.includes(d.placa));if(!M.length)return'';
@@ -543,12 +545,12 @@ const isMot=()=>/^mot/.test(S.tab);
 const GRP=[['ped','Pedidos',[['sol','Solicitações']]],['rot','Rotas',[['pla','Planejar o dia'],['env','Envio de rotas'],['aju','Roteador'],['jan','Janelas dos pacientes'],['loc','Localizações'],['evo','Evoluções']]],['fro','Frota',[['fro','Ao vivo'],['motf','Plantões e ocorrências'],['man','Manutenção'],['motc','Ticket Log e pedágios']]],['conv','Conversas',[['can','Canal com a Logística'],['motv','Conversas das rotas']]],['cfg','⚙',[['cad','Equipe e profissionais'],['mota','Acesso dos motoristas']]]];
 const grpDe=t=>(GRP.find(g=>g[2].some(x=>x[0]===t))||GRP[0])[0];
 const SUBULT={};try{Object.assign(SUBULT,JSON.parse(localStorage.getItem('lg-sub')||'{}'))}catch(e){}
-function grpBadge(g){if(g==='ped'){const n=(S.itens||[]).filter(r=>r.status==='pendente').length;return n?`<b>${n}</b>`:''}
+function grpBadge(g){if(g==='ped'){const n=LOGI()?(S.itens||[]).filter(r=>r.status==='pendente').length:cfPend().length;return n?`<b>${n}</b>`:''}
  if(g==='fro'){const n=(M.d&&+M.d.alertas||0)+M.abertas;return n?`<b>${n}</b>`:''}
  if(g==='rot')return LC.pend?`<b>${LC.pend}</b>`:'';
  if(g==='conv')return K.nl?`<b>${K.nl}</b>`:'';return''}
 function navGrupos(){const vis=LOGI()?GRP.filter(g=>g[0]!=='cfg'):GRP.filter(g=>g[0]!=='cfg').map(g=>[g[0],g[1],g[2].filter(x=>podeTab(x[0]))]).filter(g=>g[2].length);const at=grpDe(S.tab);
- return `<nav class="tabs" aria-label="Seções">${vis.map(g=>`<button type="button" data-grp="${g[0]}" class="${at===g[0]?'on':''}">${g[1]}${LOGI()||g[0]==='conv'?grpBadge(g[0]):''}</button>`).join('')}</nav>`}
+ return `<nav class="tabs" aria-label="Seções">${vis.map(g=>`<button type="button" data-grp="${g[0]}" class="${at===g[0]?'on':''}">${g[1]}${LOGI()||g[0]==='conv'||g[0]==='ped'?grpBadge(g[0]):''}</button>`).join('')}</nav>`}
 function subNav(){const at=grpDe(S.tab);let subs=(GRP.find(g=>g[0]===at)||[0,0,[]])[2];if(!LOGI())subs=subs.filter(x=>podeTab(x[0])).map(([k,t])=>[k,k==='env'?'Rotas enviadas':t]);if(subs.length<2)return'';
  return `<div class="subnav" role="tablist" aria-label="${esc((GRP.find(g=>g[0]===at)||[])[1]||'')}">${subs.map(([k,t])=>`<button type="button" role="tab" data-tab="${k}" aria-selected="${S.tab===k}" class="${S.tab===k?'on':''}">${t}${k==='motf'&&((M.d&&+M.d.alertas||0)+M.abertas)?`<b>${(M.d&&+M.d.alertas||0)+M.abertas}</b>`:''}${k==='can'&&K.nl?`<b>${K.nl}</b>`:''}${k==='loc'&&LC.pend?`<b>${LC.pend}</b>`:''}${k==='man'&&M.d&&+M.d.bloqueados?`<b>${M.d.bloqueados}</b>`:''}</button>`).join('')}</div>`}
 function menuCfg(){if(!LOGI())return'';return `<div class="cfgw"><button type="button" class="cfgb${grpDe(S.tab)==='cfg'?' on':''}" data-cfgm="1" aria-haspopup="true" aria-expanded="${!!S.cfgAb}" title="Cadastros e configurações">⚙</button>${S.cfgAb?`<div class="cfgm" role="menu"><button type="button" role="menuitem" data-tab="cad">Equipe e profissionais</button><button type="button" role="menuitem" data-tab="mota">Acesso dos motoristas</button><div class="cfgsep"></div>${pushBtnC()||'<span class="cfgnote">Avisos no aparelho: abra a Central direto no navegador (fora do painel) para ativar.</span>'}</div>`:''}</div>`}
@@ -857,6 +859,38 @@ document.addEventListener('change',e=>{const t=e.target;if(!t||!t.dataset)return
  if(d.plfim){PL.car[d.plfim].fim=t.value;PL.res=null;return}
  if(d.plmot){PL.car[d.plmot].motorista=t.value;return}});
 document.addEventListener('input',e=>{if(e.target&&e.target.id==='plq'){PL.q=e.target.value;const p=e.target.selectionStart;render();const n=$('#plq');if(n){n.focus();n.setSelectionRange(p,p)}}});
+
+/* ===== Confirmação do responsável da equipe (perfil administrativo) antes da aprovação da Logística ===== */
+const CF={itens:null,draft:{},busy:0,err:'',at:0};
+const areaN=r=>/enferm/i.test((r&&r.especialidade)||'')?'equipe de enfermagem':'equipe médica';
+async function carregarConf(sil){if(!S.token||LOGI())return;try{const r=await rpc('eq_sol_resp',{p_token:S.token});if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');CF.err=r.erro;if(!sil)render();return}
+ const ant=JSON.stringify((CF.itens||[]).map(x=>[x.id,x.resp_status,x.status]));CF.itens=r.itens||[];CF.err='';CF.at=Date.now();
+ if(!sil||ant!==JSON.stringify(CF.itens.map(x=>[x.id,x.resp_status,x.status]))){if(!(document.activeElement&&document.activeElement.dataset&&document.activeElement.dataset.cfd))render()}}catch(e){CF.err=e.message;if(!sil)render()}}
+const cfPend=()=>(CF.itens||[]).filter(r=>r.resp_status==='aguardando'&&(r.status==='pendente'||r.status==='questionada'));
+function respLinha(r){if(!r.resp_status)return'';const eq=areaN(r);
+ if(r.resp_status==='aguardando')return `<div class="rsp ag">⏳ Aguardando confirmação da ${eq}</div>`;
+ if(r.resp_status==='confirmado')return `<div class="rsp ok">✔ Confirmado por <b>${esc(r.resp_por||'')}</b> da ${eq} · ${hm(r.resp_em)}${r.resp_obs?` · “${esc(r.resp_obs)}”`:''}</div>`;
+ return `<div class="rsp no">✖ Não confirmado por <b>${esc(r.resp_por||'')}</b> da ${eq} · ${hm(r.resp_em)}${r.resp_obs?` · “${esc(r.resp_obs)}”`:''}</div>`}
+function renderConf(){if(CF.itens===null&&!CF._q){CF._q=1;setTimeout(()=>{CF._q=0;carregarConf()},0)}
+ let h=`<div class="bar"><span class="upd">Pedidos de mudança feitos pelos profissionais no app. Confira e confirme: o pedido segue para a Logística aprovar com o seu nome.</span><span class="sp"></span><span class="upd">${CF.at?'Atualizado às '+new Date(CF.at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+' · a cada 30 s':''}</span></div>`;
+ if(CF.err)h+=`<p class="err" role="alert">${esc(CF.err)}</p>`;
+ if(CF.itens===null)return h+'<div class="empty">Carregando…</div>';
+ const P=cfPend(),R=(CF.itens||[]).filter(r=>!P.includes(r));
+ const item=(r,pend)=>{const j=jan(r);return `<li><div class="lh"><span class="tp">${esc(TIPOS[r.tipo]||r.tipo)}</span>${j?`<span class="jn">${esc(j)}</span>`:''}${pend?'<span class="bd pendente">Para confirmar</span>':`<span class="bd ${r.resp_status==='confirmado'?'aprovada':'recusada'}">${r.resp_status==='confirmado'?'Confirmado':'Não confirmado'}</span>`}${!pend&&r.status!=='pendente'&&r.status!=='questionada'?`<span class="bd ${r.status}">Logística: ${STN[r.status]||r.status}</span>`:''}</div>
+  <div class="pc"><b>${esc(r.profissional)}</b>${r.especialidade?' · '+esc(r.especialidade):''} · rota de ${dm(r.data_rota)}${r.placa?' · <code>'+esc(r.placa)+'</code>':''}</div>
+  <div class="pc">${r.paciente_ordem?esc(r.paciente_ordem)+'. ':''}<b>${esc(r.paciente)}</b>${r.bairro?' · '+esc(r.bairro):''}<small> · pedido ${hm(r.criado_em)}</small></div>
+  ${r.motivo?`<p class="mo">“${esc(r.motivo)}”</p>`:''}${r.justificativa?`<div class="just">💬 <b>Justificativa do profissional:</b> ${esc(r.justificativa)}</div>`:''}
+  ${pend?`<div class="act"><input type="text" data-cfd="${r.id}" maxlength="500" placeholder="Comentário (obrigatório para não confirmar)" value="${esc(CF.draft[r.id]||'')}" aria-label="Comentário sobre o pedido de ${esc(r.paciente)}"><button class="btn wine sm" type="button" data-cfok="${r.id}"${CF.busy?' disabled':''}>Confirmar</button><button class="btn ghost sm" type="button" data-cfno="${r.id}"${CF.busy?' disabled':''}>Não confirmar</button></div>`
+   :`<div class="resp"><span>${r.resp_status==='confirmado'?'Confirmado':'Não confirmado'} por ${esc(r.resp_por||'')} · ${hm(r.resp_em)}${r.resp_obs?' · “'+esc(r.resp_obs)+'”':''}</span>${r.resposta?`<small>Resposta da Logística: ${esc(r.resposta)}</small>`:''}</div>`}</li>`};
+ h+=`<h3 class="day">Para confirmar<span>${P.length}</span></h3>`;
+ h+=P.length?`<div class="grid"><article class="rt"><ol class="ls">${P.map(r=>item(r,true)).join('')}</ol></article></div>`:'<div class="empty">Nenhum pedido esperando a sua confirmação.</div>';
+ if(R.length)h+=`<details><summary class="dica" style="cursor:pointer">Já respondidos nos últimos dias (${R.length})</summary><div class="grid"><article class="rt ok"><ol class="ls">${R.map(r=>item(r,false)).join('')}</ol></article></div></details>`;
+ return h}
+document.addEventListener('input',e=>{const t=e.target;if(t&&t.dataset&&t.dataset.cfd)CF.draft[t.dataset.cfd]=t.value});
+document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.closest('[data-cfok],[data-cfno]');if(!b||CF.busy)return;const ok=!!b.dataset.cfok,id=+(b.dataset.cfok||b.dataset.cfno);const ob=(CF.draft[id]||'').trim();
+ if(!ok&&!ob){toast('Escreva no comentário por que não confirma.');const i=document.querySelector(`[data-cfd="${id}"]`);if(i)i.focus();return}
+ CF.busy=id;render();try{const r=await rpc('eq_sol_resp_confirmar',{p_token:S.token,p_id:id,p_ok:ok,p_obs:ob});CF.busy=0;if(!r.ok){if(r.erro==='sessao')return sair('Sua sessão expirou. Entre de novo.');toast(r.erro||'Não foi possível salvar.');render();return}
+  delete CF.draft[id];toast(ok?'Confirmado. O pedido seguiu para a Logística.':'Registrado como não confirmado. A Logística vai ver o seu comentário.');carregarConf()}catch(x){CF.busy=0;toast(x.message);render()}});
 
 /* ===== Manutenção: defeitos das inspeções por carro, para programar a manutenção; liberação de carro bloqueado por item crítico ===== */
 const MN={itens:null,dias:60,st:'pend',q:'',cr:false,data:{},busy:false,err:'',at:0};
@@ -1387,6 +1421,7 @@ function render(){
  if(isMot()){app.innerHTML=h+renderMot(S.tab)+'</main>';document.querySelectorAll('.conv .cm').forEach(x=>x.scrollTop=x.scrollHeight);document.querySelectorAll('[data-cvd]').forEach(i=>i.oninput=()=>{M.draft[i.dataset.cvd]=i.value});const q=$('#mq');if(q)q.oninput=()=>{M.q=q.value;const p=q.selectionStart;render();const n=$('#mq');n.focus();n.setSelectionRange(p,p)};return}
  if(S.tab==='evo'){app.innerHTML=h+renderEvoC()+'</main>';return}
  if(S.tab==='fro'){app.innerHTML=h+renderFrota()+'</main>';desenhaFrota();return}
+ if(!LOGI()&&S.tab==='sol'){app.innerHTML=h+renderConf()+'</main>';return}
  h+=solVsw();
  if(S.solv==='hist'){h+=renderHist();app.innerHTML=h+'</main>';const q=$('#hq');if(q)q.oninput=()=>{H.q=q.value;const p=q.selectionStart;render();const n=$('#hq');n.focus();n.setSelectionRange(p,p)};const pd=$('#hdias');if(pd)pd.onchange=()=>{H.dias=+pd.value;H.d=null;carregarHist()};return}
  h+=`<div class="bar"><div class="chips" role="group" aria-label="Filtrar por situação">${['pendente','questionada','aprovada','recusada','aplicada'].map(st=>`<button type="button" data-st="${st}" class="${S.f.st===st?'on':''}">${STN[st].replace(' no SimpliRoute','')}<b>${cnt(st)}</b></button>`).join('')}<button type="button" data-st="" class="${!S.f.st?'on':''}">Todas<b>${all.length}</b></button></div>
@@ -1405,11 +1440,11 @@ function render(){
     h+=`<article class="rt${np?'':' ok'}"><button type="button" class="rth" data-tg="${id}" aria-expanded="${ab}"><span class="p"><b>${esc(r0.profissional)}</b>${r0.especialidade?`<small>${esc(r0.especialidade)}</small>`:''}</span><span class="c">${r0.placa?`<code>${esc(r0.placa)}</code>`:''}${r0.motorista?' · '+esc(r0.motorista):''}${r0.rota_confirmada?' · rota confirmada '+esc(r0.rota_confirmada):''}</span><span class="r">${np?`<span class="bd pendente">${np} ${np===1?'pendente':'pendentes'}</span>`:'<span class="bd aprovada">Tudo respondido</span>'}<small>${tot.length} ${tot.length===1?'pedido':'pedidos'}</small><span aria-hidden="true">${ab?'▾':'▸'}</span></span></button>`;
     if(ab){h+='<ol class="ls">';rs.forEach(r=>{const pend=r.status==='pendente',j=jan(r);
      h+=`<li><div class="lh"><span class="tp">${esc(TIPOS[r.tipo]||r.tipo)}</span>${j?`<span class="jn">${esc(j)}</span>`:''}<span class="bd ${r.status}">${STN[r.status]||r.status}</span></div>
-      <div class="pc">${r.paciente_ordem?esc(r.paciente_ordem)+'. ':''}<b>${esc(r.paciente)}</b>${r.bairro?' · '+esc(r.bairro):''}${r.teste?' <em class="tt">teste</em>':''}<small> · pedido ${hm(r.criado_em)}</small></div>${antTxt(r)}${listsTxt(r)}${r.justificativa?`<div class="just">💬 <b>Justificativa do profissional${r.justificado_em?" ("+hm(r.justificado_em)+")":""}:</b> ${esc(r.justificativa)}</div>`:""}
+      <div class="pc">${r.paciente_ordem?esc(r.paciente_ordem)+'. ':''}<b>${esc(r.paciente)}</b>${r.bairro?' · '+esc(r.bairro):''}${r.teste?' <em class="tt">teste</em>':''}<small> · pedido ${hm(r.criado_em)}</small></div>${respLinha(r)}${antTxt(r)}${listsTxt(r)}${r.justificativa?`<div class="just">💬 <b>Justificativa do profissional${r.justificado_em?" ("+hm(r.justificado_em)+")":""}:</b> ${esc(r.justificativa)}</div>`:""}
       ${r.motivo?`<p class="mo">“${esc(r.motivo)}”</p>`:''}
-      ${pend?`<div class="act"><input type="text" data-rs="${r.id}" maxlength="500" placeholder="Resposta ao profissional (obrigatória para recusar)" value="${esc(S.draft[r.id]||'')}" aria-label="Resposta para ${esc(r.paciente)}"><button class="btn wine sm" type="button" data-ok="${r.id}">Aprovar</button><button class="btn ghost sm" type="button" data-no="${r.id}">Recusar</button>${qBtns(r)}</div>`
+      ${pend?`<div class="act"><input type="text" data-rs="${r.id}" maxlength="500" placeholder="Resposta ao profissional (obrigatória para recusar)" value="${esc(S.draft[r.id]||'')}" aria-label="Resposta para ${esc(r.paciente)}"><button class="btn wine sm" type="button" data-ok="${r.id}"${r.resp_status==='aguardando'?` disabled title="Aguardando a confirmação da ${areaN(r)}"`:''}>Aprovar</button><button class="btn ghost sm" type="button" data-no="${r.id}">Recusar</button>${qBtns(r)}</div>`
        :`<div class="resp">${r.resposta?`<span><b>${r.status==='questionada'?'Pergunta enviada ao profissional':'Resposta'}:</b> ${esc(r.resposta)}</span>${r.status==='questionada'?'<span class="lsinfo">Aguardando a justificativa no app. Quando ele responder, o pedido volta para Pendente e você é avisado.</span>':''}`:'<span>Sem resposta escrita.</span>'}<small>${esc(r.respondido_por||'')} · ${hm(r.respondido_em)}</small><div class="act">${r.status==='aprovada'?`<button class="btn ghost sm" type="button" data-ap="${r.id}">Marcar como aplicada</button>`:''}${r.status!=='aplicada'?`<button class="btn ghost sm" type="button" data-re="${r.id}">Reabrir</button>`:''}${r.status==='aprovada'?ajBtn(r):''}</div></div>`}</li>`});
-     h+='</ol>';const pids=rs.filter(r=>r.status==='pendente').map(r=>r.id);if(pids.length>1)h+=`<div class="all"><button class="btn ghost sm" type="button" data-all="${pids.join(',')}">Aprovar os ${pids.length} pendentes desta rota</button></div>`}
+     h+='</ol>';const pids=rs.filter(r=>r.status==='pendente'&&(!r.resp_status||r.resp_status==='confirmado')).map(r=>r.id);if(pids.length>1)h+=`<div class="all"><button class="btn ghost sm" type="button" data-all="${pids.join(',')}">Aprovar os ${pids.length} pendentes desta rota</button></div>`}
     h+='</article>'});h+='</div>'})}
  h+='</main>';app.innerHTML=h}
 async function responder(id,st,resp,lote){const r=await rpc('eq_responder',{p_token:S.token,p_id:+id,p_status:st,p_resposta:resp||''});
