@@ -472,7 +472,7 @@ function render(){
  if(S.etapa==='pronto'){const t=S.turno||{};const def=t.defeitos||[];
   h=topo(PT('Plantão iniciado às ')+hm(t.entrou_em));h+='<main>'+pushCard();
   if(BLOQ(t))h+=`<div class="msg bad" role="alert"><b>Item crítico com problema.</b> Não saia com o carro antes de falar com a logística. Se a Logística liberar, o app atualiza sozinho.</div>`;
-  else if(t.critico&&t.liberado_em)h+=`<div class="msg ok" role="status"><b>Carro liberado pela Logística</b>${t.liberado_por?' · '+esc(String(t.liberado_por).split(' ')[0]):''} às ${hm(t.liberado_em)}.${t.liberacao_obs?' '+esc(t.liberacao_obs):''} O problema continua registrado para a manutenção.</div>`;
+  else if(t.critico&&t.liberado_em)h+=`<div class="msg ok" role="status"><b>Liberado pela Logística</b>${t.liberado_por?' · '+esc(String(t.liberado_por).split(' ')[0]):''} às ${hm(t.liberado_em)}. Pode seguir a rota.${t.liberacao_obs?' '+esc(t.liberacao_obs):''} O problema continua registrado para a manutenção.</div>`;
   if(TERC())h+=`<div class="card"><h2>Seu carro</h2><span style="font-size:24px;font-weight:800;letter-spacing:.04em">${esc(t.placa||'')}</span><ul class="dl"><li><span class="chk">✓</span><span><b>${PT('Plantão iniciado às ')}${hm(t.entrou_em)}</b> · carro próprio${S.empresa?' · '+esc(S.empresa):''}</span></li></ul></div>${gpsCard()}`;
   else h+=`<div class="card"><h2>Seu carro</h2><span style="font-size:24px;font-weight:800;letter-spacing:.04em">${esc(t.placa||'')}</span>
    <ul class="dl"><li><span class="chk">✓</span><span><b>Entrou no carro às ${hm(t.entrou_em)}</b> · registrado no Geotab pelo app</span></li>
