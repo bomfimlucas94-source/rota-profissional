@@ -209,6 +209,7 @@ tr.crit td{background:#fdf1f2}
 .ajt input[type=number]{font:inherit;font-size:13.5px;padding:5px 6px;border:1px solid var(--line);border-radius:8px}
 .larga main,.larga .topin{max-width:none}
 .plp{background:#fff;border:1px solid var(--line);border-left:5px solid var(--wine);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:5px}.plh b{display:block;font-size:13px}.plh small{font-size:11.5px;color:var(--muted)}.plr{display:flex;gap:6px;align-items:center;font-size:12.5px;flex-wrap:wrap}.plr2{display:flex;gap:6px 10px;flex-wrap:wrap;align-items:center;font-size:11.5px;color:var(--muted)}.plr2 label{display:flex;gap:4px;align-items:center}.plr2 input[type=time]{font:inherit;font-size:12px;padding:2px 4px;border:1px solid var(--line);border-radius:6px;width:86px}.plm select{font:inherit;font-size:12px;padding:3px 4px;border:1px solid var(--line);border-radius:6px;max-width:210px}
+.rtwrap.pltw{grid-template-columns:460px minmax(0,1fr)}.plbox{background:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 10px;display:flex;flex-direction:column;gap:7px}.plbox h4{margin:0;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}.plchips{display:flex;flex-wrap:wrap;gap:5px}.plchip{display:inline-flex;gap:5px;align-items:center;border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:12px;font-weight:700;cursor:pointer}.plchip.on{border-color:var(--wine);background:#fbf3f7;color:var(--wine)}.plchip input{margin:0}.plsk{display:flex;flex-direction:column;gap:4px}.plskr{display:flex;justify-content:space-between;gap:8px;align-items:center;border-left:4px solid #888;padding:3px 0 3px 8px;font-size:12px}.plskr b{display:block;font-size:12.5px}.plskr small{color:var(--muted)}.plbar{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.plbar input[type=search]{flex:1;min-width:140px;font:inherit;font-size:12.5px;padding:5px 8px;border:1px solid var(--line);border-radius:8px}.plc{border:1px solid var(--line);border-radius:8px;padding:5px 8px;display:flex;flex-direction:column;gap:4px}.plc.on{border-color:var(--wine);background:#fffafc}.plc .plr small{color:var(--muted);font-size:11px}.pldif{flex:1 1 100%;color:var(--pend);font-size:11px}.rtk.ok{background:var(--ok-bg);color:var(--ok)}
 .plres{position:absolute;left:10px;bottom:10px;z-index:500;background:#fff;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.2);padding:10px 12px;width:330px;max-height:70%;overflow:auto;display:flex;flex-direction:column;gap:7px;font-size:12.5px}.plk{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.plk div{background:var(--off);border-radius:8px;padding:5px;text-align:center}.plk b{display:block;font-size:16px}.plk small{font-size:10.5px;color:var(--muted)}.plrl{display:flex;flex-direction:column;gap:5px}.plrl b{display:block;font-size:12.5px}.plrl small{color:var(--muted);font-size:11.5px}
 .lcw{display:grid;grid-template-columns:330px minmax(0,1fr);gap:14px;align-items:start}.lcl{display:flex;flex-direction:column;gap:8px;max-height:calc(100vh - 230px);overflow:auto}.lci{all:unset;box-sizing:border-box;cursor:pointer;background:#fff;border:1px solid var(--line);border-left:5px solid var(--sun);border-radius:10px;padding:9px 11px;display:flex;flex-direction:column;gap:2px}.lci b{font-size:13.5px}.lci small{font-size:12px;color:var(--muted)}.lci.on{border-color:var(--wine);box-shadow:inset 0 0 0 1px var(--wine)}.lci.aplicada{border-left-color:var(--ok)}.lci.recusada{border-left-color:var(--bad)}.lci:focus-visible{outline:2px solid var(--sun)}
 .lcd{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px}.lcm{position:relative;height:330px;border-radius:10px;overflow:hidden;border:1px solid var(--line)}.lcmapa{position:absolute;inset:0;background:var(--off)}.lcleg{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}.lcleg i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:middle}.lcg{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px;font-size:13px}.lcg span{display:block;font-size:11.5px;color:var(--muted)}
@@ -758,50 +759,59 @@ document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.c
    if(AJ.d.enviada){try{E.data=AJ.data;await carregarEnv(true,true);const x=(E.sr||[]).find(z=>String(z.route_id)===String(R.id));if(x)await enviarRota(chave(x),true);toast('Rota do profissional atualizada no Minha Rota.')}catch(x){toast('A rota mudou no SimpliRoute, mas não consegui reenviar ao profissional: '+x.message)}}
    AJ.sols=[];AJ.busy='';carregar(true);rtCarregar();return ajCarregar()}catch(x){if(x.message!=='sessao')AJ.err=x.message}AJ.busy='';render()}});
 
-/* ===== Planejar o dia: visitas da fila do SimpliRoute → carros com a habilidade do profissional → roteirizar → criar o plano ===== */
-const PL={data:hojeSP(1),eq:'medica',d:null,busy:false,err:'',ver:false,car:{},res:null,map:null,el:null,lay:null,at:0,fit:true};
-async function plApi(acao,extra){const r=await fetch(SB+'/functions/v1/planejar',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({token:S.token,acao,data:PL.data,equipe:PL.eq,...(extra||{})})}).then(r=>r.json());
+/* ===== Planejar o dia: todas as visitas fora de rota → carros com habilidade → roteirizar (cada visita vai para o carro com a mesma habilidade) → criar o plano ===== */
+const PL={data:hojeSP(1),d:null,busy:false,err:'',ja:false,tipos:new Set(['med','enf','log','ter','sem']),car:{},res:null,map:null,el:null,lay:null,at:0,fit:true,q:'',soMarc:false};
+const PL_TIPO=t=>t==='med_visit'?'med':/^(enf_visit|avaliacao|admissao)/.test(t)?'enf':/(_log|pront_col)$/.test(t)?'log':/^(fono|fisio)/.test(t)?'ter':'sem';
+const nz=t=>String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+const PL_TNOME={med:'Visita médica',enf:'Enfermagem',log:'Logística',ter:'Fono / fisio',sem:'Sem tipo'};
+async function plApi(acao,extra){const r=await fetch(SB+'/functions/v1/planejar',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({token:S.token,acao,data:PL.data,...(extra||{})})}).then(r=>r.json());
  if(!r.ok&&r.erro==='sessao'){sair('Sua sessão expirou. Entre de novo.');throw new Error('sessao')}return r}
+const plVis=()=>(PL.d?PL.d.visitas:[]).filter(v=>(PL.ja||!v.ja)&&PL.tipos.has(PL_TIPO(v.tipo)));
+const plHab=id=>PL.d&&PL.d.habilidades.find(h=>h.id===+id);
+const plHabNome=id=>{const h=plHab(id);return h?h.nome:'Sem habilidade'};
+function plAuto(){const D=PL.d;if(!D)return;const quer=new Set();plVis().forEach(v=>v.skills.forEach(s=>quer.add(s)));
+ D.carros.forEach(c=>{const s=c.skills.find(x=>quer.has(x));const a=PL.car[c.id]||{inicio:c.turno[0]||'07:30',fim:c.turno[1]||'17:00',motorista:c.motorista||''};
+  PL.car[c.id]={...a,on:!!s&&!c.rotas_no_dia,skill:s?String(s):(c.skills[0]?String(c.skills[0]):'')}})}
 async function plCarregar(){PL.busy='carregar';PL.err='';PL.res=null;render();
- try{const r=await plApi('carregar');if(!r.ok)throw new Error(r.erro||'Não consegui ler o SimpliRoute.');PL.d=r;PL.at=Date.now();PL.fit=true;
-  const ant=PL.car;PL.car={};r.carros.forEach(c=>{const tem=c.skills.some(s=>r.profs.some(p=>p.id===s)&&r.visitas.some(v=>!v.ja&&v.skills.includes(s)));const a=ant[c.id];PL.car[c.id]=a||{on:tem&&!c.rotas_no_dia,inicio:c.turno[0]||'07:30',fim:c.turno[1]||'17:00',motorista:c.motorista||''}})}
+ try{const r=await plApi('carregar');if(!r.ok)throw new Error(r.erro||'Não consegui ler o SimpliRoute.');PL.d=r;PL.at=Date.now();PL.fit=true;PL.car={};plAuto()}
  catch(e){if(e.message!=='sessao')PL.err=e.message}PL.busy=false;render()}
-const plNome=id=>{const p=PL.d&&PL.d.profs.find(x=>x.id===id);return p?p.nome:'Sem profissional'};
-const plCarroDe=sid=>PL.d?PL.d.carros.find(c=>c.skills.includes(sid)):null;
-const plVisitas=()=>(PL.d?PL.d.visitas:[]).filter(v=>PL.ver||!v.ja);
 const PL_CORES=['#2f5fd0','#c2362f','#2e7d32','#d4700a','#7b3fa0','#13838a','#b8326f','#5b6b00','#8a5a00','#1f4e79','#a23e00','#4a2a8a','#00796b','#6d4c41'];
-const plCor=sid=>{const i=PL.d?PL.d.profs.findIndex(p=>p.id===sid):0;return PL_CORES[(i<0?0:i)%PL_CORES.length]};
+function plCor(sid){if(!sid)return '#888';const L=[...new Set((PL.d?PL.d.visitas:[]).flatMap(v=>v.skills))];const i=L.indexOf(+sid);return PL_CORES[(i<0?0:i)%PL_CORES.length]}
 function renderPla(){if(!PL.d&&!PL.busy&&!PL.err&&!PL._q){PL._q=1;setTimeout(()=>{PL._q=0;plCarregar()},0)}
- const d=PL.d,vs=plVisitas(),novas=d?d.visitas.filter(v=>!v.ja):[];
- let h=`<div class="bar rtbar"><label class="ck">Dia <select id="pldia">${[1,2,3,4,5,6,7].map(k=>{const s=hojeSP(k);return `<option value="${s}"${PL.data===s?' selected':''}>${k===1?'Amanhã':dExt(s)} · ${dm(s)}</option>`}).join('')}</select></label>
-  <div class="rteq" role="tablist" aria-label="Equipe">${[['medica','Visita médica'],['enfermagem','Visita de enfermagem']].map(([k,t])=>`<button type="button" role="tab" data-pleq="${k}" aria-selected="${PL.eq===k}" class="${PL.eq===k?'on':''}">${t}</button>`).join('')}</div>
-  <span class="sp"></span><span class="upd">${PL.busy==='carregar'?'Lendo o SimpliRoute…':d?`${novas.length} visita(s) na fila · ${d.ja_roteirizadas} já em rota`:''}</span>
+ const d=PL.d,vs=plVis(),marc=d?d.carros.filter(c=>(PL.car[c.id]||{}).on):[];
+ let h=`<div class="bar rtbar"><label class="ck">Dia <select id="pldia">${[0,1,2,3,4,5,6,7].map(k=>{const s=hojeSP(k);return `<option value="${s}"${PL.data===s?' selected':''}>${k===0?'Hoje':k===1?'Amanhã':dExt(s)} · ${dm(s)}</option>`}).join('')}</select></label>
+  <span class="sp"></span><span class="upd">${PL.busy==='carregar'?'Lendo o SimpliRoute…':d?`${vs.length} visita(s) para roteirizar · ${marc.length} carro(s) marcado(s)`:''}</span>
   <button class="btn ghost sm" type="button" data-pl="atualizar"${PL.busy?' disabled':''}>Atualizar</button>
-  <button class="btn sun sm" type="button" data-pl="roteirizar"${PL.busy||!d||!novas.length?' disabled':''}>${PL.busy==='roteirizar'?'Roteirizando…':'✨ Roteirizar'}</button>
+  <button class="btn sun sm" type="button" data-pl="roteirizar"${PL.busy||!d||!vs.length||!marc.length?' disabled':''}>${PL.busy==='roteirizar'?'Roteirizando…':'✨ Roteirizar'}</button>
   <button class="btn wine sm" type="button" data-pl="criar"${PL.busy||!PL.res||!PL.res.rotas.length?' disabled':''}>${PL.busy==='criar'?'Criando…':'Criar plano no SimpliRoute'}</button></div>`;
  if(PL.err)h+=`<p class="err" role="alert">${esc(PL.err)}</p>`;
- h+=`<div class="rtwrap"><section class="rtrs pls" aria-label="Profissionais, carros e visitas">`;
- if(!d)h+=`<div class="empty">${PL.busy?'Lendo as visitas do dia no SimpliRoute…':'—'}</div>`;
+ h+=`<div class="rtwrap pltw"><section class="rtrs pls" aria-label="Visitas e carros">`;
+ if(!d)h+=`<div class="empty">${PL.busy?'Lendo as visitas fora de rota no SimpliRoute…':'—'}</div>`;
  else{
-  const porProf=new Map();novas.forEach(v=>{const k=v.skills[0]||0;porProf.set(k,(porProf.get(k)||0)+1)});
-  h+=`<p class="rtres" style="margin:0">Cada visita só entra no carro que tem a habilidade do profissional dela.</p>`;
-  if(!novas.length)h+=`<div class="empty">Nenhuma visita de ${PL.eq==='medica'?'visita médica':'enfermagem'} na fila do SimpliRoute para ${dm(PL.data)}${d.ja_roteirizadas?` (${d.ja_roteirizadas} já estão em rota)`:''}.</div>`;
-  d.profs.slice().sort((a,b)=>(porProf.get(b.id)||0)-(porProf.get(a.id)||0)).forEach(p=>{const n=porProf.get(p.id)||0;const c=plCarroDe(p.id),cf=c?PL.car[c.id]:null;
-   h+=`<div class="plp" style="border-left-color:${plCor(p.id)}"><div class="plh"><b>${esc(p.nome)}</b><small>${n} visita(s)${p.base&&p.base.endereco?' · sai de '+esc(String(p.base.endereco).split(' - ')[0]):''}</small></div>`;
-   if(c){h+=`<label class="plr"><input type="checkbox" data-plon="${c.id}"${cf.on?' checked':''}> <b>${esc(c.nome)}</b>${c.rotas_no_dia?' <span class="rtk bad">já tem rota no dia</span>':''}</label>
-     <div class="plr2"><label>Saída <input type="time" data-plini="${c.id}" value="${esc(cf.inicio)}"></label><label>Até <input type="time" data-plfim="${c.id}" value="${esc(cf.fim)}"></label>
-     <label class="plm">Motorista <select data-plmot="${c.id}"><option value="">— depois —</option>${d.motoristas.map(m=>`<option value="${m.id}"${String(cf.motorista)===String(m.id)?' selected':''}>${esc(m.nome)}</option>`).join('')}</select></label></div>`}
-   else{const livres=d.carros.filter(x=>!x.skills.some(s=>porProf.get(s)));
-    h+=`<div class="plr2"><span class="rtk bad">nenhum carro com esta habilidade</span><label class="plm">Carro <select data-plhab="${p.id}"><option value="">Escolher carro…</option>${livres.map(x=>`<option value="${x.id}">${esc(x.nome)}${x.skill_nomes.length?' (hoje: '+esc(x.skill_nomes.join(', '))+')':''}</option>`).join('')}</select></label></div>`}
-   h+='</div>'});
-  if(porProf.get(0))h+=`<div class="plp" style="border-left-color:#999"><div class="plh"><b>Sem profissional</b><small>${porProf.get(0)} visita(s) sem habilidade: não entram em nenhum carro</small></div></div>`;
-  h+=`<label class="ck" style="margin:4px 2px"><input type="checkbox" id="plver"${PL.ver?' checked':''}> Mostrar no mapa as que já estão em rota</label>`}
+  /* 1. visitas fora de rota */
+  const fila=d.visitas.filter(v=>PL.ja||!v.ja),nJa=d.visitas.filter(v=>v.ja).length;const cnt={};fila.forEach(v=>{const t=PL_TIPO(v.tipo);cnt[t]=(cnt[t]||0)+1});
+  h+=`<div class="plbox"><h4>1 · Visitas fora de rota em ${dm(PL.data)}</h4><div class="plchips">${Object.keys(PL_TNOME).filter(t=>cnt[t]).map(t=>`<label class="plchip${PL.tipos.has(t)?' on':''}"><input type="checkbox" data-pltipo="${t}"${PL.tipos.has(t)?' checked':''}>${PL_TNOME[t]} <b>${cnt[t]}</b></label>`).join('')||'<span class="meta">Nenhuma visita fora de rota.</span>'}</div>
+   ${nJa?`<label class="ck" style="font-size:12px"><input type="checkbox" id="plja"${PL.ja?' checked':''}> Incluir as ${nJa} que já têm cópia em rota (já roteirizadas pelo SimpliRoute)</label>`:''}`;
+  const porSk=new Map();vs.forEach(v=>{const k=v.skills.length?v.skills.join(','):'0';porSk.set(k,(porSk.get(k)||0)+1)});
+  const carroCom=sid=>d.carros.filter(c=>(PL.car[c.id]||{}).on&&String((PL.car[c.id]||{}).skill)===String(sid));
+  h+=`<div class="plsk">${[...porSk.entries()].sort((a,b)=>b[1]-a[1]).map(([k,n])=>{const sid=k==='0'?'':k.split(',')[0];const cs=sid?carroCom(sid):[];
+   return `<div class="plskr" style="border-left-color:${plCor(sid)}"><span><b>${sid?esc(k.split(',').map(plHabNome).join(' + ')):'Sem habilidade'}</b><small>${n} visita(s)</small></span>${sid?(cs.length?`<span class="rtk ok">🚗 ${esc(cs.map(c=>c.nome).join(', '))}</span>`:`<span class="rtk bad">nenhum carro marcado com esta habilidade</span>`):'<span class="rtk">vai para qualquer carro marcado</span>'}</div>`}).join('')}</div></div>`;
+  /* 2. carros */
+  const q=nz(PL.q);const lista=d.carros.filter(c=>(!PL.soMarc||(PL.car[c.id]||{}).on)&&(!q||nz(c.nome+' '+c.grupo+' '+c.skills.map(plHabNome).join(' ')).includes(q)));
+  h+=`<div class="plbox"><h4>2 · Carros e habilidades</h4><div class="plbar"><input id="plq" type="search" placeholder="Buscar carro ou habilidade" value="${esc(PL.q)}"><label class="ck" style="font-size:12px"><input type="checkbox" id="plso"${PL.soMarc?' checked':''}> só marcados</label><button class="btn ghost sm" type="button" data-pl="auto" title="Marca os carros que já têm a habilidade das visitas">Marcar automático</button></div>
+   <datalist id="plhabs">${d.habilidades.map(x=>`<option value="${esc(x.nome)}">`).join('')}</datalist>
+   ${lista.map(c=>{const cf=PL.car[c.id]||{};const sk=cf.skill?plHab(cf.skill):null;const mud=String(cf.skill||'')!==String(c.skills[0]||'');
+    return `<div class="plc${cf.on?' on':''}"><label class="plr"><input type="checkbox" data-plon="${c.id}"${cf.on?' checked':''}> <b>${esc(c.nome)}</b><small>${esc(c.grupo)}</small>${c.rotas_no_dia?' <span class="rtk bad">já tem rota no dia</span>':''}</label>
+     ${cf.on?`<div class="plr2"><label class="plm" style="flex:1 1 100%">Habilidade <select data-plsk="${c.id}" style="max-width:none;flex:1"><option value="">— sem habilidade —</option>${d.habilidades.map(x=>`<option value="${x.id}"${String(cf.skill)===String(x.id)?' selected':''}>${esc(x.nome)}</option>`).join('')}</select></label>
+      ${mud?`<small class="pldif">${c.skills.length?'hoje no SimpliRoute: '+esc(c.skills.map(plHabNome).join(', ')):'sem habilidade hoje'} · será gravada ao criar o plano${sk&&sk.base?' · sai da casa do profissional':''}</small>`:''}
+      <label>Saída <input type="time" data-plini="${c.id}" value="${esc(cf.inicio)}"></label><label>Até <input type="time" data-plfim="${c.id}" value="${esc(cf.fim)}"></label>
+      <label class="plm">Motorista <select data-plmot="${c.id}"><option value="">— depois —</option>${d.motoristas.map(m=>`<option value="${m.id}"${String(cf.motorista)===String(m.id)?' selected':''}>${esc(m.nome)}</option>`).join('')}</select></label></div>`:''}</div>`}).join('')}</div>`}
  h+='</section>';
  h+=`<section class="rtm" aria-label="Mapa do plano"><div id="plmapa-slot" class="rtmapa"></div>`;
  if(PL.res){const R=PL.res,nv=R.rotas.reduce((a,r)=>a+r.visitas.length,0),fora=R.sem_encaixe||[];
   h+=`<div class="plres"><b>Resultado · ${dm(PL.data)}</b><div class="plk"><div><b>${R.rotas.length}</b><small>rotas</small></div><div><b>${nv}</b><small>visitas</small></div><div><b class="${fora.length?'ajbad':''}">${fora.length}</b><small>sem encaixe</small></div></div>
-   <div class="plrl">${R.rotas.map(r=>{const c=d.carros.find(x=>x.id===r.carro)||{nome:r.carro,skills:[]};const sid=c.skills[0];return `<div style="border-left:4px solid ${plCor(sid)};padding-left:7px"><b>${esc(plNome(sid))}</b><small>${esc(c.nome)} · ${r.visitas.length} visitas · ${esc(r.saida)}–${esc(r.volta)}</small></div>`}).join('')}</div>
-   ${fora.length?`<p class="ajbad" style="margin:0;font-size:12px">Sem encaixe: ${fora.map(id=>{const v=d.visitas.find(x=>x.id===id);return v?esc(v.titulo)+(v.de||v.ate?' ('+esc(v.de||'…')+'–'+esc(v.ate||'…')+')':''):id}).join(', ')}. Confira a janela, o horário do carro ou se o profissional tem carro.</p>`:''}
+   <div class="plrl">${R.rotas.map(r=>{const c=d.carros.find(x=>x.id===r.carro)||{nome:r.carro};const sid=(r.skills||[])[0];return `<div style="border-left:4px solid ${plCor(sid)};padding-left:7px"><b>${esc(sid?plHabNome(sid):'Sem habilidade')}</b><small>${esc(c.nome)} · ${r.visitas.length} visitas · ${esc(r.saida)}–${esc(r.volta)}</small></div>`}).join('')}</div>
+   ${fora.length?`<p class="ajbad" style="margin:0;font-size:12px">Sem encaixe (${fora.length}): ${fora.slice(0,12).map(id=>{const v=d.visitas.find(x=>x.id===id);return v?esc(v.titulo)+' · '+esc(v.skills.length?plHabNome(v.skills[0]):'sem habilidade'):id}).join('; ')}${fora.length>12?'…':''}. Confira se há carro marcado com a habilidade, a janela e o horário do carro.</p>`:''}
    <small style="color:var(--muted)">Nada foi gravado ainda. Confira no mapa e toque em <b>Criar plano no SimpliRoute</b>.</small></div>`}
  h+='</section></div>';return h}
 async function plDesenha(){const slot=document.getElementById('plmapa-slot');if(slot){if(!PL.el){PL.el=document.createElement('div');PL.el.className='rtmapa'}slot.replaceWith(PL.el)}else if(!PL.el||!document.body.contains(PL.el))return;
@@ -809,37 +819,39 @@ async function plDesenha(){const slot=document.getElementById('plmapa-slot');if(
  if(!PL.map){PL.map=L.map(PL.el,{scrollWheelZoom:true});L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap'}).addTo(PL.map);PL.map.setView([-22.93,-43.3],10)}
  PL.map.invalidateSize(false);if(PL.lay)PL.lay.remove();PL.lay=L.layerGroup().addTo(PL.map);const d=PL.d;if(!d)return;const pts=[];
  const pin=(cor,txt,sz,op)=>L.divIcon({className:'',html:`<div class="rtpin" style="background:${cor};width:${sz}px;height:${sz}px;opacity:${op}">${txt}</div>`,iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]});
- try{if(PL.res){PL.res.rotas.forEach(r=>{const c=d.carros.find(x=>x.id===r.carro);if(!c)return;const cor=plCor(c.skills[0]);const ll=[[c.inicio.lat,c.inicio.lng]];
-   L.marker([c.inicio.lat,c.inicio.lng],{icon:pin(cor,'⌂',22,1)}).bindTooltip(`<b>${esc(plNome(c.skills[0]))}</b><br>${esc(c.nome)} · saída ${esc(r.saida)}`).addTo(PL.lay);
+ try{if(PL.res){PL.res.rotas.forEach(r=>{const c=d.carros.find(x=>x.id===r.carro)||{nome:r.carro};const sid=(r.skills||[])[0];const cor=plCor(sid);const ini=r.ini||c.inicio,fim=r.fim||c.fim;const ll=[[ini.lat,ini.lng]];
+   L.marker([ini.lat,ini.lng],{icon:pin(cor,'⌂',22,1)}).bindTooltip(`<b>${esc(sid?plHabNome(sid):'Sem habilidade')}</b><br>${esc(c.nome)} · saída ${esc(r.saida)}`).addTo(PL.lay);
    r.visitas.forEach((x,i)=>{const v=d.visitas.find(y=>y.id===x.id);if(!v||!isFinite(v.lat))return;ll.push([v.lat,v.lng]);pts.push([v.lat,v.lng]);
-    L.marker([v.lat,v.lng],{icon:pin(cor,i+1,22,1)}).bindTooltip(`<b>${esc(plNome(c.skills[0]))}</b><br>${i+1}ª ${esc(v.titulo)}${v.bairro?' · '+esc(v.bairro):''}<br>chega ${esc(x.chegada)}${v.de||v.ate?' · janela '+esc(v.de||'…')+'–'+esc(v.ate||'…'):''}`).addTo(PL.lay)});
-   ll.push([c.fim.lat,c.fim.lng]);L.polyline(ll,{noClip:true,color:cor,weight:3,opacity:.75}).addTo(PL.lay)});
+    L.marker([v.lat,v.lng],{icon:pin(cor,i+1,22,1)}).bindTooltip(`<b>${esc(c.nome)}</b><br>${i+1}ª ${esc(v.titulo)}${v.bairro?' · '+esc(v.bairro):''}<br>chega ${esc(x.chegada)}${v.de||v.ate?' · janela '+esc(v.de||'…')+'–'+esc(v.ate||'…'):''}`).addTo(PL.lay)});
+   ll.push([fim.lat,fim.lng]);L.polyline(ll,{noClip:true,color:cor,weight:3,opacity:.75}).addTo(PL.lay)});
    (PL.res.sem_encaixe||[]).forEach(id=>{const v=d.visitas.find(y=>y.id===id);if(v&&isFinite(v.lat))L.marker([v.lat,v.lng],{icon:pin('#111','!',22,1)}).bindTooltip(`Sem encaixe: ${esc(v.titulo)}`).addTo(PL.lay)})}
-  else plVisitas().forEach(v=>{if(!isFinite(v.lat))return;const sid=v.skills[0];pts.push([v.lat,v.lng]);
-   L.marker([v.lat,v.lng],{icon:pin(sid?plCor(sid):'#999','',14,v.ja?.35:1)}).bindTooltip(`<b>${esc(plNome(sid))}</b><br>${esc(v.titulo)}${v.bairro?' · '+esc(v.bairro):''}${v.de||v.ate?'<br>janela '+esc(v.de||'…')+'–'+esc(v.ate||'…'):''}${v.ja?'<br>já está em rota':''}`).addTo(PL.lay)})}
+  else plVis().forEach(v=>{if(!isFinite(v.lat)||!v.lat)return;const sid=v.skills[0];pts.push([v.lat,v.lng]);
+   L.marker([v.lat,v.lng],{icon:pin(plCor(sid),'',14,v.ja?.4:1)}).bindTooltip(`<b>${esc(sid?plHabNome(sid):'Sem habilidade')}</b> · ${esc(PL_TNOME[PL_TIPO(v.tipo)])}<br>${esc(v.titulo)}${v.bairro?' · '+esc(v.bairro):''}${v.de||v.ate?'<br>janela '+esc(v.de||'…')+'–'+esc(v.ate||'…'):''}`).addTo(PL.lay)})}
  catch(e){console.warn('mapa do plano',e)}
  if(PL.fit&&pts.length){PL.fit=false;const f=()=>{PL.map.invalidateSize(false);PL.map.fitBounds(pts,{padding:[40,40],maxZoom:14})};f();setTimeout(f,60)}}
-document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.closest('[data-pl],[data-pleq]');if(!b)return;const d=b.dataset;
- if(d.pleq){if(PL.eq===d.pleq)return;PL.eq=d.pleq;PL.d=null;PL.res=null;render();plCarregar();return}
- if(d.pl==='atualizar'){plCarregar();return}
- if(d.pl==='roteirizar'){const D=PL.d;const carros=D.carros.filter(c=>PL.car[c.id]&&PL.car[c.id].on).map(c=>({id:c.id,inicio:PL.car[c.id].inicio,fim:PL.car[c.id].fim}));
+document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.closest('[data-pl]');if(!b)return;const a=b.dataset.pl;
+ if(a==='atualizar'){plCarregar();return}
+ if(a==='auto'){plAuto();PL.res=null;render();return}
+ if(a==='roteirizar'){const D=PL.d;const carros=D.carros.filter(c=>(PL.car[c.id]||{}).on).map(c=>({id:c.id,skills:PL.car[c.id].skill?[+PL.car[c.id].skill]:[],inicio:PL.car[c.id].inicio,fim:PL.car[c.id].fim}));
   if(!carros.length){toast('Marque ao menos um carro.');return}
-  PL.busy='roteirizar';PL.err='';render();try{const r=await plApi('otimizar',{visitas:D.visitas.filter(v=>!v.ja).map(v=>v.id),carros});if(!r.ok)throw new Error(r.erro);PL.res=r;PL.fit=true}catch(x){if(x.message!=='sessao')PL.err=x.message}PL.busy=false;render();return}
- if(d.pl==='criar'){const R=PL.res;if(!R)return;const nv=R.rotas.reduce((a,r)=>a+r.visitas.length,0);
-  if(!confirm(`Criar no SimpliRoute o plano de ${dm(PL.data)} com ${R.rotas.length} rota(s) e ${nv} visita(s)?${(R.sem_encaixe||[]).length?`\n\n${R.sem_encaixe.length} visita(s) ficam de fora (sem encaixe).`:''}`))return;
+  PL.busy='roteirizar';PL.err='';render();try{const r=await plApi('otimizar',{visitas:plVis().map(v=>v.id),carros});if(!r.ok)throw new Error(r.erro);PL.res=r;PL.fit=true}catch(x){if(x.message!=='sessao')PL.err=x.message}PL.busy=false;render();return}
+ if(a==='criar'){const R=PL.res;if(!R)return;const nv=R.rotas.reduce((s,r)=>s+r.visitas.length,0);
+  const muda=R.rotas.filter(r=>{const c=PL.d.carros.find(x=>x.id===r.carro);return c&&String((r.skills||[])[0]||'')!==String(c.skills[0]||'')}).length;
+  if(!confirm(`Criar no SimpliRoute o plano de ${dm(PL.data)} com ${R.rotas.length} rota(s) e ${nv} visita(s)?${muda?`\n\n${muda} carro(s) vão ter a habilidade trocada no SimpliRoute.`:''}${(R.sem_encaixe||[]).length?`\n\n${R.sem_encaixe.length} visita(s) ficam de fora (sem encaixe).`:''}`))return;
   PL.busy='criar';PL.err='';render();
-  try{const r=await plApi('criar',{rotas:R.rotas.map(x=>({carro:x.carro,saida:x.saida,volta:x.volta,motorista:(PL.car[x.carro]||{}).motorista||'',visitas:x.visitas}))});if(!r.ok)throw new Error(r.erro);
-   toast(`Plano criado no SimpliRoute: ${r.rotas} rota(s), ${r.visitas} visita(s). Veja e ajuste no Roteador.`);PL.res=null;PL.busy=false;RT.data=PL.data;RT.plano=null;plCarregar();return}catch(x){if(x.message!=='sessao')PL.err=x.message}PL.busy=false;render();return}});
-document.addEventListener('change',async e=>{const t=e.target;if(!t||!t.dataset)return;const d=t.dataset;
+  try{const r=await plApi('criar',{rotas:R.rotas.map(x=>({carro:x.carro,skills:x.skills,saida:x.saida,volta:x.volta,motorista:(PL.car[x.carro]||{}).motorista||'',visitas:x.visitas}))});if(!r.ok)throw new Error(r.erro);
+   toast(`Plano criado no SimpliRoute: ${r.rotas} rota(s), ${r.visitas} visita(s)${r.habilidades_gravadas?` · ${r.habilidades_gravadas} carro(s) com habilidade nova`:''}. Ajuste no Roteador se precisar.`);PL.res=null;PL.busy=false;RT.data=PL.data;RT.plano=null;plCarregar();return}catch(x){if(x.message!=='sessao')PL.err=x.message}PL.busy=false;render();return}});
+document.addEventListener('change',e=>{const t=e.target;if(!t||!t.dataset)return;const d=t.dataset;
  if(t.id==='pldia'){PL.data=t.value;PL.d=null;PL.res=null;PL.car={};render();plCarregar();return}
- if(t.id==='plver'){PL.ver=t.checked;PL.fit=true;render();return}
- if(d.plon){PL.car[d.plon].on=t.checked;PL.res=null;render();return}
+ if(t.id==='plja'){PL.ja=t.checked;PL.res=null;PL.fit=true;render();return}
+ if(t.id==='plso'){PL.soMarc=t.checked;render();return}
+ if(d.pltipo){t.checked?PL.tipos.add(d.pltipo):PL.tipos.delete(d.pltipo);PL.res=null;PL.fit=true;render();return}
+ if(d.plon){const c=PL.d.carros.find(x=>String(x.id)===d.plon);PL.car[d.plon]=PL.car[d.plon]||{inicio:c.turno[0]||'07:30',fim:c.turno[1]||'17:00',motorista:'',skill:c.skills[0]?String(c.skills[0]):''};PL.car[d.plon].on=t.checked;PL.res=null;render();return}
+ if(d.plsk){PL.car[d.plsk].skill=t.value;PL.res=null;render();return}
  if(d.plini){PL.car[d.plini].inicio=t.value;PL.res=null;return}
  if(d.plfim){PL.car[d.plfim].fim=t.value;PL.res=null;return}
- if(d.plmot){PL.car[d.plmot].motorista=t.value;return}
- if(d.plhab&&t.value){const c=PL.d.carros.find(x=>String(x.id)===t.value);const p=PL.d.profs.find(x=>String(x.id)===d.plhab);
-  if(!confirm(`Gravar no SimpliRoute a habilidade "${p?p.nome:''}" no carro ${c?c.nome:''}?${c&&c.skill_nomes.length?`\n\nO carro deixa de ser de ${c.skill_nomes.join(', ')}.`:''}${p&&p.base?'\nA saída e a volta passam a ser na casa do profissional.':'\nA casa do profissional ainda não está cadastrada: a saída continua a do carro.'}`)){t.value='';return}
-  PL.busy='hab';render();try{const r=await plApi('habilidade',{veiculo:+t.value,skill:+d.plhab});if(!r.ok)throw new Error(r.erro);toast('Habilidade gravada no carro.');PL.busy=false;plCarregar()}catch(x){PL.busy=false;if(x.message!=='sessao'){PL.err=x.message;render()}}}});
+ if(d.plmot){PL.car[d.plmot].motorista=t.value;return}});
+document.addEventListener('input',e=>{if(e.target&&e.target.id==='plq'){PL.q=e.target.value;const p=e.target.selectionStart;render();const n=$('#plq');if(n){n.focus();n.setSelectionRange(p,p)}}});
 
 /* ===== Localizações: casa do paciente enviada pelo motorista; a Logística confere e aplica no SimpliRoute ===== */
 const LC={st:'pendente',itens:null,pend:0,sel:null,busy:false,err:'',proximas:true,map:null,el:null,lay:null,at:0};
