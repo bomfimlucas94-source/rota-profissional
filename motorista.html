@@ -169,6 +169,7 @@ function sair(msg){if(S.leitura){try{sessionStorage.removeItem('rm-ver');rpc('mo
 function gps1(o,ms){return new Promise(ok=>{if(!navigator.geolocation)return ok(null);let fim=false;const t=setTimeout(()=>{if(!fim){fim=true;ok(null)}},ms);
  navigator.geolocation.getCurrentPosition(p=>{if(!fim){fim=true;clearTimeout(t);ok({lat:p.coords.latitude,lng:p.coords.longitude,prec:Math.round(p.coords.accuracy||0)||null})}},()=>{if(!fim){fim=true;clearTimeout(t);ok(null)}},o)})}
 /* sem GPS (ex.: estacionamento subterrâneo): tenta a posição por Wi-Fi/rede e, por último, a última posição guardada (até 15 min) */
+function distM(a,b,c,d){const R=6371000,r=x=>x*Math.PI/180,dl=r(c-a),dg=r(d-b),h=Math.sin(dl/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(dg/2)**2;return Math.round(2*R*Math.asin(Math.sqrt(h)))}
 async function pegaGps(){return (await gps1({enableHighAccuracy:true,timeout:8000,maximumAge:60000},9000))||(await gps1({enableHighAccuracy:false,timeout:5000,maximumAge:900000},6000))}
 function fotoComp(file){return new Promise((ok,no)=>{const u=URL.createObjectURL(file);const im=new Image();
  im.onload=()=>{const m=1280,k=Math.min(1,m/Math.max(im.width,im.height));const c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);
@@ -211,10 +212,10 @@ function gpsCard(){const g=S.g,u=g.ultima_em?new Date(g.ultima_em):null,min=u?Ma
  const ativo=u&&g.ultima_fonte==='traccar'&&min<=10;
  const st=ativo?`<div class="msg ok"><b>Localização ativa.</b> Última posição às ${u.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}. Pode usar o Waze ou o Google Maps normalmente.</div>`
   :S.turno?`<div class="msg pend"><b>O profissional ainda não está vendo você no mapa.</b> Abra o app <b>Traccar Client</b> e ligue o envio da localização.${u?` Última posição recebida às ${u.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}${g.ultima_fonte==='app'?' (só pelo Minha Rota)':''}.`:''}</div>`
-  :g.contato_em&&Date.now()-new Date(g.contato_em)<15*6e4?`<div class="msg ok"><b>Traccar Client configurado.</b> Ele está falando com o servidor. A posição passa a valer quando você iniciar o plantão.</div>`:`<p class="meta">Durante o plantão, o profissional de saúde acompanha seu carro chegando pela localização do celular (app <b>Traccar Client</b>). Fora do plantão, nada é guardado.</p>`;
+  :g.contato_em&&Date.now()-new Date(g.contato_em)<15*6e4?`<div class="msg ok"><b>Traccar Client configurado.</b> Ele está falando com o servidor. A posição passa a valer quando você iniciar o atendimento.</div>`:`<p class="meta">Durante o atendimento, o profissional de saúde acompanha seu carro chegando pela localização do celular (app <b>Traccar Client</b>). Fora do atendimento, nada é guardado.</p>`;
  return `<div class="card"><h2>Localização para o profissional</h2>${st}<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button class="btn line" type="button" data-aba="gps" style="min-height:44px;font-size:14px">Como configurar</button><button class="btn line" type="button" data-a="gpsver" style="min-height:44px;font-size:14px">Verificar agora</button></div></div>`}
 function renderGps(){const g=S.g;let h=topo('Localização pelo celular');h+=`<main>
- <div class="card"><h2>Por que precisa</h2><p class="meta" style="font-size:14px">O Minha Rota sozinho para de mandar a localização quando você abre o Waze ou o Google Maps. O app <b>Traccar Client</b> manda a posição em segundo plano, e o profissional vê seu carro chegando. Só é usado durante o plantão.</p></div>
+ <div class="card"><h2>Por que precisa</h2><p class="meta" style="font-size:14px">O Minha Rota sozinho para de mandar a localização quando você abre o Waze ou o Google Maps. O app <b>Traccar Client</b> manda a posição em segundo plano, e o profissional vê seu carro chegando. Só é usado durante o atendimento.</p></div>
  <div class="card"><h2>1 · Instale o Traccar Client</h2><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><a class="btn wine" style="min-height:44px;font-size:14px" href="https://play.google.com/store/apps/details?id=org.traccar.client" target="_blank" rel="noopener">Android</a><a class="btn wine" style="min-height:44px;font-size:14px" href="https://apps.apple.com/br/app/traccar-client/id843156974" target="_blank" rel="noopener">iPhone</a></div></div>
  <div class="card"><h2>2 · Configure com um toque</h2><p class="meta" style="font-size:14px">Com o Traccar Client instalado, toque no botão abaixo. Ele abre o Traccar já com o seu código e o servidor preenchidos.</p><a class="btn sun" href="${esc(trcLink(g.codigo))}">Configurar o Traccar automaticamente</a><p class="meta" style="font-size:13px">Se não abrir, a Logística pode mostrar o <b>QR code</b> para você ler no Traccar (Alterar configurações → ícone de QR), ou preencha à mão:</p></div>
  <div class="card"><h2>Preencher à mão</h2>
@@ -223,7 +224,7 @@ function renderGps(){const g=S.g;let h=topo('Localização pelo celular');h+=`<m
   <p class="meta" style="font-size:14px"><b>URL do servidor</b> (apague o endereço que vem de fábrica):</p><div class="cp"><code>${esc(GPS_URL)}</code><button type="button" data-a="copia" data-copia="${esc(GPS_URL)}">Copiar</button></div>
   <p class="meta" style="font-size:14px"><b>Precisão da localização</b>: Alta · <b>Distância</b>: 50 · <b>Envio de localização em repouso</b>: 120.</p></div>
  <div class="card"><h2>3 · Libere a localização</h2><p class="meta" style="font-size:14px">Quando o celular perguntar, escolha <b>Permitir o tempo todo</b> (ou <b>Sempre</b>, no iPhone).<br>No Android: Configurações → Apps → Traccar Client → Bateria → <b>Sem restrições</b>. Sem isso o celular desliga o envio.</p></div>
- <div class="card"><h2>4 · Ligue o envio</h2><p class="meta" style="font-size:14px">Na tela inicial do Traccar Client, ligue o <b>Rastreamento contínuo</b>. Para testar na hora, toque em <b>Enviar localização</b>. Pode deixar ligado: fora do plantão a posição é descartada. Não use o botão SOS.</p><button class="btn sun" type="button" data-a="gpsver">Verificar se está chegando</button></div>
+ <div class="card"><h2>4 · Ligue o envio</h2><p class="meta" style="font-size:14px">Na tela inicial do Traccar Client, ligue o <b>Rastreamento contínuo</b>. Para testar na hora, toque em <b>Enviar localização</b>. Pode deixar ligado: fora do atendimento a posição é descartada. Não use o botão SOS.</p><button class="btn sun" type="button" data-a="gpsver">Verificar se está chegando</button></div>
  <button class="btn line" type="button" data-aba="hoje">Voltar</button></main>`;return h}
 setInterval(async()=>{if(!S.token||S.leitura||!TERC()||!S.turno||document.hidden)return;const g=await pegaGps();if(g)api('posicao',g).catch(()=>{});carregaGps()},90000);
 const visStatus=v=>v.status==='completed'?'ok':v.status==='failed'?'bad':'';
@@ -240,13 +241,15 @@ async function iniciar(){
 async function carregaCarros(){S.carros=null;render();S.gps=await pegaGps();
  try{const r=await api('carros',S.gps||{});S.carros=r.carros||[];S.err=''}catch(e){if(e.message==='sessao')return;S.err=e.message;S.carros=[]}render()}
 const passos=()=>{const e=S.etapa;const T3=TERC();const i=e==='carro'?0:e==='inspecao'?1:(e==='pronto'||e==='visita')?(T3?1:2):-1;
- return `<ol class="steps" aria-label="Etapas do início do plantão">${(T3?['1 · Plantão','2 · Rota']:['1 · Carro','2 · Inspeção','3 · Rota']).map((t,k)=>`<li class="${k===i?'on':k<i?'ok':''}"${k===i?' aria-current="step"':''}><i></i>${t}</li>`).join('')}</ol>`};
+ return `<ol class="steps" aria-label="${PT('Etapas do início do plantão')}">${(T3?['1 · Início','2 · Rota']:['1 · Carro','2 · Inspeção','3 · Rota']).map((t,k)=>`<li class="${k===i?'on':k<i?'ok':''}"${k===i?' aria-current="step"':''}><i></i>${t}</li>`).join('')}</ol>`};
 function topo(sub){const d=new Date().toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'});
  return `${S.leitura?`<div class="verbar" role="note">👁 Visualização da Logística: você vê o app como o motorista vê. Nada é alterado. <button type="button" data-a="logout">Encerrar</button></div>`:''}<header class="top"><div class="k"><span>Minha Rota · Motorista</span>${S.leitura?'':'<button type="button" data-a="logout">Sair</button>'}</div><h1>${esc(saud())}, ${esc((S.nome||'').split(' ')[0])}</h1><p>${esc(sub||d)}</p>${S.etapa==='pin'||S.aba!=='hoje'?'':passos()}</header>`}
 const saud=()=>{const h=new Date().getHours();return h<12?'Bom dia':h<18?'Boa tarde':'Boa noite'};
 function itensSec(i){return (S.lista&&S.lista[i])?S.lista[i].itens:[]}
 function secCompleta(i){return itensSec(i).every(it=>{const r=S.resp[it.id];return r&&(r.ok||String(r.obs||'').trim())})}
 const IC={folga:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',hoje:'<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',chat:'<path d="M4 5h16v11H8l-4 4z"/>',ocor:'<path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.5"/>'};
+/* terceirizado presta serviço: no lugar de "plantão" o app diz "atendimento" (motoristas da Solar seguem com plantão) */
+const PT=t=>TERC()?String(t).replace(/1 · Plantão/g,'1 · Início').replace(/Plantão/g,'Atendimento').replace(/plantão/g,'atendimento').replace(/Bom descanso!/g,'Obrigado!'):t;
 function nav(){const it=[['hoje','Hoje'],['chat','Conversa'],['ocor','Ocorrências'],['folga','Folga']].filter(x=>!(TERC()&&x[0]==='folga'));
  return `<nav class="nav" aria-label="Seções"><div style="grid-template-columns:repeat(${it.length},1fr)">${it.map(([k,t])=>`<button type="button" data-aba="${k}"${S.aba===k||(k==='chat'&&S.aba==='resp')?' aria-current="page"':''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[k]}</svg>${t}${k==='chat'&&(S.naoLidas+S.lg.nl)?`<b aria-label="${S.naoLidas+S.lg.nl} não lidas">${S.naoLidas+S.lg.nl}</b>`:''}</button>`).join('')}</div></nav>`}
 const comNav=()=>S.etapa==='carro'||S.etapa==='pronto';
@@ -289,7 +292,7 @@ function hojeHtml(){const A=S.hj;if(!A.at&&!A.busy)setTimeout(()=>carregaHoje(),
  else if(A.err)h+=`<p class="err">${esc(A.err)}</p>`;
  else if(!A.rotas.length)h+='<p class="meta">Nenhuma rota sua para hoje no SimpliRoute. Se você deveria ter rota, avise a Logística.</p>';
  else A.rotas.forEach((r,ri)=>{const vs=r.visitas||[];h+=`<p class="meta" style="margin-top:6px"><b>Rota${A.rotas.length>1?' '+(ri+1):''}</b>${r.prev_inicio?' · saída prevista '+esc(r.prev_inicio):''} · ${vs.length} visitas</p><ol class="dl" style="padding-left:0;list-style:none">${vs.map(v=>`<li><span class="chk" style="background:var(--off);color:var(--ink)">${v.ordem}</span><span><b>${esc(v.titulo)}</b>${v.prev?' · '+esc(v.prev):''}<br><small class="meta">${esc(v.endereco)}</small></span></li>`).join('')}</ol>`});
- h+='<p class="meta">Para iniciar a rota, fazer check-in e finalizar, comece o plantão acima.</p></details>';return h}
+ h+='<p class="meta">'+PT('Para iniciar a rota, fazer check-in e finalizar, comece o plantão acima.')+'</p></details>';return h}
 function amanhaHtml(){const A=S.am;if(!A.at&&!A.busy)setTimeout(()=>carregaAmanha(),0);const k=amanhaK();
  let h=`<details class="card amanha"${A.aberto?' open':''}><summary style="cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:8px"><h2 style="margin:0">Rota de amanhã · ${esc(dlong(k))}</h2><span class="meta">${A.rotas==null?'…':A.rotas.length?A.rotas.reduce((a,r)=>a+(r.visitas||[]).length,0)+' visitas':'—'} ▾</span></summary>`;
  if(A.rotas==null)h+='<p class="carregando">Buscando no SimpliRoute…</p>';
@@ -381,7 +384,7 @@ function rotaHtml(t){
     <small>${v.checkout?(k==='ok'?'Realizada':'Não realizada')+' às '+hm(v.checkout):v.checkin?'Chegou às '+hm(v.checkin):[v.prev?'Previsão '+v.prev:'',v.janela?'janela '+v.janela:''].filter(Boolean).join(' · ')}</small></span></div>`;
    if(r.status==='started'&&!k){
     const nav=v.lat!=null?`https://www.google.com/maps/dir/?api=1&destination=${v.lat},${v.lng}`:'https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(v.endereco);
-    h+=`<div class="acts"><a class="btn line" href="${esc(nav)}" target="_blank" rel="noopener">Navegar</a>${v.checkin?`<button class="btn wine" type="button" data-a="fvisita" data-v="${esc(v.id)}">Finalizar visita</button>`:`<button class="btn wine" type="button" data-a="checkin" data-v="${esc(v.id)}"${S.busy?' disabled':''}>Cheguei</button>`}</div>`}
+    h+=`<div class="acts"><a class="btn line" href="${esc(nav)}" target="_blank" rel="noopener">Navegar</a>${v.checkin?`<button class="btn wine" type="button" data-a="fvisita" data-v="${esc(v.id)}">Finalizar visita</button>`:at?`<button class="btn wine" type="button" data-a="checkin" data-v="${esc(v.id)}"${S.busy?' disabled':''}>Cheguei</button>`:`<button class="link" type="button" data-a="checkin" data-fora="1" data-v="${esc(v.id)}"${S.busy?' disabled':''} style="align-self:center">Atender fora da ordem</button>`}</div>`}
    h+='</div>'});
   if(r.status==='started')h+=`<button class="btn ${feitas===vs.length?'sun':'line'}" type="button" data-a="rfinalizar" data-r="${esc(r.id)}"${S.busy?' disabled':''}>Finalizar rota</button>`;
   return h+'</div>'}).join('')+'<button class="link" type="button" data-a="rotarec" style="align-self:center">Atualizar rota</button>';
@@ -408,10 +411,10 @@ function render(){
   h=topo();h+='<main>';
   if(S.err)h+=`<p class="err" role="alert">${esc(S.err)}</p>`;
   h+=S.placaP?`<div class="card"><h2>Seu carro</h2><span style="font-size:24px;font-weight:800;letter-spacing:.04em">${esc(S.placaP)}</span><p class="meta">Carro próprio${S.empresa?' · '+esc(S.empresa):''}. Se a placa estiver errada, avise a Logística.</p>
-   <button class="btn sun" type="button" data-a="tiniciar"${S.busy?' disabled':''}>${S.busy?'Iniciando…':'Iniciar plantão'}</button></div>`
+   <button class="btn sun" type="button" data-a="tiniciar"${S.busy?' disabled':''}>${S.busy?'Iniciando…':PT('Iniciar plantão')}</button></div>`
    :`<div class="card"><h2>Seu carro</h2><p class="meta">Carro próprio${S.empresa?' · '+esc(S.empresa):''}. Seu cadastro ainda está sem a placa: informe abaixo (só na primeira vez).</p>
    <label class="fl" for="tplaca" style="font-weight:700">Placa do carro</label><input id="tplaca" maxlength="8" autocomplete="off" autocapitalize="characters" placeholder="ABC1D23" value="${esc(S.tplaca||'')}" style="font-size:22px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:10px 12px;border:1px solid var(--line);border-radius:10px">
-   <button class="btn sun" type="button" data-a="tiniciar"${S.busy?' disabled':''}>${S.busy?'Iniciando…':'Salvar placa e iniciar plantão'}</button></div>`;
+   <button class="btn sun" type="button" data-a="tiniciar"${S.busy?' disabled':''}>${S.busy?'Iniciando…':PT('Salvar placa e iniciar plantão')}</button></div>`;
   h+=`${hojeHtml()}${pushCard()}${gpsCard()}${amanhaHtml()}</main>`;
   app.innerHTML=h+nav();return}
  if(S.etapa==='carro'){
@@ -448,9 +451,9 @@ function render(){
   app.innerHTML=h;
   document.querySelectorAll('[data-obs]').forEach(t=>t.oninput=()=>{S.resp[t.dataset.obs].obs=t.value;const b=document.querySelector('.foot .btn.sun');if(b)b.disabled=!secCompleta(S.sec)||S.busy});return}
  if(S.etapa==='pronto'){const t=S.turno||{};const def=t.defeitos||[];
-  h=topo('Plantão iniciado às '+hm(t.entrou_em));h+='<main>'+pushCard();
+  h=topo(PT('Plantão iniciado às ')+hm(t.entrou_em));h+='<main>'+pushCard();
   if(t.critico)h+=`<div class="msg bad" role="alert"><b>Item crítico com problema.</b> Não saia com o carro antes de falar com a logística.</div>`;
-  if(TERC())h+=`<div class="card"><h2>Seu carro</h2><span style="font-size:24px;font-weight:800;letter-spacing:.04em">${esc(t.placa||'')}</span><ul class="dl"><li><span class="chk">✓</span><span><b>Plantão iniciado às ${hm(t.entrou_em)}</b> · carro próprio${S.empresa?' · '+esc(S.empresa):''}</span></li></ul></div>${gpsCard()}`;
+  if(TERC())h+=`<div class="card"><h2>Seu carro</h2><span style="font-size:24px;font-weight:800;letter-spacing:.04em">${esc(t.placa||'')}</span><ul class="dl"><li><span class="chk">✓</span><span><b>${PT('Plantão iniciado às ')}${hm(t.entrou_em)}</b> · carro próprio${S.empresa?' · '+esc(S.empresa):''}</span></li></ul></div>${gpsCard()}`;
   else h+=`<div class="card"><h2>Seu carro</h2><span style="font-size:24px;font-weight:800;letter-spacing:.04em">${esc(t.placa||'')}</span>
    <ul class="dl"><li><span class="chk">✓</span><span><b>Entrou no carro às ${hm(t.entrou_em)}</b> · registrado no Geotab pelo app</span></li>
    <li><span class="chk${def.length?' w':''}">${def.length?'!':'✓'}</span><span><b>Inspeção às ${hm(t.inspecao_em)}</b> · ${def.length?def.length+(def.length>1?' problemas registrados':' problema registrado'):'tudo OK'}</span></li></ul>
@@ -459,7 +462,7 @@ function render(){
    ${(S.chat.rotas||[]).filter(x=>!x.amanha).map(x=>`<div class="card" style="gap:6px"><h2>Profissional de hoje</h2><span style="font-size:18px;font-weight:800">${esc(x.profissional)}</span><p class="meta">${esc(x.especialidade||'')}${x.prev_inicio?' · saída prevista '+esc(x.prev_inicio):''}</p><button class="btn wine" type="button" data-aba="chat">Conversa${+x.nao_lidas?' · '+x.nao_lidas+(+x.nao_lidas>1?' novas':' nova'):''}</button></div>`).join('')}
    ${rotaHtml(t)}
    ${amanhaHtml()}
-   <button class="btn line" type="button" data-a="encerrar">${TERC()?'Encerrar plantão':'Encerrar plantão e sair do carro'}</button></main>`;
+   <button class="btn line" type="button" data-a="encerrar">${TERC()?'Encerrar atendimento':'Encerrar plantão e sair do carro'}</button></main>`;
   app.innerHTML=h+nav();return}
  if(S.etapa==='visita'){const v=S.vis,c=S.co;const falhou=c.status==='failed';
   const mot=S.motivos.filter(m=>!m.tipo||m.tipo==='failed');
@@ -540,7 +543,7 @@ document.addEventListener('click',async e=>{
    S.oc={lista:O.lista,tipo:'',texto:'',valor:'',foto:null,avisar:true,err:''};render();scrollTo(0,0);carregaOcor()}
   catch(x){S.busy=false;if(x.message!=='sessao'){O.err=x.message;render()}}return}
  if(a==='copia'){try{await navigator.clipboard.writeText(b.dataset.copia);toast('Copiado.')}catch(x){toast('Não consegui copiar. Segure o texto para copiar.')}return}
- if(a==='logout'){if(S.turno&&!S.turno.saiu_em&&!(await confirma('Sair do app?','Você continua registrado no carro. Para sair do carro, use "Encerrar plantão".','Sair do app')))return;sair();return}
+ if(a==='logout'){if(S.turno&&!S.turno.saiu_em&&!(await confirma('Sair do app?',(TERC()?'Seu atendimento continua aberto. Para encerrar, use "Encerrar atendimento".':'Você continua registrado no carro. Para sair do carro, use "Encerrar plantão".'),'Sair do app')))return;sair();return}
  if(a==='recarregar'){S.err='';iniciar();return}
  if(a==='gps'){carregaCarros();return}
  if(a==='escolher'){const c=(S.carros||[]).find(x=>x.id===b.dataset.id);if(!c)return;
@@ -556,7 +559,15 @@ document.addEventListener('click',async e=>{
  if(a==='riniciar'){if(!(await confirma('Iniciar a rota?','O app avisa o SimpliRoute que você saiu para a rota.','Iniciar')))return;await acaoRota('rota_iniciar',{rota:b.dataset.r},'Rota iniciada. Boa rota!');return}
  if(a==='rfinalizar'){const r=(S.rotas||[]).find(x=>x.id===b.dataset.r);const falta=r?r.visitas.filter(v=>v.status!=='completed'&&v.status!=='failed').length:0;
   if(!(await confirma('Finalizar a rota?',falta?'Ainda há '+falta+(falta>1?' visitas abertas':' visita aberta')+'. Finalize mesmo assim só se a Logística tiver combinado. Só é possível finalizar com o carro na base.':'Todas as visitas foram finalizadas. Só é possível finalizar com o carro de volta na base.','Finalizar rota')))return;await acaoRota('rota_finalizar',{rota:b.dataset.r},'Rota finalizada.');return}
- if(a==='checkin'){await acaoRota('checkin',{visita:b.dataset.v},'Chegada registrada.');return}
+ if(a==='checkin'){
+  /* evita check-in no paciente errado: o "Cheguei" fica só no próximo da ordem; fora da ordem pede confirmação; longe do endereço também */
+  const ro=(S.rotas||[]).find(r=>(r.visitas||[]).some(x=>String(x.id)===b.dataset.v));if(!ro)return;
+  const v=ro.visitas.find(x=>String(x.id)===b.dataset.v),nx=ro.visitas.find(x=>x.status!=='completed'&&x.status!=='failed');
+  if(b.dataset.fora&&nx&&nx.id!==v.id&&!(await confirma('Atender fora da ordem?',`O próximo da sua rota é ${nx.ordem}º · ${nx.titulo}. Só atenda ${v.ordem}º · ${v.titulo} antes se a Logística ou o profissional mudou a ordem.`,'Sim, cheguei em '+String(v.titulo).split(' ')[0])))return;
+  if(v.lat!=null&&v.lng!=null){S.busy=true;render();const g=await pegaGps();S.busy=false;render();
+   if(g){const m=distM(g.lat,g.lng,v.lat,v.lng)-Math.min(g.prec||0,300);
+    if(m>400&&!(await confirma('Longe do endereço',`Você está a ${m<1000?Math.round(m/10)*10+' m':(m/1000).toFixed(1).replace('.',',')+' km'} do endereço de ${v.titulo}. Confira se chegou no paciente certo.`,'Estou no paciente certo')))return}}
+  await acaoRota('checkin',{visita:b.dataset.v},'Chegada registrada.');return}
  if(a==='fvisita'){const v=(S.rotas||[]).flatMap(r=>r.visitas).find(x=>String(x.id)===b.dataset.v);if(!v)return;S.vis=v;S.co={status:'',motivo:'',comentario:'',foto:null,assImg:null,assinou:false,ex:{},tentou:false};carregaCampos().then(()=>{if(S.etapa==='visita')render()});S.err='';S.etapa='visita';render();scrollTo(0,0);return}
  if(a==='cost'){S.co.status=b.dataset.s;if(S.co.status!=='failed')S.co.motivo='';S.err='';render();return}
  if(a==='limpass'){S.co.assImg=null;S.co.assinou=false;render();return}
@@ -585,12 +596,12 @@ document.addEventListener('click',async e=>{
   catch(x){S.busy=false;if(x.message!=='sessao'){S.err=x.message;render()}}return}
  if(a==='tiniciar'){const pl=String(S.tplaca||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(!S.placaP&&!/^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/.test(pl)){S.err='Informe a placa do carro no formato ABC1D23 ou ABC1234.';render();return}
   S.busy=true;S.err='';render();const g=await pegaGps();
-  try{const r=await api('entrar',{...(g||{}),...(S.placaP?{}:{placa:pl})});if(r.ok&&!S.placaP)S.placaP=pl;S.busy=false;if(!r.ok){S.err=r.erro;render();return}S.turno=r.turno;S.etapa='pronto';toast('Plantão iniciado.');render();scrollTo(0,0);carregaRota();carregaGps()}
+  try{const r=await api('entrar',{...(g||{}),...(S.placaP?{}:{placa:pl})});if(r.ok&&!S.placaP)S.placaP=pl;S.busy=false;if(!r.ok){S.err=r.erro;render();return}S.turno=r.turno;S.etapa='pronto';toast(PT('Plantão iniciado.'));render();scrollTo(0,0);carregaRota();carregaGps()}
   catch(x){S.busy=false;if(x.message!=='sessao'){S.err=x.message;render()}}return}
- if(a==='gpsver'){toast('Verificando…');await carregaGps();const u=S.g.ultima_em?new Date(S.g.ultima_em):null;const ct=S.g.contato_em&&Date.now()-new Date(S.g.contato_em)<15*6e4;toast(u&&S.g.ultima_fonte==='traccar'&&Date.now()-u<10*6e4?'Localização chegando. Tudo certo!':!S.turno&&ct?'Traccar configurado certo. A posição vale quando você iniciar o plantão.':S.turno&&ct?'O Traccar está falando com o servidor; aguarde a próxima posição.':S.turno?'Ainda não chegou posição do Traccar Client. Confira os passos.':'Inicie o plantão e depois verifique: fora do plantão a posição não é guardada.');return}
- if(a==='encerrar'){const ab=(S.rotas||[]).some(r=>r.status==='started');if(!(await confirma('Encerrar o plantão?',(ab?'Sua rota ainda está em andamento no SimpliRoute. ':'')+(TERC()?'A localização deixa de ser usada.':'O app tira você do carro '+(S.turno?S.turno.placa:'')+' no Geotab.'),'Encerrar')))return;
+ if(a==='gpsver'){toast('Verificando…');await carregaGps();const u=S.g.ultima_em?new Date(S.g.ultima_em):null;const ct=S.g.contato_em&&Date.now()-new Date(S.g.contato_em)<15*6e4;toast(u&&S.g.ultima_fonte==='traccar'&&Date.now()-u<10*6e4?'Localização chegando. Tudo certo!':!S.turno&&ct?'Traccar configurado certo. A posição vale quando você iniciar o atendimento.':S.turno&&ct?'O Traccar está falando com o servidor; aguarde a próxima posição.':S.turno?'Ainda não chegou posição do Traccar Client. Confira os passos.':'Inicie o atendimento e depois verifique: fora do atendimento a posição não é guardada.');return}
+ if(a==='encerrar'){const ab=(S.rotas||[]).some(r=>r.status==='started');if(!(await confirma(PT('Encerrar o plantão?'),(ab?'Sua rota ainda está em andamento no SimpliRoute. ':'')+(TERC()?'A localização deixa de ser usada.':'O app tira você do carro '+(S.turno?S.turno.placa:'')+' no Geotab.'),'Encerrar')))return;
   S.busy=true;render();
-  try{const r=await api('sair');S.busy=false;if(!r.ok){toast(r.erro);return}toast('Plantão encerrado. Bom descanso!');S.turno=null;S.lista=null;S.resp={};S.etapa='carro';render();if(!TERC())carregaCarros()}
+  try{const r=await api('sair');S.busy=false;if(!r.ok){toast(r.erro);return}toast(PT('Plantão encerrado. Bom descanso!'));S.turno=null;S.lista=null;S.resp={};S.etapa='carro';render();if(!TERC())carregaCarros()}
   catch(x){S.busy=false;if(x.message!=='sessao')toast(x.message)}return}
 });
 function avisaPush(id){fetch(SB+'/functions/v1/push-chat',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({token:S.token,msg:id})}).catch(()=>{})}
